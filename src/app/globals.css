@@ -1,4 +1,38 @@
+/* globals.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: #C86953;
+  --secondary: #FFF4EA;
+  --accent: #7EACB5;
+  --highlight: #F9DEA1;
+  --footer-text:#66431B;
+}
+
+/* --- THÊM CÁC QUY TẮC SAU VÀO CUỐI FILE --- */
+html, body {
+  height: 100%; /* Đảm bảo html và body chiếm toàn bộ chiều cao viewport */
+  margin: 0; /* Xóa margin mặc định của body */
+  padding: 0; /* Xóa padding mặc định */
+  /* Nếu bạn cần ẩn thanh cuộn ngang, chỉ dùng overflow-x: hidden; */
+  /* TUYỆT ĐỐI KHÔNG DÙNG overflow: hidden; hoặc overflow-y: hidden; ở đây */
+  overflow-x: hidden; /* Chỉ dùng nếu cần ẩn thanh cuộn ngang */
+}
+
+body {
+  display: flex;          /* Biến body thành một flex container */
+  flex-direction: column; /* Sắp xếp các phần tử con theo chiều dọc */
+  min-height: 100vh;      /* Đảm bảo body có chiều cao ít nhất bằng chiều cao của viewport */
+}
+
+/* Các thuộc tính cho div root của Next.js, nếu có.
+   Trong trường hợp này, vì Header, main, Footer là con trực tiếp của body,
+   thì #__next có thể không cần điều chỉnh gì đặc biệt. */
+#__next {
+  /* Nếu bạn thấy vẫn còn khoảng trống và #__next là thủ phạm,
+     bạn có thể cần áp dụng display:flex, flex-direction:column, flex-grow:1 cho nó.
+     Tuy nhiên, hãy thử cách trên trước. */
+}
