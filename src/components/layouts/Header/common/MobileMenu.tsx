@@ -62,8 +62,9 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
   return (
     <div
       ref={mobileMenuRef}
-      className="fixed inset-0 bg-primary z-10 flex-col p-4"
-      style={{ display: menuOpen ? "flex" : "none" }} // Initial render will hide it if menuOpen is false
+      // THAY ĐỔI TẠI ĐÂY: Đặt z-index là một giá trị cực kỳ cao
+      className="fixed inset-0 bg-primary z-[99999] flex-col p-4" // Đã tăng z-index
+      style={{ display: menuOpen ? "flex" : "none" }}
     >
       <div className="flex justify-start items-center py-3 mb-4">
         <button

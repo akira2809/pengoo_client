@@ -13,7 +13,7 @@ export default function NavLinks({ onLinkClick, onCollectionsToggle, isDesktop =
         <button
           className="hover:underline focus:outline-none"
           onClick={onCollectionsToggle}
-          // onMouseEnter={onCollectionsToggle} // Bạn có thể thêm lại onMouseEnter ở đây hoặc ở MainNavbar nếu muốn
+
         >
           Collections
         </button>

@@ -80,9 +80,11 @@ export default function CollectionsDropdown({
     <>
       <div
         ref={collectionsMenuRef}
-        className="absolute left-0 right-0 top-full bg-white shadow-2xl border-t z-25"
+        // Đã thay đổi z-index thành z-[9999] để đảm bảo nó hiển thị trên mọi thứ.
+        // Bạn có thể dùng z-50 nếu muốn tuân thủ Tailwind mặc định và z-index đó đủ cao.
+        // XÓA onMouseLeave TẠI ĐÂY - nó sẽ được xử lý ở component cha hoặc bởi overlay
+        className="absolute left-0 right-0 top-full bg-white shadow-2xl border-t z-[9999]"
         style={{ display: collectionsOpen ? "block" : "none" }}
-        onMouseLeave={onClose}
       >
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex justify-between items-center mb-6">
@@ -155,7 +157,9 @@ export default function CollectionsDropdown({
       {/* Collections Overlay */}
       {collectionsOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-10 z-20"
+          // Đặt z-index thấp hơn dropdown nhưng cao hơn các phần tử khác.
+          // Đã thay đổi z-20 thành z-40 để đảm bảo nó nằm dưới dropdown (z-[9999])
+          className="fixed inset-0 bg-black bg-opacity-10 z-40"
           onClick={onClose}
         />
       )}
