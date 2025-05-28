@@ -63,7 +63,7 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
     <div
       ref={mobileMenuRef}
       // THAY ĐỔI TẠI ĐÂY: Đặt z-index là một giá trị cực kỳ cao
-      className="fixed inset-0 bg-primary z-[99999] flex-col p-4" // Đã tăng z-index
+      className="fixed inset-0 bg-primary z-[99999] flex-col p-4 text-white" // Đã tăng z-index
       style={{ display: menuOpen ? "flex" : "none" }}
     >
       <div className="flex justify-start items-center py-3 mb-4">
@@ -81,9 +81,9 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
           <NavLinks onLinkClick={onClose} /> {/* Pass onClose to close menu on link click */}
         </nav>
 
-        <div className="flex items-center space-x-2 text-base font-semibold mb-4">
+        <div className="flex items-center space-x-2 text-base  text-gray-50 font-semibold mb-4">
           <LanguageIcon />
-          <span>English (USD)</span>
+          <span className="">English (USD)</span>
         </div>
 
         <div className="text-sm text-gray-300">
