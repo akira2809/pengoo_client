@@ -1,27 +1,35 @@
-// app/page.tsx
-import HeroBanner from '../components/common/HomePage/HeroBanner'; // Đảm bảo đường dẫn đúng
+"use client"; // Đảm bảo dòng này ở đầu file
 
-export default function HomePage() {
-  const bannerFeatures = [
-    { iconSrc: '/icons/calming-effect.svg', alt: 'Calming Effect Icon', label: 'CALMING EFFECT' },
-    { iconSrc: '/icons/alcohol-free.svg', alt: 'Alcohol-Free Icon', label: 'ALCOHOL-FREE' },
-    { iconSrc: '/icons/superior-flavor.svg', alt: 'Superior Flavor Icon', label: 'SUPERIOR FLAVOUR' },
-  ];
+import React from 'react';
+import Banner from '@/components/common/Banner/Banner';
+import FeaturedProducts from '@/components/features/Product/FeaturedProducts'; 
+import BannerHotspot from '@/components/common/Banner/Banner-hotspot';  
+import CollectionSection from '@/components/common/collection/CollectionSection';
+import BenefitsSection from '@/components/common/BenefitsSection/BenefitsSection';
+import HeadlineMarquee from '@/components/common/HeadlineMarquee';
+import { SmoothScrollHero } from '@/components/common/HeroScrollZoom';
+import { AboutMaztermindSection } from '@/components/common/AboutMaztermindSection';
+import { VideoSection } from '@/components/common/VideoSection';
+import { TestimonialCarousel } from '@/components/common/TestimonialCarousel';
+import { BlogSection } from '@/components/common/BlogSection';
 
+function HomePage() {
+  
   return (
-    <div>
-      <HeroBanner
-        backgroundImage="/images/collider_background.jpg" // Đảm bảo bạn có hình nền này
-        productImage="/images/collider_can.png" // Đảm bảo bạn có hình ảnh lon sản phẩm này
-        title="Mood-boosting beer without the alcohol"
-        description="Non-alcoholic beer infused with functional mushrooms and botanicals to relax you without the need for alcohol."
-        features={bannerFeatures}
-        buttonText="SHOP NOW"
-        buttonLink="/shop"
-        rating="4.8/5 FROM 800+ REVIEWS"
-      />
-
-      {/* Phần còn lại của nội dung trang chủ */}
-    </div>
-  );
+    <>
+      <Banner />
+     <FeaturedProducts />
+     <BannerHotspot />
+     <CollectionSection />
+     <BenefitsSection />
+     <HeadlineMarquee />
+     <SmoothScrollHero />
+     <AboutMaztermindSection/>
+     <VideoSection/>
+     <TestimonialCarousel/>
+     <BlogSection/>
+    </>
+  )
 }
+
+export default HomePage;

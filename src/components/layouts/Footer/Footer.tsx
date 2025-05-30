@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#F9DEA1] text-[var(--footer-text)] py-12 px-4 md:px-8 lg:px-16">
+    <footer className="bg-background-300 text-text-700 py-12 px-4 md:px-8 lg:px-16">
       {/* Top Section */}
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 border-b border-gray-300 pb-8 mb-8">
         {/* Cột Đăng ký (Newsletter) */}
@@ -13,7 +13,7 @@ export default function Footer() {
           <p className="text-sm mb-4">
             Nhận ngay mã giảm giá 10% cho đơn đặt hàng đầu tiên
           </p>
-          <button className="bg-[#8A5B3D] text-white px-6 py-3 rounded-md hover:bg-[#7a4c30] transition-colors text-sm font-semibold">
+          <button className="bg-background-400 text-text-700 px-6 py-3 rounded-md hover:bg-background-200  transition-colors text-sm font-semibold">
             Get 10% off
           </button>
         </div>

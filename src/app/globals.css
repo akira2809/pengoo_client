@@ -5,34 +5,33 @@
 @tailwind utilities;
 
 :root {
-  --primary: #C86953;
-  --secondary: #FFF4EA;
-  --accent: #7EACB5;
-  --highlight: #F9DEA1;
-  --footer-text:#66431B;
+  /* Background colors */
+  --background-50:  #effaff;
+  --background-100: #def4ff;
+  --background-200: #b6eaff;
+  --background-300: #75ddff;
+  --background-400: #2cccff;
+  --background-500: #00bcff;
+  --background-600: #0092d4;
+  --background-700: #0074ab;
+  --background-800: #00628d;
+  --background-900: #065174;
+  --background-950: #04334d;
+
+  /* Text colors (swap with background if needed) */
+  --text-50:  #effaff;
+  --text-100: #def4ff;
+  --text-200: #b6eaff;
+  --text-300: #75ddff;
+  --text-400: #2cccff;
+  --text-500: #00bcff;
+  --text-600: #0092d4;
+  --text-700: #0074ab;
+  --text-800: #00628d;
+  --text-900: #065174;
+  --text-950: #04334d;
+
+  /* Nếu muốn swap, chỉ cần đổi giá trị giữa background và text ở từng cấp độ */
 }
 
 /* --- THÊM CÁC QUY TẮC SAU VÀO CUỐI FILE --- */
-html, body {
-  height: 100%; /* Đảm bảo html và body chiếm toàn bộ chiều cao viewport */
-  margin: 0; /* Xóa margin mặc định của body */
-  padding: 0; /* Xóa padding mặc định */
-  /* Nếu bạn cần ẩn thanh cuộn ngang, chỉ dùng overflow-x: hidden; */
-  /* TUYỆT ĐỐI KHÔNG DÙNG overflow: hidden; hoặc overflow-y: hidden; ở đây */
-  overflow-x: hidden; /* Chỉ dùng nếu cần ẩn thanh cuộn ngang */
-}
-
-body {
-  display: flex;          /* Biến body thành một flex container */
-  flex-direction: column; /* Sắp xếp các phần tử con theo chiều dọc */
-  min-height: 100vh;      /* Đảm bảo body có chiều cao ít nhất bằng chiều cao của viewport */
-}
-
-/* Các thuộc tính cho div root của Next.js, nếu có.
-   Trong trường hợp này, vì Header, main, Footer là con trực tiếp của body,
-   thì #__next có thể không cần điều chỉnh gì đặc biệt. */
-#__next {
-  /* Nếu bạn thấy vẫn còn khoảng trống và #__next là thủ phạm,
-     bạn có thể cần áp dụng display:flex, flex-direction:column, flex-grow:1 cho nó.
-     Tuy nhiên, hãy thử cách trên trước. */
-}

@@ -83,12 +83,12 @@ export default function CollectionsDropdown({
         // Đã thay đổi z-index thành z-[9999] để đảm bảo nó hiển thị trên mọi thứ.
         // Bạn có thể dùng z-50 nếu muốn tuân thủ Tailwind mặc định và z-index đó đủ cao.
         // XÓA onMouseLeave TẠI ĐÂY - nó sẽ được xử lý ở component cha hoặc bởi overlay
-        className="absolute left-0 right-0 top-full bg-white shadow-2xl border-t z-[9999]"
+        className="absolute left-0 right-0 top-full bg-background-50 shadow-2xl border-t z-[9999]"
         style={{ display: collectionsOpen ? "block" : "none" }}
       >
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800">Our Collections</h3>
+            <h3 className="text-2xl font-bold text-text-900">Our Collections</h3>
             <a href="#" className="text-sm text-primary hover:underline font-semibold">
               View All Collections →
             </a>
@@ -99,7 +99,7 @@ export default function CollectionsDropdown({
               <a
                 key={collection.id}
                 href="#"
-                className="group flex items-center space-x-4 p-4 rounded-lg hover:bg-gray-50 transition-colors"
+                className="group flex items-center space-x-4 p-4 rounded-lg hover:bg-background-100 transition-colors"
               >
                 <img
                   src={collection.image}
@@ -107,7 +107,7 @@ export default function CollectionsDropdown({
                   className="w-20 h-15 object-cover rounded-lg group-hover:scale-105 transition-transform"
                 />
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-800 group-hover:text-primary transition-colors">
+                  <h4 className="font-semibold text-text-900 group-hover:text-primary transition-colors">
                     {collection.name}
                   </h4>
                   <p className="text-sm text-gray-500 mt-1">

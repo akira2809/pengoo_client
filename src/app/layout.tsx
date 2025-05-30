@@ -2,14 +2,19 @@
 import "./globals.css";
 import Header from "../components/layouts/Header/Header";
 import Footer from "../components/layouts/Footer/Footer"; // Đảm bảo đã import Footer
-import { Roboto, Roboto_Slab } from "next/font/google";
-
-const robotoSlab = Roboto_Slab({ subsets: ["latin"] });
+import { Roboto,  } from "next/font/google";
+// const robotoSlab = Roboto_Slab({ subsets: ["latin"] });
+import { Metadata } from "next";
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
   variable: "--font-roboto",
 });
+export const metadata: Metadata = {
+  title: "Pengoo",
+  description: "A Next.js application with a parallax effect",
+
+}
 
 export default function RootLayout({
   children,
@@ -18,17 +23,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* Body bây giờ là flex container nhờ globals.css */}
-      <body className={`${roboto.className} antialiased bg-secondary text-gray-900`}>
-        {/* Header của bạn */}
+      <body className={`${roboto.className} antialiased bg-background-100 text-gray-900`}>
         <Header />
-        
-        {/* Phần nội dung chính <main> sẽ giãn nở để đẩy Footer xuống */}
-        <main className="pt-16 flex-grow"> {/* Đảm bảo có class flex-grow */}
+        <main className="">
+         
           {children}
+  
         </main>
-
-        {/* Footer nằm ở cuối body */}
         <Footer />
       </body>
     </html>

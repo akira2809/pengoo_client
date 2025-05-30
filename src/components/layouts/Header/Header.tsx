@@ -13,9 +13,11 @@ export default function Header() {
 
   // Sample cart data (giữ nguyên hoặc di chuyển nếu muốn)
   const [cartItems] = useState([
-    { id: 1, name: "Premium T-Shirt", price: 29.99, quantity: 2, image: "https://via.placeholder.com/60x60" },
-    { id: 2, name: "Classic Jeans", price: 79.99, quantity: 1, image: "https://via.placeholder.com/60x60" },
-    { id: 3, name: "Summer Dress", price: 49.99, quantity: 1, image: "https://via.placeholder.com/60x60" }
+    { id: 1, name: "Premium T-Shirt", price: 29.99, quantity: 2, image: "https://www.maztermind.vn/cdn/shop/files/MM_BoxSet4_2-min.jpg?v=1722314360&width=600" },
+    { id: 2, name: "Classic Jeans", price: 79.99, quantity: 1, image: "https://www.maztermind.vn/cdn/shop/files/MM_BoxSet4_2-min.jpg?v=1722314360&width=600" },
+    { id: 3, name: "Summer Dress", price: 49.99, quantity: 1, image: "https://www.maztermind.vn/cdn/shop/files/MM_BoxSet4_2-min.jpg?v=1722314360&width=600" },
+    { id: 4, name: "Summer Dress", price: 49.99, quantity: 1, image: "https://www.maztermind.vn/cdn/shop/files/MM_BoxSet4_2-min.jpg?v=1722314360&width=600" },
+    { id: 5, name: "Summer Dress", price: 49.99, quantity: 1, image: "https://www.maztermind.vn/cdn/shop/files/MM_BoxSet4_2-min.jpg?v=1722314360&width=600" }
   ]);
 
   // Sample collections data (Xóa hoặc di chuyển vào MainNavbar)
