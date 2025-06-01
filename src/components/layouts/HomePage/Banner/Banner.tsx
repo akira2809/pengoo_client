@@ -4,7 +4,7 @@ import { gsap } from "gsap";
 import Image from "next/image";
 
 const images = [
-  "/Spacefest-Poker_HeroBanner_PC-min.png",
+  "/board-game-card-design_699907-1.webp",
   "/board-game-card-design_699907-1.webp",
   "/board-game-card-design_699907-1.webp",
   "/board-game-card-design_699907-1.webp",

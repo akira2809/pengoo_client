@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${roboto.className} antialiased bg-background-100 text-gray-900`}>
+      <body className={`${roboto.className} antialiased bg-background-50 text-gray-900`}>
         <Header />
         <main className="">
          

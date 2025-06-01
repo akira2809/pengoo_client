@@ -1,4 +1,5 @@
 // components/Header/common/NavLinks.tsx
+import Link from 'next/link';
 interface NavLinksProps {
   onLinkClick?: () => void;
   onCollectionsToggle?: () => void; // Dành cho Desktop
@@ -8,7 +9,7 @@ interface NavLinksProps {
 export default function NavLinks({ onLinkClick, onCollectionsToggle, isDesktop = false }: NavLinksProps) {
   return (
     <>
-      <a href="#" className="hover:underline" onClick={onLinkClick}>Products</a>
+      <Link href="/product" className="hover:underline" onClick={onLinkClick}>Products</Link>
       <div className="relative">
         <button
           className="hover:underline focus:outline-none"
@@ -18,9 +19,9 @@ export default function NavLinks({ onLinkClick, onCollectionsToggle, isDesktop =
           Collections
         </button>
       </div>
-      <a href="#" className="hover:underline" onClick={onLinkClick}>Giới thiệu</a>
+      <Link href="#" className="hover:underline" onClick={onLinkClick}>Giới thiệu</Link>
       {isDesktop && (
-        <a href="#" className="hover:underline" onClick={onLinkClick}>Liên hệ</a>
+        <Link href="#" className="hover:underline" onClick={onLinkClick}>Liên hệ</Link>
       )}
     </>
   );
