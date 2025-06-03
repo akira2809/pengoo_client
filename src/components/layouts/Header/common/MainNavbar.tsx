@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { IconButton } from "@mui/material";
+import UserIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import LanguageIcon from "@mui/icons-material/Language";
@@ -10,10 +11,13 @@ import MenuIcon from "@mui/icons-material/Menu";
 import NavLinks from './NavLinks';
 import Logo from './Logo';
 import CollectionsDropdown from './CollectionsDropdown';
+import { useRouter } from "next/navigation";
+
 
 interface MainNavbarProps {
   onMenuToggle: () => void;
   onCartToggle: () => void;
+  onSearchToggle: () => void;
   cartItemCount: number;
   menuOpen: boolean;
 }
@@ -21,9 +25,11 @@ interface MainNavbarProps {
 export default function MainNavbar({
   onMenuToggle,
   onCartToggle,
+  onSearchToggle,
   cartItemCount,
   menuOpen,
 }: MainNavbarProps) {
+  const router = useRouter();
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -156,8 +162,19 @@ export default function MainNavbar({
             <span>USD</span>
           </div>
 
-          <IconButton className="text-text-nav" aria-label="Search">
+          <IconButton
+            className="text-gray-700 hover:text-gray-900"
+            aria-label="Search"
+            onClick={onSearchToggle}
+          >
             <SearchIcon />
+          </IconButton>
+          <IconButton
+            className="text-gray-700 hover:text-gray-900"
+            aria-label="User"
+            onClick={() => router.push('/signin')}
+          >
+            <UserIcon />
           </IconButton>
           <IconButton
             className="!text-text-nav relative"

@@ -2,14 +2,15 @@
 "use client";
 import { useState } from "react";
 import MarqueeBanner from "./common/MarqueeBanner";
-import MainNavbar from "./common/MainNavbar"; // Import MainNavbar
+import MainNavbar from "./common/MainNavbar"; 
 import MobileMenu from "./common/MobileMenu";
 import CartSidebar from "./common/CartSidebar";
+import SearchSidebar from "./common/SearchSidebar";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  // const [collectionsOpen, setCollectionsOpen] = useState(false); // Xóa dòng này
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Sample cart data (giữ nguyên hoặc di chuyển nếu muốn)
   const [cartItems] = useState([
@@ -26,7 +27,7 @@ export default function Header() {
   // Handlers for toggling states
   const handleMenuToggle = () => setMenuOpen(!menuOpen);
   const handleCartToggle = () => setCartOpen(!cartOpen);
-  // const handleCollectionsToggle = () => setCollectionsOpen(!collectionsOpen); // Xóa dòng này
+  const handleSearchToggle = () => setSearchOpen(!searchOpen);
 
   return (
     <header className="w-full">
@@ -34,7 +35,7 @@ export default function Header() {
       <MainNavbar
         onMenuToggle={handleMenuToggle}
         onCartToggle={handleCartToggle}
-        // onCollectionsToggle={handleCollectionsToggle} // Xóa dòng này
+        onSearchToggle={handleSearchToggle}
         cartItemCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         menuOpen={menuOpen}
       />
@@ -47,6 +48,10 @@ export default function Header() {
         cartItems={cartItems}
         cartOpen={cartOpen}
         onClose={handleCartToggle}
+      />
+      <SearchSidebar
+        isOpen={searchOpen}
+        onClose={handleSearchToggle}
       />
     </header>
   );

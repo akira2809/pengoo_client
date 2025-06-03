@@ -3,7 +3,8 @@ import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import CloseIcon from "@mui/icons-material/Close";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
-
+import Image from "next/image";
+import { useRouter } from 'next/navigation';
 interface CartItem {
   id: number;
   name: string;
@@ -23,6 +24,7 @@ export default function CartSidebar({
   cartOpen,
   onClose,
 }: CartSidebarProps) {
+  const router = useRouter();
   const cartPopupRef = useRef<HTMLDivElement>(null);
   const cartItemsRef = useRef<HTMLDivElement>(null);
 
@@ -163,7 +165,10 @@ export default function CartSidebar({
               </span>
             </div>
             <div className="space-y-3">
-              <button className="w-full bg-background-100 text-text-900 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+              <button
+                onClick={() => router.push('/cart')}
+                className="w-full bg-background-100 text-text-900 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
                 View Cart
               </button>
               <button className="w-full bg-background-900 text-text-100 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors">
