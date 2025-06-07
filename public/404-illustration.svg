@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="200" cy="150" r="120" fill="#FEF3C7" />
+  
+  <!-- Magnifying glass -->
+  <circle cx="250" cy="100" r="50" stroke="#F59E0B" stroke-width="6" />
+  <line x1="270" y1="130" x2="320" y2="180" stroke="#F59E0B" stroke-width="6" stroke-linecap="round" />
+  
+  <!-- Face -->
+  <circle cx="150" cy="150" r="10" fill="#92400E" />
+  <path d="M110 200C110 171.5 150 160 150 160C150 160 190 171.5 190 200" stroke="#92400E" stroke-width="6" stroke-linecap="round" />
+  
+  <!-- Text -->
+  <text x="200" y="270" font-family="Arial" font-size="14" text-anchor="middle" fill="#6B7280">
+    Oops! Trang không tồn tại
+  </text>
+</svg>
