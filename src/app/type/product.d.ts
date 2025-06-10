@@ -14,19 +14,35 @@ export interface ProductFeature {
   isFirstBlock?: boolean;
 }
 
+// src/app/api/data/product.ts
 export interface ProductData {
   id: string;
-  slug: string;
-  name: string;
-  originalPrice: number;
-  discountedPrice: number; // Giá sau khi giảm giá
+  product_name: string;
   description: string;
-  features: string[];
-  warranty: string;
-  shippingInfo: string;
-  images: ProductImage[]; // Mảng các ảnh sản phẩm
-  // Thêm các trường bạn có thể cần cho lọc/sắp xếp, ví dụ:
-  category?: string; // Để lọc theo danh mục
-  isOutOfStock?: boolean; // Trạng thái hết hàng
-  discount?: string; // Dùng cho hiển thị text "20% OFF"
+  product_price: number;
+  discount: number;
+  slug: string;
+  meta_title: string;
+  meta_description: string;
+  image_url: string | string[];
+  quantity_sold: string;
+  categoryId: string;
+  publisherID: number;
+  status: number;
+  tags: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Export empty array since we're using API
+export const DUMMY_PRODUCTS: ProductData[] = [];
+
+export interface ProductFeature {
+  title: string;
+  description: string;
+  imageSrc: string;
+  imageAlt: string;
+  textBgColor: string;
+  isImageRight: boolean;
+  isFirstBlock?: boolean;
 }

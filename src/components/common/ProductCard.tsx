@@ -50,8 +50,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   }, []);
 
   // Lấy ảnh chính và ảnh hover (nếu có)
-  const mainImage = product.images[0]?.src || '/placeholder.jpg'; // Ảnh chính là ảnh đầu tiên
-  const hoverImage = product.images.length > 1 ? product.images[1]?.src : undefined; // Ảnh hover là ảnh thứ hai nếu có
+  const images = Array.isArray(product.image_url) ? product.image_url : [product.image_url];
+  const mainImage = images[0] || '/placeholder.jpg'; // Ảnh chính là ảnh đầu tiên
+  const hoverImage = images.length > 1 ? images[1] : undefined; // Ảnh hover là ảnh thứ hai nếu có
 
   return (
     <Link
@@ -74,7 +75,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="relative w-full h-[300px] sm:h-[380px] flex items-center justify-center overflow-hidden">
           <Image
             src={mainImage}
-            alt={`${product.name} - hình ảnh`}
+            alt={`${product.image_url} - hình ảnh`}
             fill
             className="object-contain z-0 transition-opacity duration-500 group-hover:opacity-0"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -83,7 +84,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {hoverImage && (
             <Image
               src={hoverImage}
-              alt={`${product.name} khi hover`}
+              alt={`${product.image_url} khi hover`}
               fill
               className="object-contain z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -101,19 +102,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             className="text-sm sm:text-base font-medium text-black"
             itemProp="name"
           >
-            {product.name}
+            {product.product_name}
           </h3>
           <div className="mt-1 flex items-center gap-3">
             <span className="text-red-600 font-bold" itemProp="price">
-              {formatPrice(product.discountedPrice)} {/* Sử dụng discountedPrice */}
+              {formatPrice(product.discount > 0 ? product.discount : product.product_price)}
             </span>
-            {product.originalPrice > product.discountedPrice && ( // Chỉ hiển thị nếu có giảm giá
-              <span
-                className="text-gray-400 line-through text-sm"
-                itemProp="priceCurrency"
-                content="VND"
-              >
-                {formatPrice(product.originalPrice)} {/* Sử dụng originalPrice */}
+            {product.discount > 0 && product.discount < product.product_price && (
+              <span className="text-gray-400 line-through text-sm">
+                {formatPrice(product.product_price)}
               </span>
             )}
           </div>

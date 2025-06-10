@@ -5,7 +5,7 @@ import PriceDisplay from './component/PriceDisplay';
 import QuantitySelector from './component/QuantitySelector';
 import Button from './component/Button';
 import InfoItem from './component/InfoItem';
-import FeatureAccordion from './component/FeatureAccordion';
+// import FeatureAccordion from './component/FeatureAccordion';
 
 interface ProductDetailsSectionProps {
   productName: string;
@@ -71,10 +71,10 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       
       {/* Features */}
       <div className="mb-6">
-        <FeatureAccordion 
+        {/* <FeatureAccordion 
           title="Tính năng sản phẩm"
           features={features} 
-        />
+        /> */}
       </div>
       
       {/* Quantity Selector */}

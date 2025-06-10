@@ -1,0 +1,111 @@
+// Base API configuration
+export const API_CONFIG = {
+  // Base URL for all API requests
+  BASE_URL: 'https://68463c427dbda7ee7aae7db8.mockapi.io',
+  
+  // API endpoints
+  ENDPOINTS: {
+    // Product endpoints
+    PRODUCTS: {
+      BASE: '/products',
+      FEATURED: '/products/featured',
+      BY_ID: (id: string) => `/products/${id}`,
+      BY_SLUG: (slug: string) => `/products/slug/${slug}`,
+      SEARCH: '/products/search',
+      CATEGORIES: '/products/categories',
+      BY_CATEGORY: (category: string) => `/products/category/${category}`
+    },
+    
+    // Order endpoints
+    ORDERS: {
+      BASE: '/orders',
+      BY_ID: (id: string) => `/orders/${id}`,
+      USER_ORDERS: '/orders/user'
+    },
+    
+    // User endpoints
+    USERS: {
+      BASE: '/users',
+      PROFILE: '/users/me',
+      ADDRESSES: '/users/addresses',
+      FAVORITES: '/users/favorites'
+    },
+    
+    // Auth endpoints
+    AUTH: {
+      LOGIN: '/auth/login',
+      REGISTER: '/auth/register',
+      REFRESH_TOKEN: '/auth/refresh-token',
+      LOGOUT: '/auth/logout',
+      FORGOT_PASSWORD: '/auth/forgot-password',
+      RESET_PASSWORD: '/auth/reset-password'
+    }
+  },
+  
+  // Default request configuration
+  DEFAULT_REQUEST_CONFIG: {
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    timeout: 10000, // 10 seconds
+    withCredentials: true // Enable sending/receiving cookies
+  },
+  
+  // Error messages
+  ERROR_MESSAGES: {
+    NETWORK_ERROR: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.',
+    SERVER_ERROR: 'Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.',
+    UNAUTHORIZED: 'Bạn cần đăng nhập để thực hiện thao tác này.',
+    FORBIDDEN: 'Bạn không có quyền truy cập tài nguyên này.',
+    NOT_FOUND: 'Không tìm thấy tài nguyên yêu cầu.',
+    VALIDATION_ERROR: 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.'
+  }
+} as const;
+
+// API response types
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  statusCode?: number;
+}
+
+// Pagination type
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Helper function to build query string
+export const buildQueryString = (params: Record<string, any>): string => {
+  const queryParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      if (Array.isArray(value)) {
+        value.forEach(item => queryParams.append(key, String(item)));
+      } else {
+        queryParams.append(key, String(value));
+      }
+    }
+  });
+  
+  const queryString = queryParams.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
+// Example usage:
+// const query = buildQueryString({ page: 1, limit: 10, sortBy: 'name' });
+// const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS.BASE}${query}`;
