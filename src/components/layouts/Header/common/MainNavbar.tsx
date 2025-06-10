@@ -124,7 +124,7 @@ export default function MainNavbar({
       
       <div 
         className={`
-          bg-background-300 text-text-800 px-4 py-4 flex justify-between items-center md:px-12
+          bg-background-300 text-text-50 px-4 py-4 flex justify-between items-center md:px-12
           transition-all duration-300 ease-in-out
           ${isScrolled 
             ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95' 
@@ -139,7 +139,7 @@ export default function MainNavbar({
             onClick={onMenuToggle}
             aria-label="Toggle menu"
           >
-            <MenuIcon />
+            <MenuIcon className="text-text-50"/>
           </button>
 
           {/* Desktop Left Menu */}
@@ -158,7 +158,7 @@ export default function MainNavbar({
         <div className="flex items-center space-x-2 md:space-x-4 text-sm z-10">
           {/* Language và USD chỉ hiển thị trên desktop */}
           <div className="hidden md:flex items-center space-x-1">
-            <LanguageIcon />
+            <LanguageIcon className="text-text-50"/>
             <span>USD</span>
           </div>
 
@@ -167,21 +167,21 @@ export default function MainNavbar({
             aria-label="Search"
             onClick={onSearchToggle}
           >
-            <SearchIcon />
+            <SearchIcon className="text-text-50"/>
           </IconButton>
           <IconButton
             className="text-gray-700 hover:text-gray-900"
             aria-label="User"
             onClick={() => router.push('/signin')}
           >
-            <UserIcon />
+            <UserIcon className="text-text-50"/>
           </IconButton>
           <IconButton
             className="!text-text-nav relative"
             aria-label="Shopping bag"
             onClick={onCartToggle}
           >
-            <ShoppingBagIcon />
+            <ShoppingBagIcon className="text-text-50"/>
             {cartItemCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {cartItemCount}

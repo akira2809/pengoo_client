@@ -24,7 +24,7 @@ const TEXT_FADE_END_SCROLL = SECTION_SCROLL_DISTANCE * 0.9; // Hiện hoàn toà
 // KHÔNG CÒN ReactLenis BAO QUANH NỮA
 export const SmoothScrollHero = () => {
   return (
-    <div className="bg-background-100"> {/* Thay đổi màu nền nếu cần, ví dụ bg-white hoặc bg-background-100 */}
+    <div className=""> {/* Thay đổi màu nền nếu cần, ví dụ bg-white hoặc bg-background-100 */}
       <Hero />
       {/* Đây là nơi bạn sẽ thêm các section nội dung khác của mình */}
       

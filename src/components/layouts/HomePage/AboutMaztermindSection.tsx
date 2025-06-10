@@ -2,7 +2,7 @@ import React from 'react';
 
 export const AboutMaztermindSection = () => {
   return (
-    <section className="bg-background-100 py-16 px-4 md:py-24">
+    <section className="py-16 px-4 md:py-24">
       <div className="max-w-3xl mx-auto text-center">
         <h2 className="text-4xl font-bold text-gray-800 mb-6">
           Về Pengoo
