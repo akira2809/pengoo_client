@@ -5,6 +5,8 @@ import PriceDisplay from './component/PriceDisplay';
 import QuantitySelector from './component/QuantitySelector';
 import Button from './component/Button';
 import InfoItem from './component/InfoItem';
+import { useCartStore } from '@/app/stores/slice/cartStore';
+import toast from 'react-hot-toast';
 // import FeatureAccordion from './component/FeatureAccordion';
 
 interface ProductDetailsSectionProps {
@@ -27,15 +29,47 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   shippingInfo,
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
+  const addItem = useCartStore(state => state.addItem);
 
   const handleAddToCart = () => {
-    console.log(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng.`);
-    alert(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng!`);
+    // Add item to cart with the specified quantity
+    for (let i = 0; i < quantity; i++) {
+      addItem({
+        id: Date.now(), // Using timestamp as a simple unique ID
+        name: productName,
+        price: discountedPrice || originalPrice,
+        image: '' // You might want to pass the product image URL as a prop
+      });
+    }
+    
+    toast.success(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng!`, {
+      duration: 3000,
+      position: 'top-center',
+      style: {
+        background: '#4CAF50',
+        color: '#fff',
+        padding: '12px 20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      }
+    });
   };
 
   const handleBuyNow = () => {
+    handleAddToCart();
+    // You might want to navigate to the cart page here
     console.log(`Mua ngay ${quantity} sản phẩm "${productName}".`);
-    alert(`Đang tiến hành mua ${quantity} sản phẩm "${productName}"!`);
+    toast.success(`Đang tiến hành mua ${quantity} sản phẩm "${productName}"!`, {
+      duration: 3000,
+      position: 'top-center',
+      style: {
+        background: '#4CAF50',
+        color: '#fff',
+        padding: '12px 20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      }
+    });
   };
 
   return (

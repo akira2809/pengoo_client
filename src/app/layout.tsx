@@ -5,6 +5,7 @@ import Footer from "../components/layouts/Footer/Footer"; // Đảm bảo đã i
 import { Roboto,  } from "next/font/google";
 // const robotoSlab = Roboto_Slab({ subsets: ["latin"] });
 import { Metadata } from "next";
+import { Toaster } from 'react-hot-toast';
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
@@ -25,8 +26,25 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${roboto.className} antialiased bg-background-50 text-gray-900`}>
         <Header />
-        <main className="">
-         
+        <main className="relative">
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: '#4CAF50',
+                color: '#fff',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+              },
+              success: {
+                iconTheme: {
+                  primary: '#fff',
+                  secondary: '#4CAF50',
+                },
+              },
+            }}
+          />
           {children}
   
         </main>

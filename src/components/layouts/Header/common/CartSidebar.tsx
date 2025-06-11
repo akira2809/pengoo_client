@@ -1,11 +1,13 @@
 // components/Header/CartSidebar.tsx
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import CloseIcon from "@mui/icons-material/Close";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
-interface CartItem {
+import { useCartStore } from "@/app/stores/slice/cartStore";
+
+export interface CartItem {
   id: number;
   name: string;
   price: number;
@@ -14,24 +16,32 @@ interface CartItem {
 }
 
 interface CartSidebarProps {
-  cartItems: CartItem[];
   cartOpen: boolean;
   onClose: () => void;
 }
 
-export default function CartSidebar({
-  cartItems,
+function CartSidebarContent({
   cartOpen,
-  onClose,
+  onClose
 }: CartSidebarProps) {
+  const { items: cartItems, removeItem, updateQuantity } = useCartStore();
   const router = useRouter();
   const cartPopupRef = useRef<HTMLDivElement>(null);
   const cartItemsRef = useRef<HTMLDivElement>(null);
 
   const totalAmount = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + Number(item.price) * item.quantity,
     0
   );
+
+  const handleRemoveItem = (id: number) => {
+    removeItem(id);
+  };
+
+  const handleQuantityChange = (id: number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    updateQuantity(id, newQuantity);
+  };
 
   // Animation logic (di chuyển từ Header.tsx)
   useEffect(() => {
@@ -79,12 +89,11 @@ export default function CartSidebar({
   }, [cartOpen]);
 
   return (
-    <>
-      <div
-        ref={cartPopupRef}
-        className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[999] flex flex-col"
-        style={{ display: cartOpen ? "flex" : "none" }}
-      >
+    <div
+      ref={cartPopupRef}
+      className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[999] flex flex-col"
+      style={{ display: cartOpen ? "flex" : "none" }}
+    >
         <div className="flex justify-between items-center p-4 border-b bg-background-300 text-text-950">
           <h3 className="text-lg font-semibold">Shopping Cart</h3>
           <button
@@ -104,7 +113,7 @@ export default function CartSidebar({
                 style={{ fontSize: "4rem" }}
               />
               <p className="text-lg">Your cart is empty</p>
-              <p className="text-sm mt-2">Add some products to get started!</p>
+              <p className="text-sm mt-2">Add some products to get started!</p>zz
             </div>
           ) : (
             <div ref={cartItemsRef} className="p-4 space-y-4 ">
@@ -113,11 +122,17 @@ export default function CartSidebar({
                   key={item.id}
                   className="flex items-center space-x-4 text-text-900  bg-background-50 p-4 rounded-lg hover:bg-sky-200 transition-colors"
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <ShoppingBagIcon className="text-gray-400" />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <h4 className="font-medium text-text-heading mb-1">
                       {item.name}
@@ -126,26 +141,44 @@ export default function CartSidebar({
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-text-900">Qty:</span>
                         <div className="flex items-center space-x-2 bg-white rounded px-2 py-1">
-                          <button className="text-text-heading hover:text-gray-600">
+                          <button 
+                            className="text-text-heading hover:text-gray-600 w-6 h-6 flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuantityChange(item.id, item.quantity - 1);
+                            }}
+                          >
                             -
                           </button>
-                          <span className="text-sm font-medium">
+                          <span className="text-sm font-medium w-6 text-center">
                             {item.quantity}
                           </span>
-                          <button className="text-text-heading hover:text-gray-600">
+                          <button 
+                            className="text-text-heading hover:text-gray-600 w-6 h-6 flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuantityChange(item.id, item.quantity + 1);
+                            }}
+                          >
                             +
                           </button>
                         </div>
                       </div>
                       <span className="font-semibold text-primary">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </span>
+                        ${(Number(item.price) * item.quantity).toFixed(2)}
+                      </span> 
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      ${item.price.toFixed(2)} each
+                      ${Number(item.price).toFixed(2)}
                     </div>
                   </div>
-                  <button className="text-gray-400 hover:text-red-500 p-1">
+                  <button 
+                    className="text-gray-400 hover:text-red-500 p-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveItem(item.id);
+                    }}
+                  >
                     <CloseIcon style={{ fontSize: "1rem" }} />
                   </button>
                 </div>
@@ -177,12 +210,30 @@ export default function CartSidebar({
             </div>
           </div>
         )}
-      </div>
+    </div>
+  );
+}
+
+export default function CartSidebar(props: CartSidebarProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Don't render anything on the server or during hydration
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <>
+      <CartSidebarContent {...props} />
       {/* Cart Overlay */}
-      {cartOpen && (
+      {props.cartOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-20 z-20"
-          onClick={onClose}
+          onClick={props.onClose}
         />
       )}
     </>
