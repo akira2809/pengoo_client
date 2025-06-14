@@ -12,7 +12,8 @@ import toast from 'react-hot-toast';
 interface ProductDetailsSectionProps {
   productName: string;
   originalPrice: number;
-  discountedPrice: number;
+  discountedPrice?: number;
+  discount?: number;
   description: string;
   features: string[];
   warranty: string;
@@ -94,6 +95,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         <PriceDisplay 
           originalPrice={originalPrice} 
           discountedPrice={discountedPrice}
+          discount={0} // Pass the discount amount here if available
         />
       </div>
       

@@ -105,5 +105,20 @@ export interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
+// Search related types
+export interface SearchState {
+  searchQuery: string;
+  searchResults: Product[];
+  isLoading: boolean;
+  error: string | null;
+  recentSearches: string[];
+  setSearchQuery: (query: string) => void;
+  searchProducts: (query: string) => Promise<void>;
+  clearSearch: () => void;
+  addToRecentSearches: (query: string) => void;
+  removeRecentSearch: (index: number) => void;
+  clearRecentSearches: () => void;
+}
+
 // Combined store state
-export type RootState = ProductState & CartState & AuthState;
+export type RootState = ProductState & CartState & AuthState & SearchState;

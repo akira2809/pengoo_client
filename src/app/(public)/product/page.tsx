@@ -1,8 +1,8 @@
-// src/app/(public)/product/page.tsx
 "use client"
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ProductPageLayout } from '@/app/(public)/product/component/ProductPageLayout';
 import { useStore } from '@/app/stores/store';
+import { productService } from '@/app/api/services/productService';
 
 export default function ProductsPage() {
   const { 
@@ -12,17 +12,38 @@ export default function ProductsPage() {
     fetchProducts 
   } = useStore();
 
+  const [filters, setFilters] = useState({
+    name: '',
+    category: '',
+    tags: '',
+    minPrice: 0,
+    maxPrice: 5000000
+  });
+
+  const [categories, setCategories] = useState([]);
+
+  // 🛠️ CHỈ fetch product MỘT LẦN
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        await fetchProducts();
+        await fetchProducts(); // 👈 không truyền filters
       } catch (err) {
         console.error('Failed to fetch products:', err);
       }
     };
 
+    const loadCategories = async () => {
+      try {
+        const response = await productService.getCategories();
+        setCategories(response.data);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+
     loadProducts();
-  }, [fetchProducts]);
+    loadCategories();
+  }, []); // 👈 KHÔNG phụ thuộc filters nữa
 
   if (isLoading) {
     return (
@@ -54,14 +75,21 @@ export default function ProductsPage() {
     );
   }
 
-  // Format products to match ProductData type
   const formattedProducts = products.map(product => ({
     ...product,
     id: typeof product.id === 'string' ? Number(product.id) : product.id,
     category_ID: typeof product.category_ID === 'string' ? Number(product.category_ID) : product.category_ID,
     publisher_ID: typeof product.publisher_ID === 'string' ? Number(product.publisher_ID) : product.publisher_ID,
-    status: String(product.status || ''), // Ensure status is a string
+    status: String(product.status || ''),
   }));
 
-  return <ProductPageLayout products={formattedProducts} isLoading={isLoading} error={error} />;
+  return (
+    <ProductPageLayout 
+      products={formattedProducts} 
+      isLoading={isLoading} 
+      error={error} 
+      setFilters={setFilters} 
+      categories={categories} 
+    />
+  );
 }

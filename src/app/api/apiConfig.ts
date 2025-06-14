@@ -11,8 +11,8 @@ export const API_CONFIG = {
       FEATURED: '/products/featured',
       BY_ID: (id: string) => `/products/${id}`,
       BY_SLUG: (slug: string) => `/products/slug/${slug}`,
-      SEARCH: '/products/search',
-      CATEGORIES: '/products/categories',
+      SEARCH: '/products?name=',
+      CATEGORIES: '/categories',
       BY_CATEGORY: (category: string) => `/products/category/${category}`
     },
     

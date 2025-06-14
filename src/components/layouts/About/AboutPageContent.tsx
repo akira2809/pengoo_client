@@ -7,7 +7,7 @@ import AboutSection from "@/components/layouts/About/section/AboutSectionLeft";
 import AboutTabs from "@/components/layouts/About/section/AboutTabs"; // Import component tab mới
 import AboutSectionRight from "@/components/layouts/About/section/AboutSectionRight";
 import CoreValuesSection from "@/components/layouts/About/section/CoreValuesSection";
-import  Layout  from "@/components/UI/85%";
+import  Layout  from "@/components/common/UI/85%";
 import TimelineSection from "@/components/layouts/About/section/TimelineSection";
 import ShuffleHero from "@/components/layouts/About/section/ShuffleHero";
 

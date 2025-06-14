@@ -1,26 +1,19 @@
-// src/components/common/ProductCard.tsx
-"use client";
-
 import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+// import { gsap } from 'gsap'; // Remove gsap import
+// import { ScrollTrigger } from 'gsap/ScrollTrigger'; // Remove ScrollTrigger import
 
-gsap.registerPlugin(ScrollTrigger);
+// gsap.registerPlugin(ScrollTrigger); // Remove gsap plugin registration
 
-// Import kiểu ProductData từ file types đã cập nhật
 import { ProductData } from '@/app/type/product';
 
 interface ProductCardProps {
-  product: ProductData; // Sử dụng ProductData mới
+  product: ProductData;
 }
 
-// Hàm format giá tiền Việt Nam
 const formatPrice = (price: number | string) => {
-  // Chuyển đổi giá trị đầu vào thành số
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  // Định dạng theo tiền tệ Việt Nam
   return numPrice.toLocaleString('vi-VN', { 
     style: 'currency', 
     currency: 'VND',
@@ -29,56 +22,38 @@ const formatPrice = (price: number | string) => {
 };
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const cardRef = useRef(null);
-  
-  // Main image from image_url with fallback
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cardRef.current) {
+      cardRef.current.style.opacity = '0';
+      cardRef.current.style.transform = 'translateY(50px)';
+      setTimeout(() => {
+        if (cardRef.current) {
+          cardRef.current.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+          cardRef.current.style.opacity = '1';
+          cardRef.current.style.transform = 'translateY(0)';
+        }
+      }, 100);
+    }
+  }, []);
+
   const mainImage = product.image_url || '/placeholder.jpg';
-  
-  // Get hover image - check if images array exists and has items
   let hoverImage: string | undefined;
-  
+
   if (Array.isArray(product.images) && product.images.length > 0) {
-    // Find the first image that has a URL and is different from the main image
     const otherImage = product.images.find(img => 
       img?.url && 
       typeof img.url === 'string' && 
       img.url.trim() !== '' && 
       img.url !== mainImage
     );
-    
     hoverImage = otherImage?.url;
   }
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        cardRef.current,
-        {
-          autoAlpha: 0,
-          y: 50,
-        },
-        {
-          autoAlpha: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: cardRef.current,
-            start: "top 90%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-    }, cardRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // Main image from image_url, hover image from first item in images array
-
   return (
     <Link
-      href={`/product/${product.slug}`} // Sử dụng slug để link
+      href={`/product/${product.slug}`}
       className="block group"
       passHref
     >

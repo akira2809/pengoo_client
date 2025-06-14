@@ -1,7 +1,7 @@
 // src/components/layouts/ProductPageLayout.tsx
 "use client";
 
-import React, { useState, Fragment, useMemo } from 'react';
+import React, { useState, Fragment, useMemo, Dispatch, SetStateAction, useEffect } from 'react';
 import { ProductData } from '@/app/type/product';
 import { ProductCard } from '@/components/common/ProductCard';
 import { FilterDropdown } from '@/components/common/FilterDropdown';
@@ -14,7 +14,25 @@ interface ProductPageLayoutProps {
   products: ProductData[];
   isLoading?: boolean;
   error?: string | null;
+  setFilters: Dispatch<SetStateAction<{
+    name: string;
+    category: string;
+    tags: string;
+    minPrice: number;
+    maxPrice: number;
+  }>>;
+  categories: Array<{ id: string; name: string; slug: string; productCount: number; }>;
 }
+
+type PriceRange = {
+  min: number;
+  max: number;
+};
+
+type DisplayRange = {
+  min: string;
+  max: string;
+};
 
 const sortOptions = [
   { id: 1, name: 'Thứ tự mặc định', value: 'default' },
@@ -24,44 +42,164 @@ const sortOptions = [
   { id: 5, name: 'Giá: Cao đến Thấp', value: 'price_desc' },
 ];
 
-export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, isLoading, error }) => {
+export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, isLoading, error, setFilters, categories }) => {
   const [sortSelected, setSortSelected] = useState(sortOptions[0]);
+  const [sortedProducts, setSortedProducts] = useState(products);
   const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 5000000 });
+  const [priceRange, setPriceRange] = useState<PriceRange>({ min: 0, max: 5000000 });
+  const [displayRange, setDisplayRange] = useState<DisplayRange>({ min: '', max: '' });
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  
 
-  // Extract unique categories from products
-  const productCategories = useMemo(() => {
-    const categories = new Map<number, { id: number; name: string }>();
-    
-    products.forEach(product => {
-      if (product.category_ID) {
-        const category = typeof product.category_ID === 'object' 
-          ? product.category_ID 
-          : { id: product.category_ID, name: `Category ${product.category_ID}` };
-        categories.set(category.id, category);
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const categoryId = e.target.value;
+  
+    // Cập nhật filters.category (giữ nguyên)
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      category: prevFilters.category === categoryId ? '' : categoryId
+    }));
+  
+    // Đồng thởi cập nhật luôn selectedCategories
+    setSelectedCategories(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId);
+      } else {
+        return [...prev, categoryId];
       }
     });
+  };
+
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => {
+    const value = e.target.value;
     
-    return Array.from(categories.values()).map(cat => ({
-      id: cat.id,
-      name: cat.name,
-      value: String(cat.id)
+    // Update display value
+    setDisplayRange(prev => ({
+      ...prev,
+      [type]: value
     }));
-  }, [products]);
+    
+    // If input is empty, set to 0
+    if (value === '') {
+      const newPriceRange = {
+        ...priceRange,
+        [type]: 0
+      };
+      setPriceRange(newPriceRange);
+      setFilters(prev => ({
+        ...prev,
+        minPrice: newPriceRange.min,
+        maxPrice: newPriceRange.max
+      }));
+      return;
+    }
+    
+    const numValue = Number(value);
+    if (isNaN(numValue) || numValue < 0) return;
+    
+    // Update price range
+    const newPriceRange = {
+      ...priceRange,
+      [type]: numValue
+    };
+    
+    // Ensure min is not greater than max and vice versa
+    if (type === 'min' && numValue > priceRange.max) {
+      newPriceRange.max = numValue;
+      setDisplayRange(prev => ({ ...prev, max: numValue.toString() }));
+    } else if (type === 'max' && numValue < priceRange.min) {
+      newPriceRange.min = numValue;
+      setDisplayRange(prev => ({ ...prev, min: numValue.toString() }));
+    }
+    
+    setPriceRange(newPriceRange);
+    
+    // Update parent filters
+    setFilters(prev => ({
+      ...prev,
+      minPrice: newPriceRange.min,
+      maxPrice: newPriceRange.max
+    }));
+  };
+  
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>, type: 'min' | 'max') => {
+    // Select all text on focus for better UX
+    e.target.select();
+    // Clear the input if it's 0
+    if (priceRange[type] === 0) {
+      setDisplayRange(prev => ({
+        ...prev,
+        [type]: ''
+      }));
+    }
+  };
+  
+  const handleBlur = (type: 'min' | 'max') => {
+    // Reset display value to actual value if empty
+    if (displayRange[type] === '') {
+      setDisplayRange(prev => ({
+        ...prev,
+        [type]: priceRange[type].toString()
+      }));
+    } else {
+      // Ensure the value is a valid number
+      const numValue = Number(displayRange[type]);
+      if (!isNaN(numValue) && numValue >= 0) {
+        setDisplayRange(prev => ({
+          ...prev,
+          [type]: numValue.toString()
+        }));
+      }
+    }
+  };
+
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const tags = e.target.value;
+    setFilters(prevFilters => ({ ...prevFilters, tags }));
+  };
+
+  const formatPrice = (price: number | string) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return numPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }).replace('₫', 'đ');
+  };
+
+  useEffect(() => {
+    const sorted = [...products];
+    switch (sortSelected.value) {
+      case 'az':
+        sorted.sort((a, b) => a.product_name.localeCompare(b.product_name));
+        break;
+      case 'za':
+        sorted.sort((a, b) => b.product_name.localeCompare(a.product_name));
+        break;
+      case 'price_asc':
+        sorted.sort((a, b) => a.product_price - b.product_price);
+        break;
+      case 'price_desc':
+        sorted.sort((a, b) => b.product_price - a.product_price);
+        break;
+      default:
+        break;
+    }
+    setSortedProducts(sorted);
+  }, [sortSelected, products]);
 
   const filteredAndSortedProducts = useMemo(() => {
-    console.log('Original products count:', products.length);
-    console.log('First few products:', products.slice(0, 3).map(p => ({
+    console.log('Original products count:', sortedProducts.length);
+    console.log('First few products:', sortedProducts.slice(0, 3).map(p => ({
       id: p.id,
       name: p.product_name,
       price: p.product_price,
       category: p.category_ID,
       stock: p.quantity_stock
     })));
-    
-    let currentProducts = [...products];
+
+    let currentProducts = [...sortedProducts];
 
     // Filter by category
     if (selectedCategories.length > 0) {
@@ -79,58 +217,20 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
     if (!showOutOfStock) {
       const beforeCount = currentProducts.length;
       currentProducts = currentProducts.filter(product => {
-        const stock = product.quantity_stock ?? 0;
+        const stock = product.quantity_stock ?? 1; // Assume in stock if undefined
         return stock > 0;
       });
       console.log(`After out-of-stock filter: ${beforeCount} -> ${currentProducts.length}`);
     }
 
     // Filter by price range
-    const beforeCount = currentProducts.length;
     currentProducts = currentProducts.filter(product => {
       const price = Number(product.product_price) || 0;
-      const inRange = price >= priceRange.min && price <= priceRange.max;
-      if (!inRange) {
-        console.log(`Product ${product.id} (${product.product_name}) price ${price} is outside range ${priceRange.min}-${priceRange.max}`);
-      }
-      return inRange;
+      return price >= priceRange.min && price <= priceRange.max;
     });
-    console.log(`After price range filter (${priceRange.min} - ${priceRange.max}): ${beforeCount} -> ${currentProducts.length}`);
-
-    // Sort products
-    currentProducts.sort((a, b) => {
-      const priceA = Number(a.product_price) || 0;
-      const priceB = Number(b.product_price) || 0;
-      
-      if (sortSelected.value === 'az') {
-        return a.product_name.localeCompare(b.product_name);
-      }
-      if (sortSelected.value === 'za') {
-        return b.product_name.localeCompare(a.product_name);
-      }
-      if (sortSelected.value === 'price_asc') {
-        return priceA - priceB;
-      }
-      if (sortSelected.value === 'price_desc') {
-        return priceB - priceA;
-      }
-      return 0;
-    });
-
+    
     return currentProducts;
-  }, [products, sortSelected, showOutOfStock, selectedCategories, priceRange]);
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = e.target;
-    setSelectedCategories(prev =>
-      checked ? [...prev, value] : prev.filter(cat => cat !== value)
-    );
-  };
-
-  const formatPrice = (price: number | string) => {
-    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-    return numPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }).replace('₫', 'đ');
-  };
+  }, [sortedProducts, showOutOfStock, selectedCategories, priceRange]);
 
   if (isLoading) {
     return (
@@ -171,17 +271,17 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
 
           <FilterDropdown title="Sản phẩm">
             <div className="space-y-2">
-              {productCategories.map(category => (
+              {categories.map(category => (
                 <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    value={category.value}
-                    checked={selectedCategories.includes(category.value)}
-                    onChange={handleCategoryChange}
-                    className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"
-                  />
-                  <span className="ml-2 text-base">{category.name}</span>
-                </label>
+                <input
+                  type="checkbox"
+                  value={category.id}
+                  checked={selectedCategories.includes(category.id)}
+                  onChange={handleCategoryChange}
+                  className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"
+                />
+                <span className="ml-2 text-base">{category.name}</span>
+              </label>
               ))}
             </div>
           </FilterDropdown>
@@ -192,18 +292,24 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
               <div className="flex justify-between items-center mt-2 text-sm">
                 <input
                   type="number"
-                  placeholder="Min"
-                  value={priceRange.min}
-                  onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
-                  className="w-5/12 p-2 border border-gray-300 rounded-md"
+                  placeholder="Từ"
+                  min="0"
+                  value={displayRange.min || priceRange.min}
+                  onChange={(e) => handlePriceChange(e, 'min')}
+                  onFocus={(e) => handleFocus(e, 'min')}
+                  onBlur={() => handleBlur('min')}
+                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
                 />
-                <span>-</span>
+                <span className="mx-1">-</span>
                 <input
                   type="number"
-                  placeholder="Max"
-                  value={priceRange.max}
-                  onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
-                  className="w-5/12 p-2 border border-gray-300 rounded-md"
+                  placeholder="Đến"
+                  min={priceRange.min}
+                  value={displayRange.max || priceRange.max}
+                  onChange={(e) => handlePriceChange(e, 'max')}
+                  onFocus={(e) => handleFocus(e, 'max')}
+                  onBlur={() => handleBlur('max')}
+                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
 
@@ -211,7 +317,10 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
                 <span className="text-sm">Hiển thị hết hàng</span>
                 <Switch
                   checked={showOutOfStock}
-                  onChange={setShowOutOfStock}
+                  onChange={(e) => {
+                    e.preventDefault();
+                    setShowOutOfStock(e.target.checked);
+                  }}
                   className={`${
                     showOutOfStock ? 'bg-amber-800' : 'bg-gray-300'
                   } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2`}
@@ -231,7 +340,9 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
         <main className="w-full lg:w-3/4">
           <div className="flex justify-end items-center mb-6">
             {/* Dropdown sắp xếp - Vẫn giữ nguyên */}
-            <Listbox value={sortSelected} onChange={setSortSelected}>
+            <Listbox value={sortSelected} onChange={(value) => {
+              setSortSelected(value);
+            }}>
               {({ open }) => (
                 <div className="relative w-full sm:w-auto min-w-[200px]">
                   <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500 sm:text-sm">
@@ -321,7 +432,8 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
                 <div className="col-span-full text-center space-y-4 py-12">
                   <p className="text-xl text-gray-600">Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại.</p>
                   <button 
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       setSelectedCategories([]);
                       setPriceRange({ min: 0, max: 5000000 });
                       setShowOutOfStock(true);
@@ -349,7 +461,10 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
       {/* Nút "Filter" Sticky chỉ hiển thị trên mobile */}
       <button
         className="fixed bottom-4 right-4 lg:hidden flex items-center px-5 py-3 bg-amber-800 text-white rounded-full shadow-lg hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 z-40 text-lg"
-        onClick={() => setIsMobileFilterOpen(true)}
+        onClick={(e) => {
+          e.preventDefault();
+          setIsMobileFilterOpen(true);
+        }}
       >
         <IoFilter className="mr-2 text-xl" /> Lọc
       </button>
@@ -357,12 +472,17 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
       {/* Mobile Filter Modal */}
       <MobileFilterModal 
         isOpen={isMobileFilterOpen} 
-        onClose={() => setIsMobileFilterOpen(false)}
+        onClose={(e) => {
+          e.preventDefault();
+          setIsMobileFilterOpen(false);
+        }}
       >
         <div className="p-4">
           <div className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Sắp xếp</h3>
-            <Listbox value={sortSelected} onChange={setSortSelected}>
+            <Listbox value={sortSelected} onChange={(value) => {
+              setSortSelected(value);
+            }}>
               {({ open }) => (
                 <div className="relative w-full min-w-[200px]">
                   <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500 sm:text-sm">
@@ -417,12 +537,12 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
             <h3 className="text-xl font-bold text-gray-800 mb-4">Danh mục</h3>
             <FilterDropdown title="Sản phẩm" initialOpen={true}>
               <div className="space-y-2">
-                {productCategories.map(category => (
+                {categories.map(category => (
                   <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
                     <input
                       type="checkbox"
-                      value={category.value}
-                      checked={selectedCategories.includes(category.value)}
+                      value={category.id}
+                      checked={selectedCategories.includes(category.id)}
                       onChange={handleCategoryChange}
                       className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"
                     />
@@ -443,7 +563,7 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
                     type="number"
                     placeholder="Min"
                     value={priceRange.min}
-                    onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
+                    onChange={handlePriceChange}
                     className="w-5/12 p-2 border border-gray-300 rounded-md"
                   />
                   <span>-</span>
@@ -451,7 +571,10 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
                     type="number"
                     placeholder="Max"
                     value={priceRange.max}
-                    onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      setFilters(prevFilters => ({ ...prevFilters, minPrice: priceRange.min, maxPrice: Number(e.target.value) }));
+                    }}
                     className="w-5/12 p-2 border border-gray-300 rounded-md"
                   />
                 </div>
@@ -460,7 +583,10 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
                   <span className="text-sm">Hiển thị hết hàng</span>
                   <Switch
                     checked={showOutOfStock}
-                    onChange={setShowOutOfStock}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      setShowOutOfStock(e.target.checked);
+                    }}
                     className={`${
                       showOutOfStock ? 'bg-amber-800' : 'bg-gray-300'
                     } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2`}
