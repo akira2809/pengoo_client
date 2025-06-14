@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ProductData, ProductFeature } from '@/app/type/product';
 import { productService } from '@/app/api/services/productService';
-// import ProductImageGallery from '@/components/layouts/ProductDetail/ProductImageGallery'; ẩn do testtest
+import ProductImageGallery from '@/components/layouts/ProductDetail/ProductImageGallery';
 import ProductDetailsSection from '@/components/layouts/ProductDetail/ProductDetailsSection';
 import ProductBanner from '@/components/layouts/ProductDetail/component/ProductBanner';
 import ProductTabs from '@/components/layouts/ProductDetail/component/ProductTabs';
@@ -15,35 +15,31 @@ import { Skeleton } from '@/components/common/UI/Skeleton';
 import { mockFeatureSections, mockMainIntro } from '@/app/api/data/mockProducts';
 interface ProductPageProps {
   product: ProductData;
-  mainIntro: {
+  mainIntro?: {
     title: string;
     description: string;
   };
-  featureSections: ProductFeature[];
 }
 
 const ProductDetailPage: React.FC<ProductPageProps> = ({
   product,
-  mainIntro,
-  featureSections
+  mainIntro = { title: 'Đặc điểm nổi bật', description: 'Khám phá những điểm đặc biệt của sản phẩm' }
 }) => {
   return (
     <div className="container mx-auto px-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row">
         <div className="w-full md:w-1/2 md:pr-8">
-          {/* <ProductImageGallery 
-            images={product.image_url}     // ẩn do test 
-            alt={product.product_name} 
-          /> */}
+          <ProductImageGallery product={product} />
         </div>
         <div className="w-full md:w-1/2 md:pl-8">
           <ProductDetailsSection 
-            productName={product.product_name} 
-            originalPrice={product.product_price}
-            discountedPrice={product.discount}
-            description={product.description}
-            warranty={product.warranty}
-            shippingInfo={product.shipping_info}
+            productName={product.product_name || 'Sản phẩm không có tên'}
+            originalPrice={product.product_price || 0}
+            discountedPrice={product.discount || 0}
+            description={product.description || ''}
+            features={product.features?.map(f => f.title) || []}
+            warranty={product.warranty || 'Không có thông tin bảo hành'}
+            shippingInfo={product.shipping_info || 'Vận chuyển toàn quốc'}
             isLoading={false} 
           />
         </div>
@@ -53,8 +49,19 @@ const ProductDetailPage: React.FC<ProductPageProps> = ({
       <ProductTabs />
       
       <GameOfDrunksFeatureSection
-        mainIntro={mainIntro}
-        sections={featureSections}
+        mainIntro={{
+          title: mainIntro?.title || 'Đặc điểm nổi bật',
+          description: mainIntro?.description || 'Khám phá những điểm đặc biệt của sản phẩm'
+        }}
+        sections={product.features?.map((feature, index) => ({
+          title: feature.title || `Tính năng ${index + 1}`,
+          description: feature.content || '',
+          imageSrc: feature.image || '/placeholder-feature.jpg',
+          imageAlt: feature.title || `Feature ${index + 1}`,
+          textBgColor: index % 2 === 0 ? 'bg-gray-50' : 'bg-white',
+          isImageRight: index % 2 !== 0,
+          isFirstBlock: index === 0
+        })) || []}
       />
       
       <BlogSection />

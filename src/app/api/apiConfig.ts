@@ -1,7 +1,7 @@
 // Base API configuration
 export const API_CONFIG = {
   // Base URL for all API requests
-  BASE_URL: 'https://68463c427dbda7ee7aae7db8.mockapi.io',
+  BASE_URL: 'http://localhost:3000',
   
   // API endpoints
   ENDPOINTS: {

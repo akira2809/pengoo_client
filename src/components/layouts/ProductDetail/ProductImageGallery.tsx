@@ -1,56 +1,85 @@
 "use client";
 
 // components/ProductImageGallery.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-
-interface ProductImage {
-  src: string;
-  alt: string;
-}
+import { ProductData } from '@/app/type/product';
 
 interface ProductImageGalleryProps {
-  images: ProductImage[];
+  product: ProductData;
 }
 
-const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images }) => {
-  const [mainImage, setMainImage] = useState<ProductImage | undefined>(images[0]);
+interface ImageItem {
+  url: string;
+  alt?: string;
+}
 
-  const handleThumbnailClick = (image: ProductImage) => {
-    setMainImage(image);
+const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) => {
+  const [mainImage, setMainImage] = useState<string>(product.image_url || '');
+  const [thumbnails, setThumbnails] = useState<ImageItem[]>([]);
+
+  useEffect(() => {
+    // Set main image from product.image_url
+    if (product.image_url) {
+      setMainImage(product.image_url);
+    }
+
+    // Process additional images from product.images
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      const processedImages = product.images
+        .filter(img => img?.url && img.url !== product.image_url)
+        .map(img => ({
+          url: img.url,
+          alt: product.product_name || 'Product image'
+        }));
+      
+      setThumbnails(processedImages);
+    }
+  }, [product]);
+
+  const handleThumbnailClick = (imageUrl: string) => {
+    setMainImage(imageUrl);
   };
+
+  // Combine main image with additional thumbnails for display
+  const allImages = [
+    { url: product.image_url, alt: product.product_name },
+    ...thumbnails
+  ].filter(img => img.url);
 
   return (
     <div className="flex flex-col-reverse md:flex-row gap-4 w-full">
       {/* Thumbnails */}
-      <div className="flex md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 md:pr-3">
-        {images.map((image, index) => (
-          <button
-            key={index}
-            className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 relative rounded overflow-hidden transition-all ${
-              mainImage?.src === image.src 
-                ? 'ring-2 ring-[#4B3C2D] ring-offset-1' 
-                : 'hover:ring-1 hover:ring-gray-300'
-            }`}
-            onClick={() => handleThumbnailClick(image)}
-          >
-            <Image 
-              src={image.src} 
-              alt={image.alt} 
-              fill
-              sizes="80px"
-              className="object-cover"
-            />
-          </button>
-        ))}
-      </div>
+      {allImages.length > 1 && (
+        <div className="flex md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 md:pr-3">
+          {allImages.map((image, index) => (
+            <button
+              key={index}
+              className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 relative rounded overflow-hidden transition-all ${
+                mainImage === image.url 
+                  ? 'ring-2 ring-[#4B3C2D] ring-offset-1' 
+                  : 'hover:ring-1 hover:ring-gray-300'
+              }`}
+              onClick={() => handleThumbnailClick(image.url)}
+            >
+              <Image 
+                src={image.url} 
+                alt={image.alt || `Product image ${index + 1}`} 
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Main Image */}
       <div className="relative w-full aspect-square bg-gray-50 rounded-lg overflow-hidden">
         {mainImage && (
           <Image 
-            src={mainImage.src} 
-            alt={mainImage.alt} 
+            src={mainImage} 
+            alt={product.product_name || 'Product main image'} 
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-contain p-4"

@@ -30,7 +30,7 @@ function HomePage() {
         // Fetch featured products (you might want to add a specific endpoint for featured products)
         const response = await productService.getProducts();
         if (response?.data) {
-          setFeaturedProducts(response.data.slice(0, 4)); // Get first 4 products as featured
+          setFeaturedProducts(response.data.slice(0, 20)); // Get first 4 products as featured
         }
       } catch (err) {
         console.error('Error fetching featured products:', err);
@@ -55,7 +55,7 @@ function HomePage() {
           
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {[...Array(4)].map((_, index) => (
+              {[...Array(200)].map((_, index) => (
                 <div key={index} className="flex flex-col space-y-3">
                   <Skeleton className="h-64 w-full rounded-lg" />
                   <Skeleton className="h-4 w-3/4" />

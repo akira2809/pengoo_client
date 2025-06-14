@@ -17,6 +17,7 @@ interface ProductDetailsSectionProps {
   features: string[];
   warranty: string;
   shippingInfo: string;
+  isLoading?: boolean;
 }
 
 const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
@@ -38,7 +39,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         id: Date.now(), // Using timestamp as a simple unique ID
         name: productName,
         price: discountedPrice || originalPrice,
-        image: '' // You might want to pass the product image URL as a prop
+        image_url: '' // You might want to pass the product image URL as a prop
       });
     }
     

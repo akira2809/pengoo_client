@@ -2,31 +2,53 @@
 
 // Product related types
 export interface Product {
+  // Core product info
   id: string;
   product_name: string;
   name: string;
   description: string;
-  product_price: string;
-  discountedPrice?: string;
-  originalPrice?: string;
-  discount?: string;
+  product_price: number;
   slug: string;
-  meta_title?: string;
-  meta_description?: string;
+  status: number; // 0: Unavailable, 1: Available
+  
+  // Pricing
+  discount: number;
+  
+  // Media
   image_url: string;
-  images?: Array<{ src: string; alt: string }>;
-  quantity_sold?: string | number;
-  categoryId?: string;
-  publisherID?: number;
-  status?: number;
-  tags?: string[];
-  features?: string[];
+  images: Array<{ 
+    id: number;
+    url: string;
+  }>;
+  
+  // Features
+  features: Array<{
+    id: number;
+    title: string;
+    content: string;
+    image: string;
+  }>;
+  
+  // Inventory & Sales
+  quantity_sold: number;
+  
+  // Relationships
+  category_ID: string | number;
+  publisher_ID: number;
+  
+  // Metadata
+  meta_title: string;
+  meta_description: string;
+  tags: string[];
+  
+  // Timestamps
+  created_at: string;
+  updated_at: string;
+  
+  // Optional fields
   warranty?: string;
-  shippingInfo?: string;
-  isOutOfStock?: boolean;
-  category?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  shipping_info?: string;
+  quantity_stock?: number;
 }
 
 export interface ProductState {

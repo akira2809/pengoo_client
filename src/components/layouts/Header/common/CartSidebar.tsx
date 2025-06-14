@@ -12,7 +12,7 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  image: string;
+  image_url: string;
 }
 
 interface CartSidebarProps {
@@ -122,10 +122,11 @@ function CartSidebarContent({
                   key={item.id}
                   className="flex items-center space-x-4 text-text-900  bg-background-50 p-4 rounded-lg hover:bg-sky-200 transition-colors"
                 >
-                  {item.image ? (
-                    <img
-                      src={item.image}
+                  {item.image_url? (
+                    <Image
+                      src={item.image_url}
                       alt={item.name}
+                      fill
                       className="w-16 h-16 object-cover rounded-lg"
                     />
                   ) : (

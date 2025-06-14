@@ -24,14 +24,14 @@ export const productService = {
   // Get a single product by slug
   async getProductBySlug(slug: string) {
     try {
-      // First try to get all products and filter by slug
-      const response = await apiClient.get<ProductData[]>(`${API_CONFIG.ENDPOINTS.PRODUCTS.BASE}?slug=${slug}`);
+      // First try to get the product using the exact slug match
+      const response = await apiClient.get<ProductData[]>(`${API_CONFIG.ENDPOINTS.PRODUCTS.BASE}?slug=${encodeURIComponent(slug)}`);
       
-      if (response?.data && response.data.length > 0) {
+      if (response?.data && response.data.length > 0 && response.data[0].slug === slug) {
         return { data: response.data[0] };
       }
       
-      // Fallback: If direct slug query doesn't work, fetch all and filter
+      // Fallback: If direct slug query doesn't work, fetch all and filter with exact match
       const allProducts = await apiClient.get<ProductData[]>(API_CONFIG.ENDPOINTS.PRODUCTS.BASE);
       
       if (allProducts?.data) {
@@ -41,10 +41,10 @@ export const productService = {
         }
       }
       
-      throw new Error('Không tìm thấy sản phẩm');
+      throw new Error(`Không tìm thấy sản phẩm với slug: ${slug}`);
     } catch (error) {
       console.error('Error fetching product by slug:', error);
-      throw new Error('Có lỗi xảy ra khi tải thông tin sản phẩm');
+      throw new Error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi tải thông tin sản phẩm');
     }
   },
 

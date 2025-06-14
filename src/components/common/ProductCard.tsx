@@ -16,13 +16,38 @@ interface ProductCardProps {
   product: ProductData; // Sử dụng ProductData mới
 }
 
-// Hàm format giá
-const formatPrice = (price: number) => {
-  return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }).replace('₫', 'đ');
+// Hàm format giá tiền Việt Nam
+const formatPrice = (price: number | string) => {
+  // Chuyển đổi giá trị đầu vào thành số
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+  // Định dạng theo tiền tệ Việt Nam
+  return numPrice.toLocaleString('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND',
+    currencyDisplay: 'code'
+  }).replace('VND', 'đ').trim();
 };
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cardRef = useRef(null);
+  
+  // Main image from image_url with fallback
+  const mainImage = product.image_url || '/placeholder.jpg';
+  
+  // Get hover image - check if images array exists and has items
+  let hoverImage: string | undefined;
+  
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    // Find the first image that has a URL and is different from the main image
+    const otherImage = product.images.find(img => 
+      img?.url && 
+      typeof img.url === 'string' && 
+      img.url.trim() !== '' && 
+      img.url !== mainImage
+    );
+    
+    hoverImage = otherImage?.url;
+  }
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -49,10 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return () => ctx.revert();
   }, []);
 
-  // Lấy ảnh chính và ảnh hover (nếu có)
-  const images = Array.isArray(product.image_url) ? product.image_url : [product.image_url];
-  const mainImage = images[0] || '/placeholder.jpg'; // Ảnh chính là ảnh đầu tiên
-  const hoverImage = images.length > 1 ? images[1] : undefined; // Ảnh hover là ảnh thứ hai nếu có
+  // Main image from image_url, hover image from first item in images array
 
   return (
     <Link
@@ -66,9 +88,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         itemScope
         itemType="https://schema.org/Product"
       >
-        {product.discount && ( // Sử dụng trường discount mới
+        {Number(product.discount) > 0 && (
           <div className="absolute top-3 left-3 bg-red-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold z-20">
-            <span itemProp="discount">{product.discount}</span>
+            <span itemProp="discount">
+              {Math.min(99, Math.round((1 - (Number(product.discount) / Number(product.product_price))) * 100))}% OFF
+            </span>
           </div>
         )}
 
