@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import Image from "next/image";
 
@@ -10,44 +10,83 @@ const images = [
   "/board-game-card-design_699907-1.webp",
 ];
 
+// Preload images
+const preloadImages = (imageUrls: string[]) => {
+  imageUrls.forEach((src) => {
+    const img = new window.Image();
+    img.src = src;
+  });
+};
+
 export default function HeroBanner() {
   const [current, setCurrent] = useState(0);
+  const [isReady, setIsReady] = useState(false);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const goToSlide = (index: number) => {
-    if (index === current) return;
-    animateSlide(current, index);
-    setCurrent(index);
-  };
+  // Preload images on component mount
+  useEffect(() => {
+    preloadImages(images);
+    // Show banner after a short delay to ensure images are loaded
+    const timer = setTimeout(() => setIsReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const animateSlide = (from: number, to: number) => {
+  const goToSlide = useCallback((index: number) => {
+    if (index === current) return;
+    
+    const from = current;
+    const to = index;
+    
+    setCurrent(to);
+    
     if (!slideRefs.current[from] || !slideRefs.current[to]) return;
 
-    gsap.fromTo(
-      slideRefs.current[to],
-      { autoAlpha: 0, x: 100 },
-      { autoAlpha: 1, x: 0, duration: 1, ease: "power3.out" }
-    );
+    // Faster animation with simpler tweening
+    gsap.killTweensOf([slideRefs.current[from], slideRefs.current[to]]);
+    
     gsap.to(slideRefs.current[from], {
       autoAlpha: 0,
-      x: -100,
-      duration: 1,
-      ease: "power3.inOut",
+      x: -50,
+      duration: 0.5,
+      ease: "power2.out"
     });
-  };
+    
+    gsap.fromTo(
+      slideRefs.current[to],
+      { autoAlpha: 0, x: 50 },
+      { 
+        autoAlpha: 1, 
+        x: 0, 
+        duration: 0.5, 
+        ease: "power2.out",
+        delay: 0.1
+      }
+    );
+  }, [current]);
 
+  // Auto slide effect
   useEffect(() => {
+    if (!isReady) return;
+    
     timeoutRef.current = setInterval(() => {
       const next = (current + 1) % images.length;
-      animateSlide(current, next);
-      setCurrent(next);
+      goToSlide(next);
     }, 3000);
 
     return () => {
-      if (timeoutRef.current) clearInterval(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearInterval(timeoutRef.current);
+      }
     };
-  }, [current]);
+  }, [current, goToSlide, isReady]);
+
+  // Show loading state
+  if (!isReady) {
+    return (
+      <div className="w-full h-[70vh] md:h-[90vh] bg-gray-100 animate-pulse"></div>
+    );
+  }
 
   return (
     <div className="relative w-full h-[70vh] md:h-[90vh] overflow-hidden">
@@ -55,14 +94,21 @@ export default function HeroBanner() {
         <div
           key={index}
           ref={(el) => (slideRefs.current[index] = el)}
-          className="absolute inset-0 w-full h-full opacity-0"
-          style={{ zIndex: index === current ? 10 : 0 }}
+          className="absolute inset-0 w-full h-full"
+          style={{ 
+            opacity: index === current ? 1 : 0,
+            transition: 'opacity 0.3s ease-out',
+            zIndex: index === current ? 10 : 0 
+          }}
         >
           <Image
             src={src}
             alt={`Slide ${index}`}
             fill
             className="object-cover"
+            priority={index === 0} // Preload first image
+            quality={75} // Slightly reduce quality for faster loading
+            sizes="100vw"
           />
         </div>
       ))}

@@ -1,0 +1,47 @@
+// src/app/(auth)/_components/Sidebar.tsx
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+
+const menuItems = [
+  { name: 'Thông tin tài khoản', href: '/account' },
+  { name: 'Đơn hàng của tôi', href: '/account/orders' },
+  { name: 'Địa chỉ giao hàng', href: '/account/addresses' },
+  { name: 'Đổi mật khẩu', href: '/account/change-password' },
+  { name: 'Yêu thích', href: '/account/wishlist' },
+];
+
+export function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <div className="w-full md:w-64 shrink-0">
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-bold mb-6">Tài khoản của tôi</h2>
+        <nav className="space-y-2">
+          {menuItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`block px-4 py-2 rounded-lg ${
+                pathname === item.href
+                  ? 'bg-primary-50 text-primary-600 font-medium'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+          <button
+            onClick={() => signOut({ callbackUrl: '/' })}
+            className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg mt-4"
+          >
+            Đăng xuất
+          </button>
+        </nav>
+      </div>
+    </div>
+  );
+}

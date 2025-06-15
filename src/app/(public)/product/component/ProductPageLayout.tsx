@@ -1,27 +1,42 @@
 // src/components/layouts/ProductPageLayout.tsx
 "use client";
 
-import React, { useState, Fragment, useMemo, Dispatch, SetStateAction, useEffect } from 'react';
-import { ProductData } from '@/app/type/product';
-import { ProductCard } from '@/components/common/ProductCard';
-import { FilterDropdown } from '@/components/common/FilterDropdown';
-import { MobileFilterModal } from '@/components/common/MobileFilterModal';
-import { Listbox, Transition, Switch } from '@headlessui/react';
-import { FaCheck, FaChevronDown } from 'react-icons/fa';
-import { IoFilter } from 'react-icons/io5'; // Icon filter
+import React, {
+  useState,
+  Fragment,
+  useMemo,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useCallback,
+} from "react";
+import { ProductData } from "@/app/type/product";
+import { ProductPageHeader } from "@/app/(public)/product/component/layouts/product/ProductPageHeader";
+import { ProductSidebarFilters } from "@/app/(public)/product/component/layouts/product/ProductSidebarFilters";
+import { ProductGrid } from "@/app/(public)/product/component/layouts/product/ProductGrid";
+import { ProductPagination } from "@/app/(public)/product/component/layouts/product/ProductPagination";
+import { MobileProductFiltersModal } from "@/app/(public)/product/component/layouts/product/MobileProductFiltersModal";
+import { IoFilter } from "react-icons/io5"; // Icon filter
 
 interface ProductPageLayoutProps {
   products: ProductData[];
   isLoading?: boolean;
   error?: string | null;
-  setFilters: Dispatch<SetStateAction<{
+  setFilters: Dispatch<
+    SetStateAction<{
+      name: string;
+      category: string;
+      tags: string;
+      minPrice: number;
+      maxPrice: number;
+    }>
+  >;
+  categories: Array<{
+    id: string;
     name: string;
-    category: string;
-    tags: string;
-    minPrice: number;
-    maxPrice: number;
-  }>>;
-  categories: Array<{ id: string; name: string; slug: string; productCount: number; }>;
+    slug: string;
+    productCount: number;
+  }>;
 }
 
 type PriceRange = {
@@ -35,79 +50,100 @@ type DisplayRange = {
 };
 
 const sortOptions = [
-  { id: 1, name: 'Thứ tự mặc định', value: 'default' },
-  { id: 2, name: 'Thứ tự bằng chữ cái (A-Z)', value: 'az' },
-  { id: 3, name: 'Thứ tự bằng chữ cái (Z-A)', value: 'za' },
-  { id: 4, name: 'Giá: Thấp đến Cao', value: 'price_asc' },
-  { id: 5, name: 'Giá: Cao đến Thấp', value: 'price_desc' },
+  { id: 1, name: "Thứ tự mặc định", value: "default" },
+  { id: 2, name: "Thứ tự bằng chữ cái (A-Z)", value: "az" },
+  { id: 3, name: "Thứ tự bằng chữ cái (Z-A)", value: "za" },
+  { id: 4, name: "Giá: Thấp đến Cao", value: "price_asc" },
+  { id: 5, name: "Giá: Cao đến Thấp", value: "price_desc" },
 ];
 
-export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, isLoading, error, setFilters, categories }) => {
+export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
+  products,
+  isLoading,
+  error,
+  setFilters,
+  categories,
+}) => {
   const [sortSelected, setSortSelected] = useState(sortOptions[0]);
   const [sortedProducts, setSortedProducts] = useState(products);
   const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<PriceRange>({ min: 0, max: 5000000 });
-  const [displayRange, setDisplayRange] = useState<DisplayRange>({ min: '', max: '' });
+  const [priceRange, setPriceRange] = useState<PriceRange>({
+    min: 0,
+    max: 5000000,
+  });
+  const [displayRange, setDisplayRange] = useState<DisplayRange>({
+    min: "",
+    max: "",
+  });
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(22); // Số sản phẩm mỗi trang
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const categoryId = e.target.value;
+  // --- Handlers for Filters ---
+  const handleCategoryChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const categoryId = e.target.value;
   
-    // Cập nhật filters.category (giữ nguyên)
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      category: prevFilters.category === categoryId ? '' : categoryId
-    }));
+      setSelectedCategories((prev) => {
+        const newSelectedCategories = prev.includes(categoryId)
+          ? prev.filter((id) => id !== categoryId)
+          : [...prev, categoryId];
+        return newSelectedCategories;
+      });
   
-    // Đồng thởi cập nhật luôn selectedCategories
-    setSelectedCategories(prev => {
-      if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId);
-      } else {
-        return [...prev, categoryId];
-      }
-    });
-  };
+      // Move setFilters outside of setSelectedCategories
+      const newSelectedCategories = selectedCategories.includes(categoryId)
+        ? selectedCategories.filter((id) => id !== categoryId)
+        : [...selectedCategories, categoryId];
+      
+      setFilters((prevFilters) => ({
+        ...prevFilters,
+        category: newSelectedCategories.length > 0 ? newSelectedCategories[0] : "",
+      }));
+    },
+    [selectedCategories, setFilters]
+  );
 
+  const formatPrice = useCallback((price: number | string) => {
+    const numPrice = typeof price === "string" ? parseFloat(price) : price;
+    return numPrice
+      .toLocaleString("vi-VN", { style: "currency", currency: "VND" })
+      .replace("₫", "đ");
+  }, []);
 
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => {
+  const handlePriceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => {
     const value = e.target.value;
-    
-    // Update display value
+
     setDisplayRange(prev => ({
       ...prev,
       [type]: value
     }));
-    
-    // If input is empty, set to 0
+
     if (value === '') {
       const newPriceRange = {
         ...priceRange,
         [type]: 0
       };
       setPriceRange(newPriceRange);
-      setFilters(prev => ({
-        ...prev,
+      setFilters(prevFilters => ({ // prevFilters ở đây là đúng
+        ...prevFilters,
         minPrice: newPriceRange.min,
         maxPrice: newPriceRange.max
       }));
       return;
     }
-    
+
     const numValue = Number(value);
     if (isNaN(numValue) || numValue < 0) return;
-    
-    // Update price range
+
     const newPriceRange = {
       ...priceRange,
       [type]: numValue
     };
-    
-    // Ensure min is not greater than max and vice versa
+
     if (type === 'min' && numValue > priceRange.max) {
       newPriceRange.max = numValue;
       setDisplayRange(prev => ({ ...prev, max: numValue.toString() }));
@@ -115,72 +151,78 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
       newPriceRange.min = numValue;
       setDisplayRange(prev => ({ ...prev, min: numValue.toString() }));
     }
-    
+
     setPriceRange(newPriceRange);
-    
-    // Update parent filters
     setFilters(prev => ({
-      ...prev,
+      ...prev, // <--- Sửa từ 'prevFilters' thành 'prev' ở đây!
       minPrice: newPriceRange.min,
       maxPrice: newPriceRange.max
     }));
-  };
-  
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>, type: 'min' | 'max') => {
-    // Select all text on focus for better UX
-    e.target.select();
-    // Clear the input if it's 0
-    if (priceRange[type] === 0) {
-      setDisplayRange(prev => ({
-        ...prev,
-        [type]: ''
-      }));
-    }
-  };
-  
-  const handleBlur = (type: 'min' | 'max') => {
-    // Reset display value to actual value if empty
-    if (displayRange[type] === '') {
-      setDisplayRange(prev => ({
-        ...prev,
-        [type]: priceRange[type].toString()
-      }));
-    } else {
-      // Ensure the value is a valid number
-      const numValue = Number(displayRange[type]);
-      if (!isNaN(numValue) && numValue >= 0) {
-        setDisplayRange(prev => ({
+  }, [priceRange, setFilters]);
+
+  const handleFocus = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>, type: "min" | "max") => {
+      e.target.select();
+      if (priceRange[type] === 0) {
+        setDisplayRange((prev) => ({
           ...prev,
-          [type]: numValue.toString()
+          [type]: "",
         }));
       }
-    }
-  };
+    },
+    [priceRange]
+  );
 
-  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const tags = e.target.value;
-    setFilters(prevFilters => ({ ...prevFilters, tags }));
-  };
+  const handleBlur = useCallback(
+    (type: "min" | "max") => {
+      if (displayRange[type] === "") {
+        setDisplayRange((prev) => ({
+          ...prev,
+          [type]: priceRange[type].toString(),
+        }));
+      } else {
+        const numValue = Number(displayRange[type]);
+        if (!isNaN(numValue) && numValue >= 0) {
+          setDisplayRange((prev) => ({
+            ...prev,
+            [type]: numValue.toString(),
+          }));
+        }
+      }
+    },
+    [displayRange, priceRange]
+  );
 
-  const formatPrice = (price: number | string) => {
-    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-    return numPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }).replace('₫', 'đ');
-  };
+  const handleClearFilters = useCallback(() => {
+    setSelectedCategories([]);
+    setPriceRange({ min: 0, max: 5000000 });
+    setDisplayRange({ min: "", max: "" });
+    setShowOutOfStock(true);
+    setCurrentPage(1);
+    setFilters({
+      name: "",
+      category: "",
+      tags: "",
+      minPrice: 0,
+      maxPrice: 5000000,
+    });
+    setSortSelected(sortOptions[0]); // Reset sort to default
+  }, [setFilters]);
 
+  // --- Effects for Sorting ---
   useEffect(() => {
     const sorted = [...products];
     switch (sortSelected.value) {
-      case 'az':
+      case "az":
         sorted.sort((a, b) => a.product_name.localeCompare(b.product_name));
         break;
-      case 'za':
+      case "za":
         sorted.sort((a, b) => b.product_name.localeCompare(a.product_name));
         break;
-      case 'price_asc':
+      case "price_asc":
         sorted.sort((a, b) => a.product_price - b.product_price);
         break;
-      case 'price_desc':
+      case "price_desc":
         sorted.sort((a, b) => b.product_price - a.product_price);
         break;
       default:
@@ -189,49 +231,52 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
     setSortedProducts(sorted);
   }, [sortSelected, products]);
 
-  const filteredAndSortedProducts = useMemo(() => {
-    console.log('Original products count:', sortedProducts.length);
-    console.log('First few products:', sortedProducts.slice(0, 3).map(p => ({
-      id: p.id,
-      name: p.product_name,
-      price: p.product_price,
-      category: p.category_ID,
-      stock: p.quantity_stock
-    })));
+  // --- NEW useEffect to reset current page when filters/sort change ---
+  useEffect(() => {
+    // Chỉ reset trang nếu currentProducts thay đổi đáng kể (ngoại trừ việc thay đổi trang)
+    // Để tránh vòng lặp, hãy đảm bảo dependencies chỉ là những thứ ảnh hưởng đến filter/sort
+    setCurrentPage(1);
+  }, [selectedCategories, priceRange, showOutOfStock, sortSelected]); // Dependencies của bộ lọc/sắp xếp
 
+  // --- Memoized Filtered and Sorted Products ---
+  // Remove the problematic useEffect and move its logic into the filteredAndSortedProducts useMemo
+  const filteredAndSortedProducts = useMemo(() => {
     let currentProducts = [...sortedProducts];
 
     // Filter by category
     if (selectedCategories.length > 0) {
-      const beforeCount = currentProducts.length;
-      currentProducts = currentProducts.filter(product => {
-        const categoryId = typeof product.category_ID === 'object' 
-          ? String(product.category_ID.id) 
-          : String(product.category_ID);
+      currentProducts = currentProducts.filter((product) => {
+        const categoryId =
+          typeof product.category_ID === "object"
+            ? String(product.category_ID.id)
+            : String(product.category_ID);
         return selectedCategories.includes(categoryId);
       });
-      console.log(`After category filter (${selectedCategories.join(',')}): ${beforeCount} -> ${currentProducts.length}`);
     }
 
     // Filter out of stock if needed
     if (!showOutOfStock) {
-      const beforeCount = currentProducts.length;
-      currentProducts = currentProducts.filter(product => {
-        const stock = product.quantity_stock ?? 1; // Assume in stock if undefined
+      currentProducts = currentProducts.filter((product) => {
+        const stock = product.quantity_stock ?? 1;
         return stock > 0;
       });
-      console.log(`After out-of-stock filter: ${beforeCount} -> ${currentProducts.length}`);
     }
 
     // Filter by price range
-    currentProducts = currentProducts.filter(product => {
+    currentProducts = currentProducts.filter((product) => {
       const price = Number(product.product_price) || 0;
       return price >= priceRange.min && price <= priceRange.max;
     });
-    
+
     return currentProducts;
   }, [sortedProducts, showOutOfStock, selectedCategories, priceRange]);
 
+  // Add this new useEffect to handle page reset when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategories, priceRange, showOutOfStock, sortSelected]);
+
+  // --- Loading and Error States ---
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 lg:py-12">
@@ -252,7 +297,10 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
@@ -260,349 +308,109 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({ products, 
     );
   }
 
+  // --- Render ProductPageLayout ---
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12 bg-white">
       <div className="flex flex-col lg:flex-row lg:space-x-8">
-
         {/* Sidebar lọc - CHỈ HIỂN THỊ TRÊN MÀN HÌNH LỚN */}
-        <aside className="hidden lg:block w-full lg:w-1/4 mb-8 lg:mb-0 bg-gray-50 p-6 rounded-lg shadow-sm
-                          lg:sticky lg:top-8 lg:self-start lg:h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Lọc Sản Phẩm</h2>
-
-          <FilterDropdown title="Sản phẩm">
-            <div className="space-y-2">
-              {categories.map(category => (
-                <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  value={category.id}
-                  checked={selectedCategories.includes(category.id)}
-                  onChange={handleCategoryChange}
-                  className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"
-                />
-                <span className="ml-2 text-base">{category.name}</span>
-              </label>
-              ))}
-            </div>
-          </FilterDropdown>
-
-          <FilterDropdown title="Giá">
-            <div className="text-gray-700 text-base">
-              <p>Khoảng giá: {formatPrice(priceRange.min)} - {formatPrice(priceRange.max)}</p>
-              <div className="flex justify-between items-center mt-2 text-sm">
-                <input
-                  type="number"
-                  placeholder="Từ"
-                  min="0"
-                  value={displayRange.min || priceRange.min}
-                  onChange={(e) => handlePriceChange(e, 'min')}
-                  onFocus={(e) => handleFocus(e, 'min')}
-                  onBlur={() => handleBlur('min')}
-                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
-                />
-                <span className="mx-1">-</span>
-                <input
-                  type="number"
-                  placeholder="Đến"
-                  min={priceRange.min}
-                  value={displayRange.max || priceRange.max}
-                  onChange={(e) => handlePriceChange(e, 'max')}
-                  onFocus={(e) => handleFocus(e, 'max')}
-                  onBlur={() => handleBlur('max')}
-                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
-                />
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-sm">Hiển thị hết hàng</span>
-                <Switch
-                  checked={showOutOfStock}
-                  onChange={(e) => {
-                    e.preventDefault();
-                    setShowOutOfStock(e.target.checked);
-                  }}
-                  className={`${
-                    showOutOfStock ? 'bg-amber-800' : 'bg-gray-300'
-                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2`}
-                >
-                  <span
-                    className={`${
-                      showOutOfStock ? 'translate-x-6' : 'translate-x-1'
-                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                  />
-                </Switch>
-              </div>
-            </div>
-          </FilterDropdown>
-        </aside>
+        <ProductSidebarFilters
+          categories={categories}
+          selectedCategories={selectedCategories}
+          onCategoryChange={handleCategoryChange}
+          priceRange={priceRange}
+          displayRange={displayRange}
+          showOutOfStock={showOutOfStock}
+          handlePriceChange={handlePriceChange}
+          handleFocus={handleFocus}
+          handleBlur={handleBlur}
+          setShowOutOfStock={setShowOutOfStock}
+          formatPrice={formatPrice}
+        />
 
         {/* Khu vực hiển thị sản phẩm */}
         <main className="w-full lg:w-3/4">
-          <div className="flex justify-end items-center mb-6">
-            {/* Dropdown sắp xếp - Vẫn giữ nguyên */}
-            <Listbox value={sortSelected} onChange={(value) => {
-              setSortSelected(value);
-            }}>
-              {({ open }) => (
-                <div className="relative w-full sm:w-auto min-w-[200px]">
-                  <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500 sm:text-sm">
-                    <span className="block truncate">{sortSelected.name}</span>
-                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                      <FaChevronDown
-                        className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                        aria-hidden="true"
-                      />
-                    </span>
-                  </Listbox.Button>
-                  <Transition
-                    show={open}
-                    as={Fragment}
-                    leave="transition ease-in duration-100"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                  >
-                    <Listbox.Options className="absolute right-0 z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                      {sortOptions.map((option) => (
-                        <Listbox.Option
-                          key={option.id}
-                          className={({ active }) =>
-                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
-                            }`
-                          }
-                          value={option}
-                        >
-                          {({ selected }) => (
-                            <>
-                              <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
-                                {option.name}
-                              </span>
-                              {selected ? (
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                  <FaCheck className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                              ) : null}
-                            </>
-                          )}
-                        </Listbox.Option>
-                      ))}
-                    </Listbox.Options>
-                  </Transition>
-                </div>
+          <ProductPageHeader
+            sortOptions={sortOptions}
+            sortSelected={sortSelected}
+            setSortSelected={setSortSelected}
+            totalFilteredProducts={filteredAndSortedProducts.length}
+            totalProducts={products.length}
+          />
+
+          {/* Pagination Controls - Top */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-sm text-gray-600">
+              Hiển thị{" "}
+              {Math.min(
+                (currentPage - 1) * itemsPerPage + 1,
+                filteredAndSortedProducts.length
               )}
-            </Listbox>
+              -
+              {Math.min(
+                currentPage * itemsPerPage,
+                filteredAndSortedProducts.length
+              )}{" "}
+              của {filteredAndSortedProducts.length} sản phẩm
+            </div>
+            <ProductPagination
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredAndSortedProducts.length}
+              onPageChange={setCurrentPage}
+            />
           </div>
 
-          <div className="w-full">
-            <div className="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-yellow-700">
-                    Đang hiển thị {filteredAndSortedProducts.length} sản phẩm (Tổng: {products.length})
-                  </p>
-                </div>
-              </div>
-            </div>
+          <ProductGrid
+            products={filteredAndSortedProducts.slice(
+              (currentPage - 1) * itemsPerPage,
+              currentPage * itemsPerPage
+            )}
+            onClearFilters={handleClearFilters}
+            priceRange={priceRange}
+            selectedCategories={selectedCategories}
+            showOutOfStock={showOutOfStock}
+            categories={categories}
+          />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAndSortedProducts.length > 0 ? (
-                filteredAndSortedProducts.map(product => (
-                  <ProductCard 
-                    key={product.id}
-                    product={{
-                      ...product,
-                      id: Number(product.id),
-                      product_price: Number(product.product_price) || 0,
-                      product_name: product.product_name,
-                      image_url: product.image_url,
-                      slug: product.slug || String(product.id),
-                      status: product.status,
-                      discount: product.discount || 0,
-                      quantity_stock: product.quantity_stock || 0,
-                      images: Array.isArray(product.images) ? product.images : []
-                    }}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center space-y-4 py-12">
-                  <p className="text-xl text-gray-600">Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại.</p>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setSelectedCategories([]);
-                      setPriceRange({ min: 0, max: 5000000 });
-                      setShowOutOfStock(true);
-                    }}
-                    className="px-4 py-2 bg-amber-800 text-white rounded-md hover:bg-amber-900 transition-colors"
-                  >
-                    Xóa bộ lọc
-                  </button>
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left text-sm text-gray-600">
-                    <p className="font-medium mb-2">Thông tin gỡ rối:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>Tổng số sản phẩm: {products.length}</li>
-                      <li>Khoảng giá: {priceRange.min} - {priceRange.max} VNĐ</li>
-                      <li>Danh mục đã chọn: {selectedCategories.length > 0 ? selectedCategories.join(', ') : 'Tất cả'}</li>
-                      <li>Hiển thị hết hàng: {showOutOfStock ? 'Có' : 'Không'}</li>
-                    </ul>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Pagination Controls - Bottom */}
+          {filteredAndSortedProducts.length > itemsPerPage && (
+            <ProductPagination
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredAndSortedProducts.length}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </main>
       </div>
 
       {/* Nút "Filter" Sticky chỉ hiển thị trên mobile */}
       <button
         className="fixed bottom-4 right-4 lg:hidden flex items-center px-5 py-3 bg-amber-800 text-white rounded-full shadow-lg hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 z-40 text-lg"
-        onClick={(e) => {
-          e.preventDefault();
-          setIsMobileFilterOpen(true);
-        }}
+        onClick={() => setIsMobileFilterOpen(true)}
       >
         <IoFilter className="mr-2 text-xl" /> Lọc
       </button>
 
       {/* Mobile Filter Modal */}
-      <MobileFilterModal 
-        isOpen={isMobileFilterOpen} 
-        onClose={(e) => {
-          e.preventDefault();
-          setIsMobileFilterOpen(false);
-        }}
-      >
-        <div className="p-4">
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Sắp xếp</h3>
-            <Listbox value={sortSelected} onChange={(value) => {
-              setSortSelected(value);
-            }}>
-              {({ open }) => (
-                <div className="relative w-full min-w-[200px]">
-                  <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500 sm:text-sm">
-                    <span className="block truncate">{sortSelected.name}</span>
-                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                      <FaChevronDown
-                        className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                        aria-hidden="true"
-                      />
-                    </span>
-                  </Listbox.Button>
-                  <Transition
-                    show={open}
-                    as={Fragment}
-                    leave="transition ease-in duration-100"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                  >
-                    <Listbox.Options className="absolute right-0 z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                      {sortOptions.map((option) => (
-                        <Listbox.Option
-                          key={option.id}
-                          className={({ active }) =>
-                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
-                            }`
-                          }
-                          value={option}
-                        >
-                          {({ selected }) => (
-                            <>
-                              <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
-                                {option.name}
-                              </span>
-                              {selected ? (
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                  <FaCheck className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                              ) : null}
-                            </>
-                          )}
-                        </Listbox.Option>
-                      ))}
-                    </Listbox.Options>
-                  </Transition>
-                </div>
-              )}
-            </Listbox>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Danh mục</h3>
-            <FilterDropdown title="Sản phẩm" initialOpen={true}>
-              <div className="space-y-2">
-                {categories.map(category => (
-                  <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value={category.id}
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={handleCategoryChange}
-                      className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"
-                    />
-                    <span className="ml-2 text-base">{category.name}</span>
-                  </label>
-                ))}
-              </div>
-            </FilterDropdown>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Giá</h3>
-            <FilterDropdown title="Giá" initialOpen={true}>
-              <div className="text-gray-700 text-base">
-                <p>Khoảng giá: {formatPrice(priceRange.min)} - {formatPrice(priceRange.max)}</p>
-                <div className="flex justify-between items-center mt-2 text-sm">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={priceRange.min}
-                    onChange={handlePriceChange}
-                    className="w-5/12 p-2 border border-gray-300 rounded-md"
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={priceRange.max}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setFilters(prevFilters => ({ ...prevFilters, minPrice: priceRange.min, maxPrice: Number(e.target.value) }));
-                    }}
-                    className="w-5/12 p-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm">Hiển thị hết hàng</span>
-                  <Switch
-                    checked={showOutOfStock}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setShowOutOfStock(e.target.checked);
-                    }}
-                    className={`${
-                      showOutOfStock ? 'bg-amber-800' : 'bg-gray-300'
-                    } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2`}
-                  >
-                    <span
-                      className={`${
-                        showOutOfStock ? 'translate-x-6' : 'translate-x-1'
-                      } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                    />
-                  </Switch>
-                </div>
-              </div>
-            </FilterDropdown>
-          </div>
-        </div>
-      </MobileFilterModal>
+      <MobileProductFiltersModal
+        isOpen={isMobileFilterOpen}
+        onClose={() => setIsMobileFilterOpen(false)}
+        sortOptions={sortOptions}
+        sortSelected={sortSelected}
+        setSortSelected={setSortSelected}
+        categories={categories}
+        selectedCategories={selectedCategories}
+        onCategoryChange={handleCategoryChange}
+        priceRange={priceRange}
+        displayRange={displayRange}
+        handlePriceChange={handlePriceChange}
+        handleFocus={handleFocus}
+        handleBlur={handleBlur}
+        showOutOfStock={showOutOfStock}
+        setShowOutOfStock={setShowOutOfStock}
+        formatPrice={formatPrice}
+      />
     </div>
   );
 };

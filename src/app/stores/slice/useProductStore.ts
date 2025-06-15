@@ -161,6 +161,64 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
     }
   },
 
+  /**
+   * Fetches products by category ID
+   */
+  fetchProductsByCategory: async (categoryId: string): Promise<void> => {
+    if (!categoryId) {
+      set({ error: 'Category ID is required', isLoading: false });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    
+    try {
+      const response = await productService.getProductsByCategory(categoryId);
+      console.log('Category Products Response:', response);
+
+      if (!response?.data) {
+        throw new Error('No products found for this category');
+      }
+
+      // The response.data should be an array of products
+      const productsData = Array.isArray(response.data) ? response.data : [];
+      
+      // Map the response data to match the ApiProduct interface
+      const apiProducts: ApiProduct[] = productsData.map((item: any) => ({
+        ...item,
+        // Ensure images is an array of {id, url} objects
+        images: Array.isArray(item.images) 
+          ? item.images.map((img: any, index: number) => ({
+              id: typeof img === 'object' ? img.id : index + 1,
+              url: typeof img === 'object' ? img.url : String(img)
+            }))
+          : [],
+        // Ensure features is an array of feature objects
+        features: Array.isArray(item.features)
+          ? item.features.map((f: any) => ({
+              id: f.id || 0,
+              title: f.title || '',
+              content: f.content || '',
+              image: f.image || ''
+            }))
+          : []
+      }));
+
+      const products = apiProducts.map(mapApiProductToProduct);
+      
+      // Update products in the store
+      set({
+        products,
+        isLoading: false,
+        error: null
+      });
+    } catch (error) {
+      handleError(error, 'Failed to fetch products by category', set);
+    }
+  },
+  
+  // Add missing comma if this is the last method in the object
+
   fetchProductById: async (id: string): Promise<Product | null> => {
     if (!id) {
       set({ error: 'Product ID is required', isLoading: false });
