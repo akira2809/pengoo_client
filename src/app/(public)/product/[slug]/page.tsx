@@ -1,18 +1,45 @@
 // src/app/(public)/product/[slug]/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { ProductData, ProductFeature } from '@/app/type/product';
 import { productService } from '@/app/api/services/productService';
-import ProductImageGallery from '@/components/layouts/ProductDetail/ProductImageGallery';
-import ProductDetailsSection from '@/components/layouts/ProductDetail/ProductDetailsSection';
-import ProductBanner from '@/components/layouts/ProductDetail/component/ProductBanner';
-import ProductTabs from '@/components/layouts/ProductDetail/component/ProductTabs';
-import GameOfDrunksFeatureSection from '@/components/layouts/ProductDetail/component/GameOfDrunksFeatureSection';
-import { BlogSection } from '@/components/common/BlogSection';
 import { Skeleton } from '@/components/common/UI/Skeleton';
 import { mockFeatureSections, mockMainIntro } from '@/app/api/data/mockProducts';
+
+// Dynamic imports for large components
+const ProductImageGallery = dynamic(
+  () => import('@/components/layouts/ProductDetail/ProductImageGallery').then(mod => mod.default),
+  { loading: () => <div className="w-full h-[500px] bg-gray-100 animate-pulse" />, ssr: false }
+);
+
+const ProductDetailsSection = dynamic(
+  () => import('@/components/layouts/ProductDetail/ProductDetailsSection').then(mod => mod.default),
+  { loading: () => <div className="w-full h-[400px] bg-gray-100 animate-pulse" />, ssr: false }
+);
+
+const ProductBanner = dynamic(
+  () => import('@/components/layouts/ProductDetail/component/ProductBanner').then(mod => mod.default),
+  { loading: () => <div className="w-full h-[200px] bg-gray-100 animate-pulse my-8" />, ssr: false }
+);
+
+const ProductTabs = dynamic(
+  () => import('@/components/layouts/ProductDetail/component/ProductTabs').then(mod => mod.default),
+  { loading: () => <div className="w-full h-[300px] bg-gray-100 animate-pulse my-8" />, ssr: false }
+);
+
+const GameOfDrunksFeatureSection = dynamic(
+  () => import('@/components/layouts/ProductDetail/component/GameOfDrunksFeatureSection').then(mod => mod.default),
+  { loading: () => <div className="w-full h-[600px] bg-gray-100 animate-pulse my-8" />, ssr: false }
+);
+
+const BlogSection = dynamic(
+  () => import('@/components/common/BlogSection').then(mod => mod.BlogSection),
+  { loading: () => <div className="w-full h-[400px] bg-gray-100 animate-pulse my-8" />, ssr: false }
+);
+
 interface ProductPageProps {
   product: ProductData;
   mainIntro?: {
