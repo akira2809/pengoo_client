@@ -24,7 +24,7 @@ export default function MarqueeBanner() {
   }, []);
 
   return (
-    <div className="bg-accent font-medium text-xs text-center py-2 overflow-hidden whitespace-nowrap relative">
+    <div className="bg-background-950 font-medium text-xs text-text-50 text-center py-2 overflow-hidden whitespace-nowrap relative">
       <div ref={marqueeRef} className="inline-block will-change-transform">
         <span className="inline-flex items-center mx-8">10% OFF for your first order <span className="ml-10 mr-10">•</span></span>
         <span className="inline-flex items-center mx-10">Free shipping on orders over $100 <span className="ml-10 mr-10">•</span></span>

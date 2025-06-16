@@ -1,8 +1,8 @@
 // src/app/(auth)/layout.tsx
 'use client';
 import { ReactNode, useEffect, useState } from 'react';
-import { Sidebar } from '@/components/layouts/Auth/Sidebar';
 import { usePathname } from 'next/navigation';
+import { Sidebar } from '@/components/layouts/Auth/Sidebar';
 
 // Danh sách các route không hiển thị sidebar
 const NO_SIDEBAR_PATHS = [
@@ -26,9 +26,8 @@ export default function AuthLayout({
     setMounted(true);
   }, []);
 
-  // Trong lần render đầu tiên, không render gì cả để tránh hydration mismatch
   if (!mounted) {
-    return null;
+    return null; 
   }
 
   const showSidebar = !NO_SIDEBAR_PATHS.some(path => 

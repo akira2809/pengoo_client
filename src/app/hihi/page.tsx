@@ -32,7 +32,7 @@ export default function CreateProductForm() {
     formData.append("categoryId", "2"); // Sửa ở đây: đảm bảo là "2" và đúng key backend cần
 
     formData.append("publisher_ID", "1");
-    formData.append("quantity_sold", "0");
+    formData.append("quantity_sold", "12");
     formData.append("quantity_stock", "10");
     formData.append("meta_description", "Mua Uno Flip chính hãng - phiên bản đặc biệt với hai mặt bài đảo chiều. Tăng độ kịch tính, chơi nhóm siêu vui. Giao hàng nhanh toàn quốc!");
     formData.append("meta_title", "shreriff of nothingham");

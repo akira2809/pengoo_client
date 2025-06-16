@@ -7,7 +7,7 @@ const slogans: string[] = [
   "House of Artisan Board Games",
   "Premium Quality", // Đoán từ "P..." trong hình ảnh
   "Unique Designs",
-  "Masterminds at Play",
+  "Pengoo at Play",
   "Crafted for Joy"
 ];
 
@@ -55,7 +55,7 @@ export default function HeadlineMarquee() {
                 key={`${duplicationIndex}-${sloganIndex}`} // Key duy nhất cho mỗi span
                 className="inline-flex items-center px-8 md:px-16 lg:px-24" // padding ngang cho mỗi slogan
               >
-                <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-text-800 inline">
+                <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-text-900 inline">
                   {slogan}
                 </h2>
               </span>

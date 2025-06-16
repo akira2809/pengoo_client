@@ -1,11 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-// import { gsap } from 'gsap'; // Remove gsap import
-// import { ScrollTrigger } from 'gsap/ScrollTrigger'; // Remove ScrollTrigger import
-
-// gsap.registerPlugin(ScrollTrigger); // Remove gsap plugin registration
-
 import { ProductData } from '@/app/type/product';
 
 interface ProductCardProps {
@@ -23,8 +18,43 @@ const formatPrice = (price: number | string) => {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isHot, setIsHot] = useState(false);
+  const HOT_VIEW_THRESHOLD = 5; // Số lần xem cần thiết để sản phẩm được đánh dấu là "Hot"
 
   useEffect(() => {
+    // Kiểm tra xem sản phẩm đã "Hot" chưa
+    const checkIfHot = () => {
+      const views = JSON.parse(localStorage.getItem('productViews') || '{}');
+      if ((views[product.id] || 0) >= HOT_VIEW_THRESHOLD) {
+        setIsHot(true);
+      } else {
+        setIsHot(false);
+      }
+    };
+
+    // Chỉ kiểm tra khi chạy ở phía client
+    if (typeof window !== 'undefined') {
+      // Kiểm tra trạng thái hot ban đầu
+      checkIfHot();
+      
+      // Theo dõi số lần xem sản phẩm trong localStorage
+      const trackView = () => {
+        const views = JSON.parse(localStorage.getItem('productViews') || '{}');
+        const viewCount = (views[product.id] || 0) + 1;
+        views[product.id] = viewCount;
+        localStorage.setItem('productViews', JSON.stringify(views));
+        
+        // Cập nhật state isHot dựa trên viewCount mới
+        if (viewCount >= HOT_VIEW_THRESHOLD) {
+          setIsHot(true);
+        } else {
+          setIsHot(false);
+        }
+      };
+
+      trackView();
+    }
+
     if (cardRef.current) {
       cardRef.current.style.opacity = '0';
       cardRef.current.style.transform = 'translateY(50px)';
@@ -36,7 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         }
       }, 100);
     }
-  }, []);
+  }, [product.id]);
 
   const mainImage = product.image_url || '/placeholder.jpg';
   let hoverImage: string | undefined;
@@ -59,17 +89,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <article
         ref={cardRef}
-        className="product-card bg-[#F5F5F5] rounded-3xl p-4 relative group transition-transform hover:scale-[1.02] cursor-pointer"
+        className="product-card bg-background-100 rounded-3xl p-4 relative group transition-transform hover:scale-[1.02] cursor-pointer"
         itemScope
         itemType="https://schema.org/Product"
       >
-        {Number(product.discount) > 0 && (
-          <div className="absolute top-3 left-3 bg-red-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold z-20">
-            <span itemProp="discount">
-              {Math.min(99, Math.round((1 - (Number(product.discount) / Number(product.product_price))) * 100))}% OFF
-            </span>
-          </div>
-        )}
+        <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">
+          {Number(product.discount) > 0 && (
+            <div className="bg-red-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
+              <span itemProp="discount">
+                {Math.min(99, Math.round((1 - (Number(product.discount) / Number(product.product_price))) * 100))}% OFF
+              </span>
+            </div>
+          )}
+          
+          {isHot && (
+            <div className="bg-yellow-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
+              HOT
+            </div>
+          )}
+          
+          {Number(product.quantity_sold) >= 10 && (
+            <div className="bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
+              Best Seller
+            </div>
+          )}
+        </div>
 
         <div className="relative w-full h-[300px] sm:h-[380px] flex items-center justify-center overflow-hidden">
           <Image
@@ -98,27 +142,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           itemType="https://schema.org/Offer"
         >
           <h3
-            className="text-sm sm:text-base font-medium text-black"
+            className="text-sm sm:text-base font-medium text-gray-900 line-clamp-2 h-10"
             itemProp="name"
           >
             {product.product_name}
           </h3>
-          <div className="mt-1 flex items-center gap-3">
-            <span className="text-red-600 font-bold" itemProp="price">
-              {formatPrice(product.discount > 0 ? product.discount : product.product_price)}
-            </span>
-            {product.discount > 0 && product.discount < product.product_price && (
-              <span className="text-gray-400 line-through text-sm">
-                {formatPrice(product.product_price)}
-              </span>
-            )}
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center">
+              {Number(product.discount) > 0 ? (
+                <>
+                  <span className="text-red-500 font-bold text-sm sm:text-base">
+                    {formatPrice(product.discount)}
+                  </span>
+                  <span className="ml-2 text-gray-500 text-xs line-through">
+                    {formatPrice(product.product_price)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-gray-900 font-bold text-sm sm:text-base">
+                  {formatPrice(product.product_price)}
+                </span>
+              )}
+            </div>
           </div>
-          <link
-            itemProp="availability"
-            href="https://schema.org/InStock"
-          />
         </div>
       </article>
     </Link>
   );
 };
+
+export default ProductCard;
