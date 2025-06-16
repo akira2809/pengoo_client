@@ -56,9 +56,9 @@ export default function Footer() {
         <div className="lg:col-span-1">
           <h3 className="font-semibold text-lg mb-4">Chính sách</h3>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/return-policy" className="hover:underline">Đổi trả</Link></li>
-            <li><Link href="/shipping-policy" className="hover:underline">Giao hàng</Link></li>
-            <li><Link href="/privacy-policy" className="hover:underline">Bảo mật</Link></li>
+            <li><Link href="/returnPolicy" className="hover:underline">Đổi trả</Link></li>
+            <li><Link href="/shippingPolicy" className="hover:underline">Giao hàng</Link></li>
+            <li><Link href="/termsOfServicePolicy" className="hover:underline">Điều khoản dịch vụ</Link></li>
             <li><Link href="/contact" className="hover:underline">Liên hệ</Link></li>
           </ul>
         </div>
