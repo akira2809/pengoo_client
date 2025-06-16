@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "analyze": "cross-env ANALYZE=true next build",
     "lint": "next lint"
   },
   "dependencies": {
@@ -13,8 +14,10 @@
     "@emotion/styled": "^11.14.0",
     "@gsap/react": "^2.1.2",
     "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
+    "@next/bundle-analyzer": "^15.3.3",
     "@studio-freight/lenis": "^1.0.42",
     "class-variance-authority": "^0.7.1",
     "dotenv": "^16.5.0",
@@ -38,6 +41,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.1.8",
     "postcss": "^8",

@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuthStore } from '@/app/stores/slice/useAuthStore';
+import toast from 'react-hot-toast';
 
 export default function SignUpPage() {
+  const router = useRouter();
+  const { register, isAuthenticated, isLoading, error, clearError } = useAuthStore();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +20,20 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string>('');
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      clearError();
+    }
+  }, [error, clearError]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,11 +78,73 @@ export default function SignUpPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      // Handle signup logic here
-      console.log('Signup with:', formData);
+    setApiError(''); // Clear previous API errors
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    try {
+      const userData = {
+        username: formData.email.split('@')[0], // Using email prefix as username
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.name,
+        phone_number: '', // Add empty values for required fields
+        address: '',
+        role: 'user',
+        avatar_url: ''
+      };
+      
+      console.log('Sending registration request:', userData);
+      
+      const result = await register(userData);
+      
+      if (result.success) {
+        toast.success('Đăng ký thành công!');
+        router.push('/signin');
+      } else {
+        // Handle case where register returns success: false but no error
+        const errorMsg = result.message || 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.';
+        toast.error(errorMsg);
+        setApiError(errorMsg);
+      }
+    } catch (err: any) {
+      console.error('Registration failed:', {
+        error: err,
+        response: err.response?.data,
+        status: err.response?.status,
+        message: err.message,
+        stack: err.stack
+      });
+      
+      // Handle specific error cases
+      console.error('Error details:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message
+      });
+
+      if (err.response?.status === 500) {
+        const errorMsg = 'Lỗi máy chủ. Vui lòng thử lại sau.';
+        toast.error(errorMsg);
+        setApiError(errorMsg);
+      } else if (err.response?.data?.message?.toLowerCase().includes('email') || 
+                err.message?.toLowerCase().includes('email')) {
+        setErrors(prev => ({
+          ...prev,
+          email: 'Email đã được sử dụng. Vui lòng sử dụng email khác.'
+        }));
+      } else if (err.response?.data?.message) {
+        // Display the error message from the server
+        setApiError(err.response.data.message);
+      } else {
+        const errorMsg = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
+        toast.error(errorMsg);
+        setApiError(errorMsg);
+      }
     }
   };
 
@@ -84,6 +166,11 @@ export default function SignUpPage() {
             <p className="text-gray-600">Join us today!</p>
           </div>
 
+          {apiError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <span className="block sm:inline">{apiError}</span>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -204,9 +291,10 @@ export default function SignUpPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                disabled={isLoading}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign Up
+                {isLoading ? 'Signing up...' : 'Sign Up'}
               </button>
             </div>
           </form>

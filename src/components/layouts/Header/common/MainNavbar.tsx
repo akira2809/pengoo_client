@@ -12,7 +12,7 @@ import NavLinks from './NavLinks';
 import Logo from './Logo';
 import CollectionsDropdown from './CollectionsDropdown';
 import { useRouter } from "next/navigation";
-
+import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 
 interface MainNavbarProps {
   onMenuToggle: () => void;
@@ -30,6 +30,7 @@ export default function MainNavbar({
   menuOpen,
 }: MainNavbarProps) {
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -124,7 +125,7 @@ export default function MainNavbar({
       
       <div 
         className={`
-          bg-background-300 text-text-50 px-4 py-4 flex justify-between items-center md:px-12
+          bg-background-900 text-text-50 px-4 py-4 flex justify-between items-center md:px-12
           transition-all duration-300 ease-in-out
           ${isScrolled 
             ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95' 
@@ -171,10 +172,10 @@ export default function MainNavbar({
           </IconButton>
           <IconButton
             className="text-gray-700 hover:text-gray-900"
-            aria-label="User"
-            onClick={() => router.push('/signin')}
+            aria-label={isAuthenticated ? 'Tài khoản' : 'Đăng nhập'}
+            onClick={() => router.push(isAuthenticated ? '/account' : '/signin')}
           >
-            <UserIcon className="text-text-50"/>
+            <UserIcon className="text-text-50" />
           </IconButton>
           <IconButton
             className="!text-text-nav relative"

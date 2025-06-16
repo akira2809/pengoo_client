@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-background-100 text-text-700 py-12 px-4 md:px-8 lg:px-16">
+    <footer className="bg-background-900 text-text-50 py-12 px-4 md:px-8 lg:px-16">
       {/* Top Section */}
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 border-b border-gray-300 pb-8 mb-8">
         {/* Cột Đăng ký (Newsletter) */}

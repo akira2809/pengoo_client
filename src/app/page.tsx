@@ -49,8 +49,8 @@ function HomePage() {
 
       <section className="py-12 sm:py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">
-            Sản phẩm nổi bật 🔥
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-text-950">
+            Sản phẩm nổi bật 
           </h2>
           
           {isLoading ? (

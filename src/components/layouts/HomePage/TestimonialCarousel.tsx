@@ -64,7 +64,7 @@ export const TestimonialCarousel = () => {
         </div>
 
         {/* Quote */}
-        <p className="text-xl md:text-2xl font-serif text-gray-800 leading-relaxed italic mb-10 max-w-2xl mx-auto">
+        <p className="text-xl md:text-2xl font-medium text-text-800 leading-relaxed  mb-10 max-w-2xl mx-auto">
           &ldquo;{currentTestimonial.quote}&rdquo;
         </p>
 
@@ -74,7 +74,7 @@ export const TestimonialCarousel = () => {
           <div className="bg-black text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mb-4">
             {currentTestimonial.authorInitial}
           </div>
-          <p className="text-lg font-semibold text-gray-800">
+          <p className="text-lg font-semibold text-text-950">
             {currentTestimonial.authorName}
           </p>
         </div>
@@ -83,10 +83,10 @@ export const TestimonialCarousel = () => {
         <div className="flex justify-center items-center gap-4 mt-8">
           <button
             onClick={goToPrevious}
-            className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200"
+            className="p-3 rounded-full bg-background-400 hover:bg-background-300 transition-colors duration-200"
             aria-label="Previous testimonial"
           >
-            <IoIosArrowBack className="text-gray-700 text-xl" />
+            <IoIosArrowBack className="text-text-50 text-xl" />
           </button>
           
           {/* Dots Indicator */}
@@ -105,10 +105,10 @@ export const TestimonialCarousel = () => {
 
           <button
             onClick={goToNext}
-            className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200"
+            className="p-3 rounded-full bg-background-400 hover:bg-background-300 transition-colors duration-200"
             aria-label="Next testimonial"
           >
-            <IoIosArrowForward className="text-gray-700 text-xl" />
+            <IoIosArrowForward className="text-text-50 text-xl" />
           </button>
         </div>
       </div>

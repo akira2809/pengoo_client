@@ -417,7 +417,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       handleError(error, 'Failed to fetch featured products', set);
     }
   }
-}));
+});
 
 // Export the store
 export default createProductSlice;

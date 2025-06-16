@@ -119,22 +119,22 @@ export default function BenefitsSection() {
     // Đảm bảo mỗi slide có width: 100% và flex-shrink-0 để không bị co lại
     <div className="flex-none w-full flex flex-col items-center p-4">
       {/* Vòng tròn nền cho icon */}
-      <div className="bg-[#F6F4F1] p-6 rounded-full inline-flex items-center justify-center mb-6 shadow-sm">
+      <div className="bg-background-50 p-6 rounded-full inline-flex items-center justify-center mb-6 shadow-sm text-text-950">
         {benefit.icon}
       </div>
       {/* Tiêu đề của lợi ích */}
-      <h3 className="text-xl sm:text-2xl font-bold text-text-800 mb-2">
+      <h3 className="text-xl sm:text-2xl font-bold text-text-800 mb-2 text-text-950">
         {benefit.title}
       </h3>
       {/* Mô tả chi tiết của lợi ích */}
-      <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-xs mx-auto">
+      <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-xs mx-auto text-text-800">
         {benefit.description}
       </p>
     </div>
   );
 
   return (
-    <section className="bg-background-300 py-16 px-4 sm:px-6 lg:px-16 text-center mb-16">
+    <section className="bg-background-100 py-16 px-4 sm:px-6 lg:px-16 text-center mb-16">
       <div className="max-w-screen-xl mx-auto overflow-hidden"> {/* Thêm overflow-hidden */}
         {/* Grid layout cho tablet và desktop */}
         <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 lg:gap-16">
