@@ -22,7 +22,7 @@ export default function NavLinks({ onLinkClick, onCollectionsToggle, isDesktop =
       <Link href="/about" className="hover:underline" onClick={onLinkClick}>Giới thiệu</Link>
       <Link href="/blogs" className="hover:underline" onClick={onLinkClick}>Blogs</Link>
       {isDesktop && (
-        <Link href="#" className="hover:underline" onClick={onLinkClick}>Liên hệ</Link>
+        <Link href="/contact" className="hover:underline" onClick={onLinkClick}>Liên hệ</Link>
       )}
     </>
   );

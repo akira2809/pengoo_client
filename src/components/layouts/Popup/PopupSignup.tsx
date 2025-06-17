@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
-type Props = {
+type PopUpProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-export default function PopupSignup({ isOpen, onClose }: Props) {
+export default function PopupSignup({ isOpen, onClose }: PopUpProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
@@ -26,7 +26,7 @@ export default function PopupSignup({ isOpen, onClose }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 transition-opacity duration-500 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 transition-opacity duration-500 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={() => {
@@ -37,7 +37,7 @@ export default function PopupSignup({ isOpen, onClose }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`bg-white rounded-lg overflow-hidden shadow-lg w-[90%] max-w-md md:max-w-3xl relative transform transition-all duration-500 ${
+        className={`bg-white rounded-lg overflow-hidden shadow-lg w-[80%] max-w-md md:max-w-2xl relative transform transition-all duration-500 ${
           isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
         }`}
       >
