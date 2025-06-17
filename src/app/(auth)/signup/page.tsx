@@ -151,11 +151,20 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* Left side - Image */}
-      <div className="w-full md:w-1/2 h-64 md:h-screen relative">
-        <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-         <Image src="/doro.webp" alt="Sign Up" className="object-cover w-full h-full" width={500} height={500} layout="responsive" />
-        </div>
-      </div>
+     <div className="w-full md:w-1/2 h-64 md:h-screen relative">
+             <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+               <div className="relative w-full h-full">
+                 <Image 
+                   src="/dorroo1.jpg" 
+                   alt="Sign In" 
+                   fill
+                   className="object-cover"
+                   priority
+                   sizes="(max-width: 768px) 100vw, 50vw"
+                 />
+               </div>
+             </div>
+           </div>
 
 
       {/* Right side - Sign Up Form */}
