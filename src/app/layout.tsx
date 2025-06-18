@@ -6,8 +6,6 @@ import { Roboto,  } from "next/font/google";
 // const robotoSlab = Roboto_Slab({ subsets: ["latin"] });
 import { Metadata } from "next";
 import { Toaster } from 'react-hot-toast';
-import ScratchMinigamePopup from "@/components/common/ScratchMinigamePopup";
-
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
@@ -48,7 +46,7 @@ export default function RootLayout({
             }}
           />
           {children}
-          <ScratchMinigamePopup /> {/* This makes the button/modal global */}
+  
         </main>
         <Footer />
       </body>
