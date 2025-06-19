@@ -1,27 +1,70 @@
 "use client";
-import { apiClient } from "@/app/api/apiClient";
 import { useRef, useState } from "react";
+import { apiClient } from "@/app/api/apiClient";
+import { useAuthStore } from "@/app/stores/slice/useAuthStore";
+import TicketCountBadge from "./scratch-minigame/TicketCountBadge";
+import TicketEarningActions from "./scratch-minigame/TicketEarningActions";
+import DailyTicketButton from "./scratch-minigame/DailyTicketButton";
+import ScratchRewardInfo from "./scratch-minigame/ScratchRewardInfo";
+import ScratchCanvas from "./scratch-minigame/ScratchCanvas";
 
-const CARD_WIDTH = 300;
-const CARD_HEIGHT = 180;
+const CARD_WIDTH = 320;
+const CARD_HEIGHT = 200;
 const SCRATCH_RADIUS = 18;
-const SCRATCH_THRESHOLD = 0.5; // 50% scratched to reveal
+const SCRATCH_THRESHOLD = 0.5;
+
+type ScratchResult = {
+  grid: string[][];
+  tileTokens: string[][];
+  winLines: string[];
+  bonus: number;
+  gridScore: number;
+  totalPoints: number;
+  tickets: number;
+  couponGranted: boolean;
+  couponCode: string | null;
+  message: string;
+};
+
+type TicketEarningType = "post" | "product" | "social";
 
 export default function ScratchMinigamePopup() {
   const [open, setOpen] = useState(false);
   const [scratching, setScratching] = useState(false);
   const [scratched, setScratched] = useState(false);
-  const [reward, setReward] = useState<{ label: string; value: string } | null>(
-    null
-  );
+  const [result, setResult] = useState<ScratchResult | null>(null);
   const [scratchedPercent, setScratchedPercent] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<number | null>(null);
+  const [earnLoading, setEarnLoading] = useState<TicketEarningType | null>(null);
+  const [earnMsg, setEarnMsg] = useState<Record<TicketEarningType, string>>({
+    post: "",
+    product: "",
+    social: "",
+  });
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [claimMsg, setClaimMsg] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { isAuthenticated } = useAuthStore();
+
+  // Fetch ticket count (from last minigame result or by playing scratch)
+  const fetchTickets = async () => {
+    if (result) {
+      setTickets(result.tickets);
+      return;
+    }
+    try {
+      const res = await apiClient.post<ScratchResult>("/minigame/play-scratch", {});
+      if (res.data?.tickets !== undefined) setTickets(res.data.tickets);
+    } catch {
+      setTickets(0);
+    }
+  };
 
   // Call backend to play the minigame
   const startGame = async () => {
-    setReward(null);
+    setResult(null);
     setScratched(false);
     setScratchedPercent(0);
     setError(null);
@@ -29,19 +72,20 @@ export default function ScratchMinigamePopup() {
     setLoading(true);
 
     try {
-      // Only use the relative path here!
-      const res = await apiClient.post<{ label: string; value: string }>(
-        "/minigame/play-scratch"
+      const res = await apiClient.post<ScratchResult>(
+        "/minigame/play-scratch",
+        {}
       );
-      setReward({
-        label: res.data?.label || res.data?.value || "🎁 Unknown Reward",
-        value: res.data?.value || "",
-      });
-    } catch (err: any) {
+      if (!res.success) throw new Error(res.error || "Không thể kết nối minigame backend");
+      setResult(res.data!);
+      setTickets(res.data!.tickets);
+    } catch (err) {
+      const error = err as Error;
       setError(
-        err.message ||
+        error.message ||
           "Có lỗi xảy ra khi kết nối minigame backend."
       );
+      setTickets(0);
     } finally {
       setLoading(false);
       setTimeout(() => {
@@ -49,10 +93,59 @@ export default function ScratchMinigamePopup() {
         if (ctx) {
           ctx.clearRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
           ctx.globalCompositeOperation = "source-over";
-          ctx.fillStyle = "#bdbdbd";
+          ctx.fillStyle = "#e5e7eb";
           ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
         }
       }, 50);
+    }
+  };
+
+  // Earn ticket by simulating an action
+  const earnTicket = async (type: TicketEarningType) => {
+    setEarnLoading(type);
+    setEarnMsg((prev) => ({ ...prev, [type]: "" }));
+    try {
+      if (!isAuthenticated) {
+        setEarnMsg((prev) => ({ ...prev, [type]: "Bạn cần đăng nhập để nhận vé." }));
+        setEarnLoading(null);
+        return;
+      }
+      const refId = Math.random().toString(36).slice(2, 10);
+      const res = await apiClient.post<{ message: string; tickets: number }>(
+        "/minigame/earn-ticket",
+        { type, refId }
+      );
+      setEarnMsg((prev) => ({ ...prev, [type]: res.data?.message || "Đã nhận vé!" }));
+      setTickets(res.data?.tickets ?? tickets);
+    } catch (err) {
+      const error = err as Error;
+      setEarnMsg((prev) => ({ ...prev, [type]: error.message || "Không thể nhận vé." }));
+    } finally {
+      setEarnLoading(null);
+    }
+  };
+
+  // Claim daily ticket
+  const claimDailyTicket = async () => {
+    setClaimLoading(true);
+    setClaimMsg(null);
+    try {
+      if (!isAuthenticated) {
+        setClaimMsg("Bạn cần đăng nhập để nhận vé miễn phí.");
+        setClaimLoading(false);
+        return;
+      }
+      const res = await apiClient.post<{ message: string; tickets: number }>(
+        "/minigame/claim-daily-ticket",
+        {}
+      );
+      setClaimMsg(res.data?.message || "Đã nhận vé miễn phí!");
+      setTickets(res.data?.tickets ?? tickets);
+    } catch (err) {
+      const error = err as Error;
+      setClaimMsg(error.message || "Không thể nhận vé miễn phí.");
+    } finally {
+      setClaimLoading(false);
     }
   };
 
@@ -64,7 +157,7 @@ export default function ScratchMinigamePopup() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let x, y;
+    let x: number, y: number;
     if ("touches" in e) {
       const rect = canvas.getBoundingClientRect();
       x = e.touches[0].clientX - rect.left;
@@ -96,12 +189,18 @@ export default function ScratchMinigamePopup() {
     }
   };
 
+  // Show ticket count on open
+  const handleOpen = () => {
+    setOpen(true);
+    fetchTickets();
+  };
+
   return (
     <>
       {/* Floating Button */}
       <button
-        onClick={startGame}
-        className="fixed bottom-6 right-6 z-50 bg-yellow-400 hover:bg-yellow-500 text-black rounded-full shadow-lg p-4 flex items-center justify-center transition-all"
+        onClick={handleOpen}
+        className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-yellow-400 to-yellow-300 hover:from-yellow-500 hover:to-yellow-400 text-black rounded-full shadow-xl p-4 flex items-center justify-center transition-all"
         aria-label="Open Scratch Minigame"
       >
         <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
@@ -117,88 +216,87 @@ export default function ScratchMinigamePopup() {
 
       {/* Modal */}
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm relative p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative p-6 border border-yellow-100">
             <button
               onClick={() => setOpen(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl"
+              className="absolute top-2 right-2 text-gray-400 hover:text-black text-2xl"
               aria-label="Close"
             >
               &times;
             </button>
-            <h2 className="text-lg font-bold mb-4 text-center">
-              Scratch &amp; Win!
+            <h2 className="text-xl font-extrabold mb-2 text-center text-yellow-600 tracking-wide drop-shadow">
+              🎉 Scratch &amp; Win! 🎉
             </h2>
+            <TicketCountBadge tickets={tickets} />
+            {tickets === 0 && (
+              <div className="mb-4 text-center">
+                <div className="text-sm text-gray-700 mb-2">
+                  Bạn đã hết vé. Hãy thực hiện các hành động sau để nhận thêm vé:
+                </div>
+                <TicketEarningActions
+                  isAuthenticated={isAuthenticated}
+                  earnLoading={earnLoading}
+                  earnMsg={earnMsg}
+                  onEarn={earnTicket}
+                />
+                <DailyTicketButton
+                  isAuthenticated={isAuthenticated}
+                  claimLoading={claimLoading}
+                  claimMsg={claimMsg}
+                  onClaim={claimDailyTicket}
+                />
+                {!isAuthenticated && (
+                  <div className="mt-2 text-xs text-red-600">
+                    Vui lòng đăng nhập để nhận vé minigame.
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex flex-col items-center">
               <div
                 className="relative"
                 style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}
               >
-                {/* Reward Card: Show grid if result exists */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-yellow-100 to-yellow-300 rounded-lg border-2 border-yellow-400 text-2xl font-bold select-none">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-200 rounded-xl border-2 border-yellow-300 text-2xl font-bold select-none shadow-inner">
                   {loading ? (
                     <span className="text-base text-gray-400">
                       Đang tải phần thưởng...
                     </span>
                   ) : error ? (
                     <span className="text-base text-red-500">{error}</span>
-                  ) : reward ? (
-                    <div>
-                      <div className="mb-2">
-                        <span className="text-base font-semibold">
-                          Tổng điểm: {reward.value}
-                        </span>
-                        <br />
-                        <span className="text-base">Vé còn lại: 0</span>
-                      </div>
-                      <div className="text-green-700 font-semibold text-base">
-                        {reward.label}
-                      </div>
-                    </div>
+                  ) : result ? (
+                    <ScratchRewardInfo result={result} />
                   ) : (
                     <span className="text-base text-gray-500">
                       Cào thẻ để nhận phần thưởng!
                     </span>
                   )}
                 </div>
-                {/* Scratch Canvas */}
-                {!scratched && !loading && !error && (
-                  <canvas
-                    ref={canvasRef}
-                    width={CARD_WIDTH}
-                    height={CARD_HEIGHT}
-                    className="absolute inset-0 w-full h-full rounded-lg touch-none cursor-pointer"
-                    style={{ zIndex: 2 }}
-                    onMouseDown={() => setScratching(true)}
-                    onMouseUp={() => setScratching(false)}
-                    onMouseLeave={() => setScratching(false)}
-                    onMouseMove={(e) => scratching && handleScratch(e)}
-                    onTouchStart={() => setScratching(true)}
-                    onTouchEnd={() => setScratching(false)}
-                    onTouchCancel={() => setScratching(false)}
-                    onTouchMove={(e) => scratching && handleScratch(e)}
-                  />
-                )}
-                {/* Loading overlay */}
+                <ScratchCanvas
+                  canvasRef={canvasRef}
+                  onScratch={handleScratch}
+                  scratching={scratching}
+                  setScratching={setScratching}
+                  disabled={scratched || loading || !!error || tickets === 0}
+                />
                 {loading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/60 rounded-lg z-10">
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-xl z-10">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400"></div>
                   </div>
                 )}
               </div>
               <div className="mt-4 text-center">
                 {scratched && !loading && !error ? (
-                  <div>
-                    <button
-                      className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded shadow font-medium"
-                      onClick={startGame}
-                    >
-                      Chơi lại
-                    </button>
-                  </div>
+                  <button
+                    className="bg-gradient-to-br from-yellow-400 to-yellow-300 hover:from-yellow-500 hover:to-yellow-400 text-black px-5 py-2 rounded-full shadow font-semibold transition"
+                    onClick={startGame}
+                  >
+                    Chơi lại
+                  </button>
                 ) : (
                   !loading &&
-                  !error && (
+                  !error && tickets !== 0 && (
                     <span className="text-gray-500 text-sm">
                       Cào thẻ để nhận phần thưởng!
                       <br />
