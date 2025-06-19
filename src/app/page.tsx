@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { productService } from '@/app/api/services/productService';
 import { ProductData } from '@/app/type/product';
 import { Skeleton } from '@/components/common/UI/Skeleton';
+import ScratchMinigamePopup from '@/components/common/ScratchMinigamePopUp';
 
 // Tạo một component fallback mặc định
 const Fallback = ({ className = '' }: { className?: string }) => (
@@ -180,6 +181,9 @@ function HomePage() {
       <Suspense fallback={<div className="h-[400px] w-full bg-gray-100 animate-pulse my-8" />}>
         <BlogSection />
       </Suspense>
+
+      {}
+      <ScratchMinigamePopup />
     </>
   );
 }

@@ -22,7 +22,6 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     const data = await response.json().catch(() => ({}));
-    
     if (!response.ok) {
       const error = {
         status: response.status,
@@ -31,7 +30,6 @@ class ApiClient {
       };
       throw error;
     }
-
     return {
       success: true,
       data: data.data || data,
@@ -64,8 +62,7 @@ class ApiClient {
         method: 'GET',
         headers,
         mode: 'cors',
-        // Remove credentials for MockAPI as it doesn't support credentials with wildcard CORS
-        credentials: url.includes('mockapi.io') ? 'same-origin' : 'include'
+        // Không cần credentials cho JWT header
       });
 
       if (!response.ok) {
@@ -105,8 +102,7 @@ class ApiClient {
         headers,
         body: JSON.stringify(data),
         mode: 'cors',
-        // Remove credentials for MockAPI as it doesn't support credentials with wildcard CORS
-        credentials: url.includes('mockapi.io') ? 'same-origin' : 'include'
+        // Không cần credentials cho JWT header
       });
       return this.handleResponse<T>(response);
     } catch (error) {
@@ -136,7 +132,8 @@ class ApiClient {
         method: 'PUT',
         headers,
         body: JSON.stringify(data),
-        credentials: 'include' as RequestCredentials,
+        mode: 'cors',
+        // Không cần credentials cho JWT header
       });
       return this.handleResponse<T>(response);
     } catch (error) {
@@ -148,7 +145,6 @@ class ApiClient {
       };
     }
   }
-
 
   public async delete<T>(
     endpoint: string,
@@ -167,7 +163,8 @@ class ApiClient {
         method: 'DELETE',
         headers,
         body: Object.keys(data).length > 0 ? JSON.stringify(data) : undefined,
-        credentials: 'include' as RequestCredentials,
+        mode: 'cors',
+        // Không cần credentials cho JWT header
       });
       return this.handleResponse<T>(response);
     } catch (error) {
