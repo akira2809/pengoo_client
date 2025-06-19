@@ -1,5 +1,7 @@
 import ContactSection from '@/components/layouts/Contact/ContactSection';
 import Layout from '@/components/common/UI/85%';
+import { BlogSection } from '@/components/common/BlogSection';
+
 
 const ContactPage = () => {
   return (
@@ -29,6 +31,8 @@ const ContactPage = () => {
                     Hãy ghé ngay hôm nay và trải nghiệm <strong>30+ board games độc đáo</strong> tại 6/10 Cách Mạng Tháng 8, P.Bến Thành, Q1, TP.HCM và nhận nhiều ưu đãi hấp dẫn!`}
 
       />
+      <BlogSection />
+      
     </Layout>
   );
 };

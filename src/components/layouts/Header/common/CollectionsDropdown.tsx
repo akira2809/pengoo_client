@@ -142,7 +142,7 @@ export default function CollectionsDropdown({
             {categories.map((category) => (
               <Link
                 key={category.id}
-                href={`/collection/${category.slug}`} // Sử dụng ID làm tham số có slug thì thay thành chữ slug
+                href={`/collection/${category.id}`} // Sử dụng ID làm tham số có slug thì thay thành chữ slug
                 className="group flex items-center space-x-4 p-4 rounded-lg hover:bg-background-100 transition-colors"
               >
                 {category.image && (

@@ -52,14 +52,14 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <h3 className="font-semibold text-lg mb-4">Hợp tác</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/business-gift" className="hover:underline">Quà tặng doanh nghiệp</Link></li>
-              <li><Link href="/wholesale-partner" className="hover:underline">Đối tác mua sỉ</Link></li>
+              <li><Link href="/partner" className="hover:underline">Quà tặng doanh nghiệp</Link></li>
+              <li><Link href="/partner" className="hover:underline">Đối tác mua sỉ</Link></li>
               <li><Link href="/custom-design" className="hover:underline">Thiết kế theo yêu cầu</Link></li>
               <li><Link href="/product-catalog" className="hover:underline">Catalogue sản phẩm</Link></li>
             </ul>
           </div>
 
-          {/* Cột Chính sách */}
+          {/* Cột Chính sách */} 
           <div className="lg:col-span-1">
             <h3 className="font-semibold text-lg mb-4">Chính sách</h3>
             <ul className="space-y-2 text-sm">
