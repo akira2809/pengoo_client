@@ -19,9 +19,12 @@ interface ProductDetailsSectionProps {
   warranty: string;
   shippingInfo: string;
   isLoading?: boolean;
+  image_url?: string;
+  slug?: string;
 }
 
 const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
+  productId,
   productName,
   originalPrice,
   discountedPrice,
@@ -29,20 +32,23 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   features,
   warranty,
   shippingInfo,
+  image_url = '',
+  slug = ''
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const addItem = useCartStore(state => state.addItem);
 
   const handleAddToCart = () => {
     // Add item to cart with the specified quantity
-    for (let i = 0; i < quantity; i++) {
-      addItem({
-        id: Date.now(), // Using timestamp as a simple unique ID
-        name: productName,
-        price: discountedPrice || originalPrice,
-        image_url: '' // You might want to pass the product image URL as a prop
-      });
-    }
+    addItem({
+      id: Number(productId),
+      product_name: productName,
+      product_price: discountedPrice || originalPrice,
+      quantity: quantity,
+      image_url: image_url,
+      slug: slug,
+      description: description
+    });
     
     toast.success(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng!`, {
       duration: 3000,

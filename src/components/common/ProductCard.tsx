@@ -68,7 +68,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   }, [product.id]);
 
-  const mainImage = product.image_url || '/placeholder.jpg';
+  const mainImage = product.images?.[0] || '/placeholder.jpg';
   let hoverImage: string | undefined;
 
   if (Array.isArray(product.images) && product.images.length > 0) {
@@ -89,7 +89,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <article
         ref={cardRef}
-        className="product-card bg-background-100 rounded-3xl p-4 relative group transition-transform hover:scale-[1.02] cursor-pointer"
+        className="product-card bg-white rounded-3xl p-4 relative group transition-transform hover:scale-[1.02] cursor-pointer"
         itemScope
         itemType="https://schema.org/Product"
       >
@@ -102,11 +102,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           )}
           
-          {isHot && (
+          {/* {isHot && (
             <div className="bg-yellow-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
               HOT
             </div>
-          )}
+          )} */}
           
           {Number(product.quantity_sold) >= 10 && (
             <div className="bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
@@ -141,12 +141,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           itemScope
           itemType="https://schema.org/Offer"
         >
-          <h3
-            className="text-sm sm:text-base font-medium text-gray-900 line-clamp-2 h-10"
+          <h2
+            className="text-sm sm:text-base font-bold text-gray-900 line-clamp-2 h-10"
             itemProp="name"
           >
             {product.product_name}
-          </h3>
+          </h2>
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center">
               {Number(product.discount) > 0 ? (

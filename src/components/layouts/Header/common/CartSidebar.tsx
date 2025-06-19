@@ -9,10 +9,13 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 
 export interface CartItem {
   id: number;
-  name: string;
-  price: number;
+  product_name: string;
+  product_price: number | string;
   quantity: number;
-  image_url: string;
+  image_url?: string;
+  discount?: number;
+  slug?: string;
+  description?: string;
 }
 
 interface CartSidebarProps {
@@ -30,7 +33,13 @@ function CartSidebarContent({
   const cartItemsRef = useRef<HTMLDivElement>(null);
 
   const totalAmount = cartItems.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
+    (sum, item) => {
+      const price = typeof item.product_price === 'string' 
+        ? parseFloat(item.product_price) 
+        : item.product_price;
+      const discount = item.discount || 0;
+      return sum + (price * item.quantity * (1 - discount / 100));
+    },
     0
   );
 
@@ -38,9 +47,10 @@ function CartSidebarContent({
     removeItem(id);
   };
 
-  const handleQuantityChange = (id: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    updateQuantity(id, newQuantity);
+  const handleQuantityChange = (id: number, newQuantity: number | string) => {
+    const quantity = Math.max(1, Math.round(Number(newQuantity)));
+    if (isNaN(quantity)) return;
+    updateQuantity(id, quantity);
   };
 
   // Animation logic (di chuyển từ Header.tsx)
@@ -122,13 +132,20 @@ function CartSidebarContent({
                   key={item.id}
                   className="flex items-center space-x-4 text-text-900  bg-background-50 p-4 rounded-lg hover:bg-sky-200 transition-colors"
                 >
-                  {item.image_url? (
-                    <Image
-                      src={item.image_url}
-                      alt={item.name}
-                      fill
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
+                  {item.image_url ? (
+                    <div className="relative w-16 h-16 flex-shrink-0">
+                      <Image
+                        src={item.image_url}
+                        alt={item.product_name || 'Product image'}
+                        fill
+                        className="object-cover rounded-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = '/images/placeholder-product.jpg';
+                        }}
+                      />
+                    </div>
                   ) : (
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                       <ShoppingBagIcon className="text-gray-400" />
@@ -136,7 +153,7 @@ function CartSidebarContent({
                   )}
                   <div className="flex-1">
                     <h4 className="font-medium text-text-heading mb-1">
-                      {item.name}
+                      {item.product_name}
                     </h4>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
@@ -146,19 +163,28 @@ function CartSidebarContent({
                             className="text-text-heading hover:text-gray-600 w-6 h-6 flex items-center justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleQuantityChange(item.id, item.quantity - 1);
+                              handleQuantityChange(item.id, Number(item.quantity) - 1);
                             }}
                           >
                             -
                           </button>
-                          <span className="text-sm font-medium w-6 text-center">
-                            {item.quantity}
-                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            className="w-10 text-center text-sm border-0 focus:ring-0 p-0"
+                            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                            onBlur={(e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              updateQuantity(item.id, value);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
                           <button 
                             className="text-text-heading hover:text-gray-600 w-6 h-6 flex items-center justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleQuantityChange(item.id, item.quantity + 1);
+                              handleQuantityChange(item.id, Number(item.quantity) + 1);
                             }}
                           >
                             +
@@ -166,11 +192,21 @@ function CartSidebarContent({
                         </div>
                       </div>
                       <span className="font-semibold text-primary">
-                        ${(Number(item.price) * item.quantity).toFixed(2)}
+                        ${(Number(item.product_price) * Number(item.quantity) * (1 - (Number(item.discount) || 0) / 100)).toFixed(2)}
+                        {item.discount && item.discount > 0 && (
+                          <span className="text-xs text-red-500 ml-1">
+                            (-{Math.round(Number(item.discount))}%)
+                          </span>
+                        )}
                       </span> 
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      ${Number(item.price).toFixed(2)}
+                      ${Number(item.product_price).toFixed(2)}
+                      {item.discount && item.discount > 0 && (
+                        <span className="text-green-500 ml-1">
+                          (Tiết kiệm ${(Number(item.product_price) * Number(item.quantity) * (Number(item.discount) / 100)).toFixed(2)})
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button 
@@ -205,8 +241,14 @@ function CartSidebarContent({
               >
                 View Cart
               </button>
-              <button className="w-full bg-background-900 text-text-100 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors">
-                Checkout
+              <button 
+                onClick={() => {
+                  router.push('/checkout');
+                  onClose();
+                }}
+                className="w-full bg-background-900 text-text-100 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors"
+              >
+                Thanh toán
               </button>
             </div>
           </div>
