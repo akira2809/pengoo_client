@@ -1,6 +1,5 @@
 // src/components/product/ProductGrid.tsx
 import React from "react";
-import Link from "next/link";
 import { ProductCard } from "@/components/common/ProductCard"; // Đảm bảo đường dẫn đúng
 import { ProductData } from "@/app/type/product"; // Đảm bảo đường dẫn đúng
 

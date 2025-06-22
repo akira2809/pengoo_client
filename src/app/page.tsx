@@ -107,7 +107,7 @@ function HomePage() {
           </h2>
           
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, index) => (
                 <div key={index} className="flex flex-col space-y-3">
                   <Skeleton className="h-64 w-full rounded-lg" />
@@ -128,14 +128,14 @@ function HomePage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {featuredProducts.map((product) => (
                   <DynamicProductCard key={product.id} product={product} />
                 ))}
               </div>
               <div className="flex justify-center mt-10">
                 <Link
-                  href="/products"
+                  href="/product"
                   className="px-6 py-3 border border-black rounded-full text-sm sm:text-base font-medium hover:bg-black hover:text-white transition-colors duration-300"
                 >
                   Xem tất cả sản phẩm

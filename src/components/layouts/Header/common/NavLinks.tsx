@@ -14,7 +14,7 @@ export default function NavLinks({ onLinkClick, onCollectionsToggle, isDesktop =
         <button
           className="hover:underline focus:outline-none"
           onClick={onCollectionsToggle}
-
+ 
         >
           Collections
         </button>

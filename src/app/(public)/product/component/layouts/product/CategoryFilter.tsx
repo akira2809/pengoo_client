@@ -18,7 +18,7 @@ interface CategoryFilterProps {
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   categories,
   selectedCategories,
-  onCategoryChange,
+  onCategoryChange, 
 }) => {
   return (
     <FilterDropdown title="Sản phẩm" initialOpen={true}>
@@ -27,7 +27,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
           <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
             <input
               type="checkbox"
-              value={category.id}
+              value={category.id} 
               checked={selectedCategories.includes(category.id)}
               onChange={onCategoryChange}
               className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"

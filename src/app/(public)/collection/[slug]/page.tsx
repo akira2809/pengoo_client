@@ -124,48 +124,44 @@ export default function CollectionPage({ params }: CollectionPageProps) {
 
   // Load category and products by ID
   useEffect(() => {
-    let isMounted = true;
-    
-    const loadCategory = async () => {
-      try {
-        // Fetch category details
-        const response = await productService.getCategories();
-        if (!isMounted) return;
-        
-        if (response?.data) {
-          const categoriesData = response.data as Category[];
-          setCategories(categoriesData);
-          
-          // @todo: Khi có slug, thay đổi điều kiện tìm kiếm
-          // Tìm kiếm category bằng ID (tạm thởi)
-          // Khi có slug: categoriesData.find(cat => cat.slug === slug)
-          const category = categoriesData.find(cat => Number(cat.id) === Number(slug));
-          console.log('Categories loaded:', category);
-          
-          if (category) {
-            setCurrentCategory(category);
-            // Fetch products for this category
-            // await fetchProductsByCategory(category.slug);
-          } else {
-            console.warn(`Category with slug ${slug} not found`);
-            router.push('/404');
-          }
-        }
-      } catch (err) {
-        console.error('Error loading category:', err);
-        if (isMounted) {
-          // Xử lý lỗi tốt hơn, có thể hiển thị thông báo cho người dùng
-          console.error('Failed to load category data');
+  let isMounted = true;
+
+  const loadCategory = async () => {
+    try {
+      const response = await productService.getCategories();
+      if (!isMounted) return;
+
+      if (response?.data) {
+        const categoriesData = response.data as Category[];
+        setCategories(categoriesData);
+
+        // Tối ưu: Dùng Map để tra cứu nhanh
+        const categoryMap = new Map(categoriesData.map(cat => [String(cat.id), cat]));
+        // Khi có slug: categoryMap.get(slug)
+        const category = categoryMap.get(String(slug));
+        console.log('Categories loaded:', category);
+
+        if (category) {
+          setCurrentCategory(category);
+        } else {
+          console.warn(`Category with slug ${slug} not found`);
+          router.push('/404');
         }
       }
-    };
+    } catch (err) {
+      console.error('Error loading category:', err);
+      if (isMounted) {
+        console.error('Failed to load category data');
+      }
+    }
+  };
 
-    loadCategory();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [slug, router, fetchProductsByCategory]);
+  loadCategory();
+
+  return () => {
+    isMounted = false;
+  };
+}, [slug, router, fetchProductsByCategory]);
 
   // Update document title
   useEffect(() => {
@@ -223,7 +219,7 @@ export default function CollectionPage({ params }: CollectionPageProps) {
 <ProductPageLayout 
         products={currentCategory?.products ?? []}
         isLoading={isLoading}
-        error={error}
+        error={error} 
         setFilters={handleFiltersChange}
         categories={categories.map(c => ({
           id: String(c.id),
