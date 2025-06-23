@@ -7,6 +7,14 @@ import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { useCartStore } from "@/app/stores/slice/cartStore";
 
+// Format number to VND without decimal part and space
+const formatVND = (amount: number | string): string => {
+  // Convert to number and round to nearest integer
+  const num = Math.round(Number(amount) * 1);
+  // Format with thousand separators and add ₫
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + '₫';
+};
+
 export interface CartItem {
   id: number;
   product_name: string;
@@ -104,11 +112,11 @@ function CartSidebarContent({
       className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[999] flex flex-col"
       style={{ display: cartOpen ? "flex" : "none" }}
     >
-        <div className="flex justify-between items-center p-4 border-b bg-background-300 text-text-950">
-          <h3 className="text-lg font-semibold">Shopping Cart</h3>
+        <div className="flex justify-between items-center p-4 border-b bg-background-700 text-text-950">
+          <h3 className="text-lg font-semibold text-text-50">Shopping Cart</h3>
           <button
             onClick={onClose}
-            className="text-text-nav hover:text-teal-50 p-1"
+            className="text-text-50 hover:text-teal-50 p-1"
             aria-label="Close cart"
           >
             <CloseIcon />
@@ -122,8 +130,8 @@ function CartSidebarContent({
                 className="mb-4 text-text-700"
                 style={{ fontSize: "4rem" }}
               />
-              <p className="text-lg">Your cart is empty</p>
-              <p className="text-sm mt-2">Add some products to get started!</p>zz
+              <p className="text-lg">Giỏ hàng của bạn đang trống</p>
+              <p className="text-sm mt-2">Thêm sản phẩm để bắt đầu mua sắm!</p>
             </div>
           ) : (
             <div ref={cartItemsRef} className="p-4 space-y-4 ">
@@ -157,7 +165,7 @@ function CartSidebarContent({
                     </h4>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-text-900">Qty:</span>
+                        <div className="text-sm text-text-700">{formatVND(item.product_price)}</div>
                         <div className="flex items-center space-x-2 bg-white rounded px-2 py-1">
                           <button 
                             className="text-text-heading hover:text-gray-600 w-6 h-6 flex items-center justify-center"
@@ -192,7 +200,7 @@ function CartSidebarContent({
                         </div>
                       </div>
                       <span className="font-semibold text-primary">
-                        ${(Number(item.product_price) * Number(item.quantity) * (1 - (Number(item.discount) || 0) / 100)).toFixed(2)}
+                        {formatVND(Number(item.product_price) * Number(item.quantity) * (1 - (Number(item.discount) || 0) / 100))}
                         {item.discount && item.discount > 0 && (
                           <span className="text-xs text-red-500 ml-1">
                             (-{Math.round(Number(item.discount))}%)
@@ -201,10 +209,10 @@ function CartSidebarContent({
                       </span> 
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      ${Number(item.product_price).toFixed(2)}
+                      {formatVND(Number(item.product_price))}
                       {item.discount && item.discount > 0 && (
                         <span className="text-green-500 ml-1">
-                          (Tiết kiệm ${(Number(item.product_price) * Number(item.quantity) * (Number(item.discount) / 100)).toFixed(2)})
+                          (Tiết kiệm {formatVND(Number(item.product_price) * Number(item.quantity) * (Number(item.discount) / 100))})
                         </span>
                       )}
                     </div>
@@ -231,7 +239,7 @@ function CartSidebarContent({
                 Total:
               </span>
               <span className="text-xl font-bold text-primary">
-                ${totalAmount.toFixed(2)}
+                {formatVND(totalAmount)}
               </span>
             </div>
             <div className="space-y-3">

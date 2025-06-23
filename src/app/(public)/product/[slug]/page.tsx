@@ -63,7 +63,7 @@ const ProductDetailPage: React.FC<ProductPageProps> = ({
             productId={product.id}
             productName={product.product_name || 'Sản phẩm không có tên'}
             originalPrice={product.product_price || 0}
-            discountedPrice={product.discount || 0}
+            discount={product.discount || 0}
             description={product.description || ''}
             features={product.features?.map(f => f.title) || []}
             warranty={product.warranty || 'Không có thông tin bảo hành'}

@@ -1,74 +1,73 @@
 // components/PriceDisplay.tsx
 import React from 'react';
 
-// Định nghĩa kiểu cho props của component
 interface PriceDisplayProps {
   originalPrice: number;
-  discountedPrice?: number;
-  discount?: number;
+  percentageDiscount?: number; // Ví dụ: 12 cho 12%
   className?: string;
 }
 
 const PriceDisplay: React.FC<PriceDisplayProps> = ({
   originalPrice,
-  discountedPrice: propDiscountedPrice,
-  discount: propDiscount,
+  percentageDiscount = 0,
   className = '',
 }) => {
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 0, // Không hiển thị số lẻ
     }).format(price);
   };
 
-  // Calculate discounted price based on discount amount if provided
-  const discount = propDiscount || 0;
-  const calculatedDiscountedPrice = discount > 0 ? Number(originalPrice) - Number(discount) : undefined;
-  const discountedPrice = propDiscountedPrice !== undefined ? propDiscountedPrice : calculatedDiscountedPrice;
-  
-  const hasDiscount = (discountedPrice !== undefined && discountedPrice < originalPrice) || discount > 0;
-  const discountPercentage = discount > 0 
-    ? Math.round((discount / originalPrice) * 100) 
-    : (discountedPrice ? Math.round((1 - discountedPrice / originalPrice) * 100) : 0);
+  const hasDiscount = percentageDiscount > 0;
+  let finalPriceToDisplay: number;
+  let displayDiscountPercentage: number = 0;
 
-  const finalDiscountedPrice = hasDiscount ? (discountedPrice || (originalPrice - discount)) : originalPrice;
+  if (hasDiscount) {
+    finalPriceToDisplay = originalPrice * (1 - percentageDiscount / 100);
+    displayDiscountPercentage = Math.round(percentageDiscount);
+  } else {
+    finalPriceToDisplay = originalPrice;
+  }
+
+  // Đảm bảo giá giảm không âm
+  finalPriceToDisplay = Math.max(0, finalPriceToDisplay);
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      {hasDiscount && (
+      {hasDiscount ? (
+        // Hiển thị khi có giảm giá: Giá đã giảm + % giảm + Giá gốc gạch ngang
+        <>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-red-500"> {/* Giá đã giảm */}
+              {formatPrice(finalPriceToDisplay)}
+            </span>
+            <span className="bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded">
+              {displayDiscountPercentage}% GIẢM
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500 line-through"> {/* Giá gốc */}
+              {formatPrice(originalPrice)}
+            </span>
+          </div>
+        </>
+      ) : (
+        // Hiển thị khi KHÔNG có giảm giá: Chỉ Giá gốc
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-[#4B3C2D]">
-            {formatPrice(finalDiscountedPrice)}
+          <span className="text-2xl font-bold text-[#4B3C2D]"> {/* Giá gốc */}
+            {formatPrice(originalPrice)}
           </span>
-          <span className="bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded">
-            {discountPercentage}% GIẢM
+          <span className="text-xs text-green-600 ml-1">
+            (Giá đã bao gồm VAT)
           </span>
         </div>
       )}
       
-      <div className="flex items-center gap-2">
-        {hasDiscount ? (
-          <span className="text-sm text-gray-500 line-through">
-            {formatPrice(originalPrice)}
-          </span>
-        ) : (
-          <span className="text-2xl font-bold text-[#4B3C2D]">
-            {formatPrice(originalPrice)}
-          </span>
-        )}
-        
-        {!hasDiscount && (
-          <span className="text-xs text-green-600 ml-1">
-            (Giá đã bao gồm VAT)
-          </span>
-        )}
-      </div>
-      
       {hasDiscount && (
         <div className="text-xs text-green-600 mt-1">
-          Tiết kiệm: {formatPrice(originalPrice - (discountedPrice || 0))} ({Math.round((1 - (discountedPrice || 0) / originalPrice) * 100)}%)
+          Tiết kiệm: {formatPrice(originalPrice - finalPriceToDisplay)} ({displayDiscountPercentage}%)
         </div>
       )}
     </div>

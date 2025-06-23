@@ -37,10 +37,10 @@ export default function ProductForm() {
       formData.append('images', file);
     });
 
-    formData.append("product_name", "Majestic Mahjong Set")
-    formData.append("product_price", "13000000")
+    formData.append("product_name", "Majestic Mahjong Setsssssssssssssssssssssssssssss")
+    formData.append("product_price", "2222")
     formData.append("description", "Lấy cảm hứng từ vẻ đẹp huyền bí của những đền tháp cổ Á Đông, Majestic Mahjong Set tái hiện tinh hoa văn hoá qua từng nét chạm khắc tinh xảo. Một tác phẩm nghệ thuật giao thoa giữa lịch sử và nghệ thuật, bộ cờ vừa toát lên vẻ cổ kính uy nghi, vừa tạo dấu ấn độc bản cho trải nghiệm chơi và trưng bày.")
-    formData.append("slug", "majestic-mahjong-set")
+    formData.append("slug", "majestic-sikulasikula")
     formData.append("tags", "1 3 4")
     formData.append("discount", "0")
     formData.append("category_ID", "1")
