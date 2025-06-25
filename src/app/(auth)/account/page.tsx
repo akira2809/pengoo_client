@@ -213,7 +213,7 @@ export default function AccountPage() {
                     />
                   ) : (
                     <span className="text-5xl font-semibold text-gray-500">
-                      {accountData.full_name?.charAt(0).toUpperCase() || accountData.username?.charAt(0).toUpperCase() || 'U'}
+                      {accountData.username?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   )}
                 </div>
