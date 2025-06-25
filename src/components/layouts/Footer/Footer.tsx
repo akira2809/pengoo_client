@@ -19,7 +19,7 @@ export default function Footer() {
             </p>
             <button
               onClick={() => setPopupOpen(true)}
-              className="bg-background-400 text-text-700 px-6 py-3 rounded-md hover:bg-background-200 transition-colors text-sm font-semibold"
+              className="bg-background-400 w-full text-text-700 px-6 py-3 rounded-md hover:bg-background-200 transition-colors text-sm font-semibold"
             >
               Get 10% off
             </button>

@@ -151,20 +151,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Thông tin sản phẩm */}
         <div className="px-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <h2
-            className="text-2xl sm:text-xl font-bold text-gray-900 line-clamp-2 h-10"
+            className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 h-10 first-letter:uppercase"
             itemProp="name"
           >
             {product.product_name}
           </h2>
-          <p className="text-xs text-gray-400 line-clamp-2 mb-2">{product.meta_description}</p>
+          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.meta_description}</p>
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center">
               {Number(product.discount) > 0 ? (
                 <>
-                  <span className="text-red-500 font-bold text-sm sm:text-base">
+                  <span className="text-red-500 font-semibold text-sm sm:text-base">
                     {formatPrice(product.discount)}
                   </span>
-                  <span className="ml-2 text-gray-500 text-xs line-through">
+                  <span className="ml-2 text-gray-400 text-xs line-through">
                     {formatPrice(product.product_price)}
                   </span>
                 </>
@@ -179,7 +179,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         {/* Nút Mua ngay */}
         <button className="w-full bg-background-900 text-white py-2 rounded-b-lg hover:bg-background-800 transition">
-          Buy Now
+          Mua ngay
         </button>
       </article>
     </Link>
