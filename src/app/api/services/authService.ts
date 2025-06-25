@@ -193,7 +193,7 @@ export const authService = {
    */
   updateUser: async (userData: Partial<UserApiData> & { id: string }, token: string): Promise<{ success: boolean; message: string; user?: UserApiData }> => {
     const response = await fetch(`${USERS_API_BASE_URL}/update`, {
-      method: 'PUT', // Hoặc 'PATCH'
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -207,5 +207,30 @@ export const authService = {
       return { success: false, message: data.error || data.message || 'Cập nhật người dùng thất bại' };
     }
     return { success: true, message: data.message || 'Cập nhật người dùng thành công', user: data.user };
+  },
+
+  /**
+   * Cập nhật mật khẩu người dùng
+   */
+  updatePassword: async (currentPassword: string, newPassword: string, token: string): Promise<{ success: boolean; message: string }> => {
+    const response = await fetch(`${AUTH_API_BASE_URL}/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || 'Đổi mật khẩu thất bại');
+    }
+
+    return {
+      success: true,
+      message: data.message || 'Đổi mật khẩu thành công',
+    };
   },
 };

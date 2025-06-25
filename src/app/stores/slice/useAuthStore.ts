@@ -42,6 +42,7 @@ interface AuthState {
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
   resetPassword: (token: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   updateUser: (userData: Partial<User> & { id: string }) => Promise<{ success: boolean; message: string; user?: User }>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   clearError: () => void;
   logout: () => void;
 }
@@ -232,6 +233,28 @@ export const useAuthStore = create<AuthState>()(
           error: null,
         });
         // Bạn có thể thêm logic xóa các dữ liệu khác liên quan đến phiên làm việc nếu cần
+      },
+
+      /**
+       * Cập nhật mật khẩu người dùng
+       */
+      updatePassword: async (currentPassword: string, newPassword: string) => {
+        const { token } = get();
+        if (!token) {
+          return { success: false, message: 'Người dùng chưa đăng nhập.' };
+        }
+
+        set({ isLoading: true, error: null });
+        try {
+          const result = await authService.updatePassword(currentPassword, newPassword, token);
+          set({ isLoading: false });
+          return { success: true, message: result.message || 'Cập nhật mật khẩu thành công.' };
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
+          console.error('Lỗi đổi mật khẩu:', error);
+          set({ error: errorMessage, isLoading: false });
+          return { success: false, message: errorMessage };
+        }
       },
 
       /**
