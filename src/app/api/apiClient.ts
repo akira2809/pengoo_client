@@ -37,10 +37,19 @@ class ApiClient {
       statusCode: response.status
     };
   }
-
-  private getAuthHeader(): Record<string, string> {
-    // Get token from localStorage or cookies
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+private getAuthHeader(): Record<string, string> {
+    let token: string | null = null;
+    if (typeof window !== 'undefined') {
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage);
+          token = parsed?.state?.token ?? null;
+        } catch {
+          token = null;
+        }
+      }
+    }
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 

@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { productService } from '@/app/api/services/productService';
 import { ProductData } from '@/app/type/product';
 import { Skeleton } from '@/components/common/UI/Skeleton';
-import ScratchMinigamePopup from '@/components/common/ScratchMinigamePopUp';
+import ScratchMinigamePopup from '@/components/common/scratch-minigame/ScratchMinigamePopup';
+
 
 // Tạo một component fallback mặc định
 const Fallback = ({ className = '' }: { className?: string }) => (
@@ -183,7 +184,7 @@ function HomePage() {
       </Suspense>
 
       {}
-      <ScratchMinigamePopup />
+      <ScratchMinigamePopup buttonImage="/images/greenssrb.png" />
     </>
   );
 }
