@@ -223,6 +223,13 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   const userPoints = result?.userPoints ?? 0;
   const nextMilestone = milestoneCoupons.find((m) => userPoints < m.milestonePoints);
 
+  // Helper to mask coupon code
+  function maskCoupon(code: string) {
+    if (!code) return "???";
+    if (code.length <= 4) return "*".repeat(code.length);
+    return "*".repeat(code.length - 4) + code.slice(-4);
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-3xl shadow-2xl w-full max-w-3xl relative p-0 border-4 border-yellow-300 flex flex-col ring-8 ring-yellow-200/40">
@@ -245,25 +252,32 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
               Điểm của bạn: {userPoints}
             </span>
             <div className="flex flex-wrap gap-2 mt-2 justify-center">
-              {milestoneCoupons.map(m => (
-                <span
-                  key={m.milestonePoints}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold shadow
-                    ${userPoints >= m.milestonePoints
-                      ? "bg-green-200 text-green-700 border border-green-400"
-                      : "bg-gray-100 text-gray-500 border border-gray-200"
-                    }
-                  `}
-                >
-                  🎁 Coupon: <span className="underline">{m.code}</span> ({m.discountPercent}%)
-                  <span className="ml-1">- {m.milestonePoints} điểm</span>
-                  {userPoints < m.milestonePoints && nextMilestone?.milestonePoints === m.milestonePoints && (
-                    <span className="ml-2 text-yellow-600 font-bold">
-                      (Còn {m.milestonePoints - userPoints} điểm)
-                    </span>
-                  )}
-                </span>
-              ))}
+              {milestoneCoupons.map(m => {
+                const reached = userPoints >= m.milestonePoints;
+                return (
+                  <span
+                    key={m.milestonePoints}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold shadow
+                      ${reached
+                        ? "bg-green-200 text-green-700 border border-green-400"
+                        : "bg-gray-100 text-gray-500 border border-gray-200"
+                      }
+                    `}
+                  >
+                    🎁 Coupon:{" "}
+                    <span className="underline">
+                      {reached ? m.code : maskCoupon(m.code)}
+                    </span>{" "}
+                    ({m.discountPercent}%)
+                    <span className="ml-1">- {m.milestonePoints} điểm</span>
+                    {!reached && nextMilestone?.milestonePoints === m.milestonePoints && (
+                      <span className="ml-2 text-yellow-600 font-bold">
+                        (Còn {m.milestonePoints - userPoints} điểm)
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
             </div>
           </div>
           <TicketCountBadge tickets={tickets} />
