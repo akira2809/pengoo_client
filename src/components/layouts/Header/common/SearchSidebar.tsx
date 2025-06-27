@@ -40,6 +40,27 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
   const searchStartTime = useRef<number>(0);
   const minSearchDuration = 1500; // Minimum duration to show skeleton (1.5s)
 
+  // Format price with VND currency
+  const formatPrice = (price: number | string): string => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+    }).format(numPrice);
+  };
+
+  // Calculate final price based on discount percentage
+  const calculateDiscountedPrice = (originalPrice: number | string, discount: number | string = 0): number => {
+    const price = typeof originalPrice === 'string' ? parseFloat(originalPrice) : originalPrice;
+    const discountPercent = typeof discount === 'string' ? parseFloat(discount) : discount;
+    
+    if (!discountPercent || discountPercent <= 0) return price;
+    
+    const discountAmount = (price * discountPercent) / 100;
+    return Math.max(0, price - discountAmount);
+  };
+
   // Debounce search input
   const performSearch = useCallback((query: string) => {
     if (query.trim() === '') {
@@ -69,13 +90,14 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
           // even if the search completed earlier
           if (isSearching) {
             // Force a re-render to update the loading state
-            setSearchQuery(prev => prev + ' ');
-            setSearchQuery(prev => prev.trim());
+            const currentQuery = searchQuery;
+            setSearchQuery(currentQuery + ' ');
+            setSearchQuery(currentQuery.trim());
           }
         }, remainingTime);
       }
     }, 300); // Keep a short debounce for typing
-  }, [originalSearchProducts, clearSearch, isSearching, setSearchQuery]);
+  }, [originalSearchProducts, clearSearch, isSearching, setSearchQuery, searchQuery]);
 
   // Xử lý thay đổi input tìm kiếm
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,47 +304,59 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
                     role="button"
                     tabIndex={0}
                   >
-                    <div className="w-16 h-16 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
-                      <Image
-                        src={product.image_url || '/images/placeholder-product.png'}
-                        alt={product.product_name}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 relative">
+                      {product.images?.[0]?.url || product.image_url ? (
+                        <Image
+                          src={product.images?.[0]?.url || product.image_url || '/images/placeholder-product.png'}
+                          alt={product.product_name}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                          onError={(e) => {
+                            // Fallback to placeholder if image fails to load
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = '/images/placeholder-product.png';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                     <div className="ml-4 flex-1">
                       <h3 className="text-sm font-medium text-gray-900">
                         {product.product_name}
                       </h3>
-                      <div className="flex items-center space-x-2">
                       {product.discount > 0 ? (
-                        <>
-                          <span className="text-sm font-medium text-red-600">
-                            {new Intl.NumberFormat('vi-VN', {
-                              style: 'currency',
-                              currency: 'VND',
-                            }).format(Number(product.discount) || 0)}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-red-500 font-semibold text-sm">
+                            {formatPrice(calculateDiscountedPrice(product.product_price, product.discount))}
                           </span>
-                          <span className="text-xs text-gray-400 line-through">
-                            {new Intl.NumberFormat('vi-VN', {
-                              style: 'currency',
-                              currency: 'VND',
-                            }).format(product.product_price || 0)}
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-gray-400 text-xs line-through">
+                            {formatPrice(product.product_price)}
                           </span>
-                          <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                            -{Math.min(99, Math.round((1 - (Number(product.discount) / Number(product.product_price))) * 100))}%
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-sm text-gray-600">
-                          {new Intl.NumberFormat('vi-VN', {
-                            style: 'currency',
-                            currency: 'VND',
-                          }).format(product.product_price || 0)}
+                        </div>
+                        <div className="text-xs text-green-600">
+                          Tiết kiệm: {formatPrice(Number(product.product_price) - calculateDiscountedPrice(product.product_price, product.discount))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-800 font-semibold text-sm">
+                          {formatPrice(product.product_price)}
                         </span>
-                      )}
-                    </div>
+                        <span className="text-xs text-green-600">
+                          (Đã bao gồm VAT)
+                        </span>
+                      </div>
+                    )}
                     </div>
                   </div>
                 ))}

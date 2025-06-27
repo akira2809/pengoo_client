@@ -12,6 +12,7 @@ interface ProductImageGalleryProps {
 interface ImageItem {
   url: string;
   alt?: string;
+  isMain?: boolean;
 }
 
 const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) => {
@@ -19,9 +20,11 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
   const [thumbnails, setThumbnails] = useState<ImageItem[]>([]);
 
   useEffect(() => {
-    // Set main image from product.image_url
+    // Set main image from product.image_url or first image in product.images
     if (product.image_url) {
       setMainImage(product.image_url);
+    } else if (Array.isArray(product.images) && product.images.length > 0) {
+      setMainImage(product.images[0].url);
     }
 
     // Process additional images from product.images
@@ -43,7 +46,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
 
   // Combine main image with additional thumbnails for display
   const allImages = [
-    { url: product.image_url, alt: product.product_name },
+    { url: mainImage, alt: product.product_name },
     ...thumbnails
   ].filter(img => img.url);
 
@@ -52,7 +55,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
       {/* Thumbnails */}
       {allImages.length > 1 && (
         <div className="flex md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 md:pr-3">
-          {allImages.map((image, index) => (
+          {thumbnails.map((image, index) => (
             <button
               key={index}
               className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 relative rounded overflow-hidden transition-all ${

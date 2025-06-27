@@ -140,25 +140,48 @@ function CartSidebarContent({
                   key={item.id}
                   className="flex items-center space-x-4 text-text-900  bg-background-50 p-4 rounded-lg hover:bg-sky-200 transition-colors"
                 >
-                  {item.image_url ? (
-                    <div className="relative w-16 h-16 flex-shrink-0">
-                      <Image
-                        src={item.image_url}
-                        alt={item.product_name || 'Product image'}
-                        fill
-                        className="object-cover rounded-lg"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null;
-                          target.src = '/images/placeholder-product.jpg';
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <ShoppingBagIcon className="text-gray-400" />
-                    </div>
-                  )}
+                  {(() => {
+                    // Check if we have a valid image URL
+                    const imageUrl = item.image_url;
+                    const isValidUrl = imageUrl && 
+                                     typeof imageUrl === 'string' && 
+                                     imageUrl.trim() !== '' &&
+                                     (imageUrl.startsWith('http') || 
+                                      imageUrl.startsWith('/') || 
+                                      imageUrl.startsWith('data:image'));
+                    
+                    if (!isValidUrl) {
+                      return (
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <ShoppingBagIcon className="text-gray-400" />
+                        </div>
+                      );
+                    }
+                    
+                    // Format the URL if needed
+                    const formattedUrl = imageUrl.startsWith('http') || 
+                                      imageUrl.startsWith('/') ||
+                                      imageUrl.startsWith('data:image')
+                                      ? imageUrl 
+                                      : `/${imageUrl}`;
+                    
+                    return (
+                      <div key={`img-${item.id}`} className="relative w-16 h-16 flex-shrink-0">
+                        <Image
+                          src={formattedUrl}
+                          alt={item.product_name || 'Product image'}
+                          width={64}
+                          height={64}
+                          className="object-cover rounded-lg"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = '/images/placeholder-product.jpg';
+                          }}
+                        />
+                      </div>
+                    );
+                  })()}
                   <div className="flex-1">
                     <h4 className="font-medium text-text-heading mb-1">
                       {item.product_name}
