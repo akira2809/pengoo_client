@@ -18,19 +18,19 @@ interface CategoryFilterProps {
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   categories,
   selectedCategories,
-  onCategoryChange,
+  onCategoryChange, 
 }) => {
   return (
-    <FilterDropdown title="Sản phẩm" initialOpen={true}>
+    <FilterDropdown title="Sản phẩm" initialOpen={false}>
       <div className="space-y-2">
         {categories.map(category => (
           <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
             <input
               type="checkbox"
-              value={category.id}
-              checked={selectedCategories.includes(category.id)}
+              value={String(category.id)} 
+              checked={selectedCategories.includes(String(category.id))}
               onChange={onCategoryChange}
-              className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"
+              className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
             />
             <span className="ml-2 text-base">{category.name}</span>
           </label>

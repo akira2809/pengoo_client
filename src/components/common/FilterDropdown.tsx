@@ -14,7 +14,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({ title, children,
   return (
     <div className="border-b border-gray-200 py-4 last:border-b-0">
       <button
-        className="flex justify-between items-center w-full text-lg font-semibold text-gray-800 hover:text-gray-900 transition-colors duration-200 focus:outline-none"
+        className="flex justify-between items-center w-full text-dm font-semibold text-gray-800 hover:text-gray-900 transition-colors duration-200 focus:outline-none"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>{title}</span>
