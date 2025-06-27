@@ -7,6 +7,8 @@ import { Plus } from "lucide-react";
 import { ProductData } from "@/app/type/product";
 import { useCartStore } from "@/app/stores/slice/cartStore";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+
 
 interface ProductCardProps {
   product: ProductData;
@@ -30,6 +32,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const addItem = useCartStore((state) => state.addItem); // lấy action addItem
   const [isHot, setIsHot] = useState(false);
   const HOT_VIEW_THRESHOLD = 5;
+  const router = useRouter();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -87,13 +90,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
       },
     });
+    
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    addItem({
+      id: product.id,
+      product_name: product.product_name,
+      product_price: product.discount > 0 ? finalPrice : product.product_price,
+      image_url: mainImage,
+      discount: Number(product.discount) || 0,
+      quantity: 1,
+      slug: product.slug,
+      description: product.meta_description,
+    });
+
+    router.push("/checkout"); // Chuyển sang trang thanh toán
   };
 
   return (
     <Link href={`/product/${product.slug}`} className="block group" passHref>
       <article
         ref={cardRef}
-        className="relative product-card bg-white border border-gray-200 rounded-2xl flex flex-col justify-between min-h-[450px] shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+        className="relative product-card bg-white border border-gray-200 rounded-2xl flex flex-col justify-between min-h-[450px]
+        shadow-md hover:shadow-[2px_2px_5px_rgba(0,0,0,0.3)]
+        transition-shadow cursor-pointer"        
         itemScope
         itemType="https://schema.org/Product"
       >
@@ -162,7 +186,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   <span className="text-red-500 font-semibold text-sm sm:text-base">
                     {formatPrice(finalPrice)}
                   </span>
-                  <span className="ml-2 text-gray-500 text-xs line-through">
+                  <span className="ml-2 text-red-500 text-xs line-through">
                     {formatPrice(originalPrice)}
                   </span>
                 </>
@@ -176,7 +200,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Nút Mua ngay */}
-        <button className="w-full bg-background-900 text-white py-2 rounded-b-2xl hover:bg-background-800 transition">
+        <button
+          className="w-full bg-background-900 text-white py-2 rounded-b-2xl hover:bg-background-800 transition"
+          onClick={handleBuyNow}
+        >
           Mua ngay
         </button>
       </article>
