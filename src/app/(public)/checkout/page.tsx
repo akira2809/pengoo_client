@@ -414,7 +414,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.billingAddress === 'sameAsShipping'}
                   onChange={handleInputChange}
                   label="Giống địa chỉ vận chuyển"
-                  isCustomClass={true}
+                  // isCustomClass={true}
                 />
                 <RadioButton
                   id="different"
@@ -423,7 +423,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.billingAddress === 'different'}
                   onChange={handleInputChange}
                   label="Sử dụng địa chỉ thanh toán khác"
-                  isCustomClass={true}
+                  // isCustomClass={true}
                 />
               </div>
 
@@ -431,7 +431,7 @@ const CheckoutPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-400 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
                   isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >

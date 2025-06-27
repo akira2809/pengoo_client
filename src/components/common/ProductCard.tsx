@@ -1,4 +1,3 @@
-// components/ProductCard.tsx
 "use client";
 
 import React, { useEffect, useRef, useState, MouseEvent } from "react";
@@ -13,6 +12,7 @@ interface ProductCardProps {
   product: ProductData;
 }
 
+// Format giá
 const formatPrice = (price: number | string) => {
   const numPrice = typeof price === "string" ? parseFloat(price) : price;
   return numPrice
@@ -27,7 +27,7 @@ const formatPrice = (price: number | string) => {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const addItem = useCartStore((state) => state.addItem); // ✅ lấy action addItem
+  const addItem = useCartStore((state) => state.addItem); // lấy action addItem
   const [isHot, setIsHot] = useState(false);
   const HOT_VIEW_THRESHOLD = 5;
 
@@ -53,25 +53,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   }, [product.id]);
 
-  const mainImage = product.images?.[0] || "/placeholder.jpg";
-  let hoverImage: string | undefined;
-  if (Array.isArray(product.images)) {
-    const otherImage = product.images.find(
-      (img) => img?.url && img.url.trim() !== "" && img.url !== mainImage
-    );
-    hoverImage = otherImage?.url;
-  }
+  const mainImage = product.images?.[0]?.url || "/placeholder.jpg";
+  const hoverImage = product.images?.find((img) => img?.url !== mainImage)?.url;
 
-  // ✅ Xử lý click thêm vào giỏ hàng
+  const originalPrice = parseFloat(String(product.product_price)) || 0;
+  const discountPercentage = Number(product.discount) || 0;
+  const discountAmount = Math.round((originalPrice * discountPercentage) / 100);
+  const finalPrice = originalPrice - discountAmount;
+
   const handleAddToCart = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
     addItem({
-      id: Number(product.id),
+      id: product.id,
       product_name: product.product_name,
-      product_price: Number(product.discount || product.product_price),
-      quantity: 1,
+      product_price: product.discount > 0 ? finalPrice : product.product_price,
       image_url: mainImage,
+      discount: Number(product.discount) || 0,
+      quantity: 1,
       slug: product.slug,
       description: product.meta_description,
     });
@@ -93,7 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <Link href={`/product/${product.slug}`} className="block group" passHref>
       <article
         ref={cardRef}
-        className="relative product-card bg-white border border-gray-200 rounded-lg  flex flex-col justify-between min-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        className="relative product-card bg-white border border-gray-200 rounded-2xl flex flex-col justify-between min-h-[450px] shadow-md hover:shadow-lg transition-shadow cursor-pointer"
         itemScope
         itemType="https://schema.org/Product"
       >
@@ -118,14 +118,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Ảnh sản phẩm */}
-        <div className="relative w-full h-64 flex items-center justify-center overflow-hidden group">
+        <div className="relative w-full h-64 flex items-center rounded-t-2xl justify-center overflow-hidden group">
           <Image
             src={mainImage}
             alt={product.product_name}
             fill
             objectFit="cover"
             className="object-contain transition-opacity duration-500 group-hover:opacity-0"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           {hoverImage && (
             <Image
@@ -133,12 +132,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               alt={product.product_name}
               fill
               objectFit="cover"
-              className="object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain opacity-0 transition-opacity rounded-t-2xl duration-500 group-hover:opacity-100"
             />
           )}
 
-          {/* Nút Thêm vào giỏ */}
+          {/* Nút thêm vào giỏ */}
           <button
             onClick={handleAddToCart}
             className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background-50"
@@ -151,26 +149,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Thông tin sản phẩm */}
         <div className="px-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <h2
-            className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 h-10 first-letter:uppercase"
+            className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
             itemProp="name"
           >
             {product.product_name}
           </h2>
-          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.meta_description}</p>
+          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.description}</p>
           <div className="mt-2 flex items-center justify-between">
-            <div className="flex items-center">
-              {Number(product.discount) > 0 ? (
+            <div className="mt-2 flex items-center">
+              {discountPercentage > 0 ? (
                 <>
                   <span className="text-red-500 font-semibold text-sm sm:text-base">
-                    {formatPrice(product.discount)}
+                    {formatPrice(finalPrice)}
                   </span>
-                  <span className="ml-2 text-gray-400 text-xs line-through">
-                    {formatPrice(product.product_price)}
+                  <span className="ml-2 text-gray-500 text-xs line-through">
+                    {formatPrice(originalPrice)}
                   </span>
                 </>
               ) : (
-                <span className="text-gray-800 font-semibold text-sm sm:text-base">
-                  {formatPrice(product.product_price)}
+                <span className="text-gray-900 font-semibold text-sm sm:text-base">
+                  {formatPrice(originalPrice)}
                 </span>
               )}
             </div>
@@ -178,7 +176,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Nút Mua ngay */}
-        <button className="w-full bg-background-900 text-white py-2 rounded-b-lg hover:bg-background-800 transition">
+        <button className="w-full bg-background-900 text-white py-2 rounded-b-2xl hover:bg-background-800 transition">
           Mua ngay
         </button>
       </article>
