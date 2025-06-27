@@ -14,9 +14,11 @@ type ScratchResult = {
 
 export default function ScratchRewardInfo({ result }: { result: ScratchResult }) {
   return (
-    <>
-      <ScratchGrid grid={result.grid} winLines={result.winLines} />
-      <div className="mt-2 text-base font-semibold text-green-700">
+    <div className="w-full flex flex-col items-center">
+      <div className="w-full flex justify-center">
+        <ScratchGrid grid={result.grid} winLines={result.winLines} />
+      </div>
+      <div className="mt-2 text-base font-semibold text-green-700 text-center">
         {result.message}
       </div>
       <div className="flex flex-wrap gap-2 justify-center mt-2">
@@ -31,10 +33,10 @@ export default function ScratchRewardInfo({ result }: { result: ScratchResult })
         </span>
       </div>
       {result.couponGranted && (
-        <div className="mt-3 text-yellow-700 font-bold text-base bg-yellow-100 px-3 py-2 rounded shadow">
+        <div className="mt-3 text-yellow-700 font-bold text-base bg-yellow-100 px-3 py-2 rounded shadow text-center">
           🎁 Coupon: <span className="underline">{result.couponCode}</span>
         </div>
       )}
-    </>
+    </div>
   );
 }

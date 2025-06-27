@@ -206,7 +206,7 @@ export const useAuthStore = create<AuthState>()(
             }));
             return { success: true, message: result.message, user: result.user };
           } else {
-            throw new Error(result.message || 'Cập nhật thông tin người dùng thất bại.');
+            // throw new Error(result.message || 'Cập nhật thông tin người dùng thất bại.');
           }
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định khi cập nhật người dùng.';

@@ -192,7 +192,7 @@ export const authService = {
    * Yêu cầu token trong Authorization header.
    */
   updateUser: async (userData: Partial<UserApiData> & { id: string }, token: string): Promise<{ success: boolean; message: string; user?: UserApiData }> => {
-    const response = await fetch(`${USERS_API_BASE_URL}/update`, {
+    const response = await fetch(`${USERS_API_BASE_URL}/update/${userData.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -201,12 +201,12 @@ export const authService = {
       body: JSON.stringify(userData),
     });
 
-    const data: { user?: UserApiData; message?: string; error?: string } = await response.json();
+    const updateResult = await response.json();
 
     if (!response.ok) {
-      return { success: false, message: data.error || data.message || 'Cập nhật người dùng thất bại' };
+      return { success: false, message: updateResult.error || updateResult.message || 'Cập nhật người dùng thất bại' };
     }
-    return { success: true, message: data.message || 'Cập nhật người dùng thành công', user: data.user };
+    return { success: true, message: updateResult.message || 'Cập nhật người dùng thành công', user: updateResult };
   },
 
   /**
