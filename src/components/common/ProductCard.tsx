@@ -188,9 +188,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <Link href={`/product/${product.slug}`} className="block group" passHref>
       <article
         ref={cardRef}
-        className="relative product-card bg-white border border-gray-200 rounded-2xl flex flex-col justify-between min-h-[450px]
-        shadow-md hover:shadow-[2px_2px_5px_rgba(0,0,0,0.3)]
-        transition-shadow cursor-pointer"        
+        className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         itemScope
         itemType="https://schema.org/Product"
       >
@@ -209,13 +207,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Ảnh sản phẩm */}
-        <div className="relative w-full h-64 flex items-center justify-center overflow-hidden rounded-t-xl group bg-gray-50 p-4">
+        <div className="relative w-full h-64 flex items-center rounded-t-xl justify-center overflow-hidden group bg-gray-50 p-4">
           <div className="relative w-full h-full">
             <Image
               src={mainImage}
               alt={product.product_name}
               fill
-              className="object-contain  transition-opacity duration-300 group-hover:opacity-0"
+              className="object-contain transition-opacity duration-300 group-hover:opacity-0"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority
               onError={(e) => {
@@ -229,7 +227,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 src={hoverImage}
                 alt={`${product.product_name} - Hover`}
                 fill
-                className="object-contain rounded-t-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 absolute inset-0"
+                className="object-contain opacity-0 transition-opacity duration-300 group-hover:opacity-100 absolute inset-0"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -253,21 +251,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Thông tin sản phẩm */}
         <div className="px-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <h2
-            className="text-xl sm:text-lg font-semibold text-gray-900 line-clamp-2 first-letter:uppercase"
+            className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
             itemProp="name"
           >
             {product.product_name}
           </h2>
-          <p className="text-xs text-gray-500 line-clamp-2 my-2">{product.meta_description}</p>
+          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.meta_description}</p>
           <div className="mt-2">
             {hasDiscount ? (
               // Display when there's a discount
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-red-500 font-bold text-base">
+                  <span className="text-red-500 font-semibold text-base">
                     {formatPrice(finalPrice)}
                   </span>
-                
                   <span className="text-gray-400 text-xs line-through">
                     {formatPrice(product.product_price)}
                   </span>
@@ -291,7 +288,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Nút Mua ngay */}
-        <button className="w-full rounded-b-xl bg-background-900 text-white py-2 hover:bg-background-800 transition">
+        <button className="w-full bg-background-900 text-white py-2 rounded-b-xl hover:bg-background-800 transition">
           Mua ngay
         </button>
       </article>

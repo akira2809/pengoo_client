@@ -223,6 +223,8 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   }, [setFilters]);
 
   // --- Effects for Sorting ---
+
+  
   useEffect(() => {
     const sorted = [...products];
     switch (sortSelected.value) {

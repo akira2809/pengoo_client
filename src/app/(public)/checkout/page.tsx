@@ -26,6 +26,7 @@ interface FormData {
   paymentMethod: 'payos' | 'cod';
   billingAddress: 'sameAsShipping' | 'different';
   note?: string;
+  couponCode?: string;
 }
 
 const CheckoutPage: React.FC = () => {
@@ -34,6 +35,8 @@ const CheckoutPage: React.FC = () => {
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: user?.email || '',
     country: 'Vietnam',
@@ -49,6 +52,7 @@ const CheckoutPage: React.FC = () => {
     paymentMethod: 'payos',
     billingAddress: 'sameAsShipping',
     note: '',
+    couponCode: '',
   });
 
   // Update form data when user data changes
@@ -84,7 +88,7 @@ const CheckoutPage: React.FC = () => {
   const shippingCost = formData.shippingMethod === 'localHCM' ? 25000 : 40000;
 
   // Calculate total
-  const total = subtotal + shippingCost;
+  const total = subtotal - shippingCost - discountAmount;
 
   // Redirect if cart is empty or user not logged in
   useEffect(() => {
@@ -111,6 +115,27 @@ const CheckoutPage: React.FC = () => {
     }));
     setErrors(prev => ({ ...prev, [name]: undefined })); // Clear error on change
   };
+
+  const handleApplyCoupon = () => {
+  const code = formData.couponCode?.trim().toUpperCase();
+
+  if (!code) {
+    toast.error('Vui lòng nhập mã giảm giá.');
+    return;
+  }
+
+  // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
+  if (code === 'SAVE10') {
+    const discount = subtotal * 0.1;
+    setDiscountAmount(discount);
+    setIsCouponApplied(true);
+    toast.success('Áp dụng mã giảm giá thành công!');
+  } else {
+    setDiscountAmount(0);
+    setIsCouponApplied(false);
+    toast.error('Mã giảm giá không hợp lệ.');
+  }
+};
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
@@ -149,7 +174,7 @@ const CheckoutPage: React.FC = () => {
         {
           ...formData,
           total,
-          couponCode: '' // Add coupon code if available
+          couponCode: formData.couponCode || '', // ✅ Gửi mã
         },
         cartItems,
         user?.id ? parseInt(user.id.toString(), 10) : undefined
@@ -190,6 +215,7 @@ const CheckoutPage: React.FC = () => {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-white py-10">
@@ -477,10 +503,18 @@ const CheckoutPage: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Mã giảm giá"
+                  value={formData.couponCode}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      couponCode: e.target.value,
+                    }))
+                  }
                   className="flex-1 block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3 mr-2"
                 />
                 <button
                   type="button"
+                  onClick={handleApplyCoupon}
                   className="bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-300 transition-colors"
                 >
                   Áp dụng
@@ -493,9 +527,15 @@ const CheckoutPage: React.FC = () => {
                   <span>Tổng phụ</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
+                {isCouponApplied && (
+                  <div className="flex justify-between text-green-600 mb-2">
+                    <span>Giảm giá</span>
+                    <span>-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Vận chuyển</span>
-                  <span>{shippingCost === 0 ? 'Miễn phí' : formatCurrency(shippingCost)}</span>
+                  <span>- {shippingCost === 0 ? 'Miễn phí' : formatCurrency(shippingCost)}</span>
                 </div>
               </div>
 

@@ -191,14 +191,14 @@ export default function CollectionsDropdown({
               <div className="bg-gray-100 p-6 rounded-lg">
                 <h4 className="font-bold text-lg mb-2 text-gray-800">Khuyến mãi</h4>
                 <p className="text-sm text-gray-600 mb-3">Giảm giá lên đến 50%</p>
-                <a href="/sale" className="text-sm font-semibold text-primary hover:underline">
+                <a href="/sale" className="text-sm font-semibold text-text-900 hover:underline">
                   Xem ưu đãi
                 </a>
               </div>
               <div className="bg-gray-100 p-6 rounded-lg">
                 <h4 className="font-bold text-lg mb-2 text-gray-800">Bộ sưu tập</h4>
                 <p className="text-sm text-gray-600 mb-3">Xu hướng thời trang mới nhất</p>
-                <a href="/collections" className="text-sm font-semibold text-primary hover:underline">
+                <a href="/collections" className="text-sm font-semibold text-text-900 hover:underline">
                   Khám phá
                 </a>
               </div>
