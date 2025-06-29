@@ -11,6 +11,7 @@ const menuItems = [
   { name: 'Địa chỉ giao hàng', href: '/account/addresses' },
   { name: 'Đổi mật khẩu', href: '/account/change-password' },
   { name: 'Yêu thích', href: '/account/wishlist' },
+  { name: 'Mã khuyến mãi', href: '/account/coupons' },
 ];
 
 export function Sidebar() {
