@@ -30,6 +30,15 @@ export const API_CONFIG = {
       ADDRESSES: '/users/addresses',
       FAVORITES: '/users/favorites'
     },
+
+    // Coupon endpoints
+    COUPONS: {
+      BASE: '/coupons',
+      VERIFY_VOUCHER: '/coupons/verify-voucher',
+      GET_BY_USER_ID: '/coupons/get-voucher-by-userId'
+    },
+
+
     
     // Auth endpoints
     AUTH: {

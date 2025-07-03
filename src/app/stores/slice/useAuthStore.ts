@@ -15,6 +15,7 @@ export interface User {
   avatar_url: string;
   address: string;
   role: string;
+  points?: number;
 }
 
 // Định nghĩa AuthState chứa tất cả các trạng thái và hàm liên quan đến xác thực
@@ -37,6 +38,7 @@ interface AuthState {
     avatar_url?: string;
     address?: string;
     role?: string;
+    points?: number; 
   }) => Promise<{ success: boolean; message: string }>;
   verifyToken: (token: string) => Promise<{ success: boolean; user?: User; message?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -45,6 +47,7 @@ interface AuthState {
   updatePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   clearError: () => void;
   logout: () => void;
+  verifyVoucherByUserPoint: (voucherCode: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -82,7 +85,8 @@ export const useAuthStore = create<AuthState>()(
             phone_number: verifyData.decoded.phone_number || verifyData.decoded.phone || '',
             avatar_url: verifyData.decoded.avatar_url || verifyData.decoded.picture || '',
             address: verifyData.decoded.address || '',
-            role: verifyData.decoded.role || 'user'
+            role: verifyData.decoded.role || 'user',
+            points: verifyData.decoded.points || 0, 
           };
 
           set({
@@ -235,6 +239,24 @@ export const useAuthStore = create<AuthState>()(
         // Bạn có thể thêm logic xóa các dữ liệu khác liên quan đến phiên làm việc nếu cần
       },
 
+      verifyVoucherByUserPoint: async (voucherCode) => {
+        const { token } = get();
+        if (!token) {
+          return { success: false, message: 'Bạn cần đăng nhập để sử dụng mã khuyến mãi.' };
+        }
+
+        try {
+          const result = await authService.verifyVoucherByUserPoint(voucherCode, token);
+          return result;
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Lỗi xác minh mã khuyến mãi.';
+          set({ error: errorMessage });
+          return { success: false, message: errorMessage };
+        }
+      },
+
+
       /**
        * Cập nhật mật khẩu người dùng
        */
@@ -277,7 +299,8 @@ export const useAuthStore = create<AuthState>()(
               phone_number: data.decoded.phone_number || data.decoded.phone || '',
               avatar_url: data.decoded.avatar_url || data.decoded.picture || '',
               address: data.decoded.address || '',
-              role: data.decoded.role || 'user'
+              role: data.decoded.role || 'user',
+              points: data.decoded.points || 0,
             };
 
             set({

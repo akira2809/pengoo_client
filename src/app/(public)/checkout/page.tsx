@@ -9,6 +9,8 @@ import InputField from '../../(public)/checkout/component/InputField';
 import RadioButton from '../../(public)/checkout/component/RadioButton';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
+import { useStore } from '@/app/stores/store';
+
 //  
 
 interface FormData {
@@ -30,6 +32,9 @@ interface FormData {
 }
 
 const CheckoutPage: React.FC = () => {
+  const myVouchers = useStore((state) => state.myVouchers);
+  const fetchMyVouchers = useStore((state) => state.fetchMyVouchers);
+  const [showCouponList, setShowCouponList] = useState(false); // Dropdown toggle
   const router = useRouter();
   const { items: cartItems, clearCart } = useCartStore();
   const { user } = useAuthStore();
@@ -57,17 +62,24 @@ const CheckoutPage: React.FC = () => {
 
   // Update form data when user data changes
   useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        email: user.email || prev.email,
-        firstName: user.full_name ? user.full_name.split(' ').slice(0, -1).join(' ') : prev.firstName,
-        lastName: user.full_name ? user.full_name.split(' ').slice(-1)[0] : prev.lastName,
-        address: user.address || prev.address,
-        phone: user.phone_number || prev.phone,
-      }));
+    if (!user?.id) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      email: user.email || prev.email,
+      firstName: user.full_name?.split(' ').slice(0, -1).join(' ').trim() || prev.firstName,
+      lastName: user.full_name?.split(' ').slice(-1)[0] || prev.lastName,
+      address: user.address || prev.address,
+      phone: user.phone_number || prev.phone,
+    }));
+  }, [user?.id]);
+  // Gọi API lấy mã giảm giá
+  useEffect(() => {
+    if (user?.id) {
+      fetchMyVouchers();
     }
-  }, [user]);
+  }, [user?.id]);
+
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -499,27 +511,49 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               {/* Mã giảm giá */}
-              <div className="px-4 py-4 border-t border-gray-200 flex items-center">
+              <div className="px-4 py-4 border-t border-gray-200 relative">
                 <input
                   type="text"
                   placeholder="Mã giảm giá"
                   value={formData.couponCode}
+                  onFocus={() => setShowCouponList(true)}
+                  onBlur={() => setTimeout(() => setShowCouponList(false), 150)} // delay để chọn được
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       couponCode: e.target.value,
                     }))
                   }
-                  className="flex-1 block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3 mr-2"
+                  className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3"
                 />
+                {showCouponList && myVouchers.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full mt-1 shadow-sm max-h-48 overflow-auto">
+                    {myVouchers.map((uc) => (
+                      <li
+                        key={uc.id}
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            couponCode: uc.coupon.code,
+                          }));
+                          setShowCouponList(false);
+                        }}
+                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {uc.coupon.code} - {uc.coupon.description || 'Không có mô tả'}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
-                  className="bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-300 transition-colors"
+                  className="mt-2 w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-300 transition-colors"
                 >
                   Áp dụng
                 </button>
               </div>
+
 
               {/* Tổng kết */}
               <div className="px-4 py-4 border-t border-gray-200 text-sm">

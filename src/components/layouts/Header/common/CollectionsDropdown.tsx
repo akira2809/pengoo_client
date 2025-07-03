@@ -133,9 +133,9 @@ export default function CollectionsDropdown({
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-text-900">Danh mục sản phẩm</h3>
-            <a href="/collections" className="text-sm text-primary hover:underline font-semibold">
+            <Link href="/collections" className="text-sm text-primary hover:underline font-semibold">
               Xem tất cả →
-            </a>
+            </Link>
           </div>
 
           <div ref={collectionsItemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -198,9 +198,9 @@ export default function CollectionsDropdown({
               <div className="bg-gray-100 p-6 rounded-lg">
                 <h4 className="font-bold text-lg mb-2 text-gray-800">Bộ sưu tập</h4>
                 <p className="text-sm text-gray-600 mb-3">Xu hướng thời trang mới nhất</p>
-                <a href="/collections" className="text-sm font-semibold text-text-900 hover:underline">
+                <Link href="/collection" className="text-sm font-semibold text-text-900 hover:underline">
                   Khám phá
-                </a>
+                </Link>
               </div>
             </div>
           </div>

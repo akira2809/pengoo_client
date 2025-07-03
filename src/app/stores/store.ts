@@ -1,17 +1,21 @@
-// src/app/stores/store.ts
+// 📁 src/app/stores/store.ts
 import { create } from 'zustand';
 import { createProductSlice } from './slice/useProductStore';
+import { createCouponSlice } from './slice/useCouponStore';
 import { ProductState, CartState, AuthState, Product } from './type';
+import { CouponState } from './slice/useCouponStore';
 import { productService } from '../api/services/productService';
 
 // Define the combined state type
-type StoreState = ProductState & CartState & AuthState & {
+type StoreState = ProductState & CartState & AuthState & CouponState & {
   fetchProductsByCategory: (categoryId: string) => Promise<void>;
 };
 
 // Create the store
 export const useStore = create<StoreState>((set, get) => ({
   ...createProductSlice(set, get),
+  ...createCouponSlice(set),
+
   // Cart state
   items: [],
   addToCart: (product: Product) => set((state) => ({ 
@@ -31,14 +35,13 @@ export const useStore = create<StoreState>((set, get) => ({
     (total, item) => total + (item.product.product_price * item.quantity),
     0
   ),
-  
+
   // Auth state
   user: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
   login: async (credentials: { email: string; password: string }) => {
-    // Thêm logic đăng nhập ở đây
     try {
       set({ isLoading: true });
       // Implement login logic here
@@ -78,14 +81,13 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
   logout: () => set({ user: null, isAuthenticated: false }),
-  
+
   // Fetch products by category
   fetchProductsByCategory: async (categoryId: string) => {
     try {
       set({ isLoading: true, error: null });
       const response = await productService.getProductsByCategory(categoryId);
       if (response?.data) {
-        // Ensure the response data is an array of products
         const products = Array.isArray(response.data) ? response.data : [];
         set({ products, isLoading: false });
       }
@@ -98,11 +100,22 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 }));
 
-// Export typed hooks
+// Product hook
 export const useProductStore = () => useStore((state) => ({
   products: state.products,
   isLoading: state.isLoading,
   error: state.error,
   fetchProducts: state.fetchProducts,
   fetchProductsByCategory: state.fetchProductsByCategory,
+}));
+
+// Coupon hook
+export const useCouponStore = () => useStore((state) => ({
+  coupons: state.coupons,
+  myVouchers: state.myVouchers,
+  isLoading: state.isLoading,
+  error: state.error,
+  fetchCoupons: state.fetchCoupons,
+  fetchMyVouchers: state.fetchMyVouchers,
+  verifyVoucher: state.verifyVoucher,
 }));

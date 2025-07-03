@@ -16,6 +16,7 @@ interface User {
   avatar_url: string;
   address: string;
   role: string;
+  points?: number; 
 }
 
 export default function AccountPage() {
@@ -38,6 +39,7 @@ export default function AccountPage() {
       });
       setAccountData(user);
     }
+      console.log('User data:', user);
   }, [user]);
 
   // Handle input changes for form fields
@@ -292,6 +294,9 @@ export default function AccountPage() {
                       {accountData.phone_number || 'Chưa cập nhật số điện thoại'}
                     </p>
                     <p className="text-sm text-gray-500">Tên người dùng: {accountData.username}</p>
+                    <p className="text-sm text-gray-600">
+                      Điểm của bạn: <strong>{accountData.points ?? 0}</strong>
+                    </p>
                   </div>
                 )}
               </div>
