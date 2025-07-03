@@ -38,20 +38,21 @@ class ApiClient {
     };
   }
 private getAuthHeader(): Record<string, string> {
-    let token: string | null = null;
-    if (typeof window !== 'undefined') {
-      const authStorage = localStorage.getItem('auth-storage');
-      if (authStorage) {
-        try {
-          const parsed = JSON.parse(authStorage);
-          token = parsed?.state?.token ?? null;
-        } catch {
-          token = null;
-        }
+  let token: string | null = null;
+  if (typeof window !== 'undefined') {
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      try {
+        const parsed = JSON.parse(authStorage);
+        token = parsed?.state?.token ?? null;
+      } catch {
+        token = null;
       }
     }
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
+  console.log('JWT token used for API:', token); // Add this line
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
 
   public async get<T>(
     endpoint: string, 
