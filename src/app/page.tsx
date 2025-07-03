@@ -81,8 +81,10 @@ function HomePage() {
         setIsLoading(true);
         // Fetch featured products (you might want to add a specific endpoint for featured products)
         const response = await productService.getProducts();
-        if (response?.data) {
-          setFeaturedProducts(response.data.slice(0, 20)); // Get first 4 products as featured
+        if (response) {
+          // The response is already the array of products
+          const products = Array.isArray(response) ? response : [];
+          setFeaturedProducts(products.slice(0, 4)); // Get first 4 products as featured
         }
       } catch (err) {
         console.error('Error fetching featured products:', err);
