@@ -13,6 +13,7 @@ export const API_CONFIG = {
       BY_SLUG: (slug: string) => `/products/slug/${slug}`,
       SEARCH: '/products?name=',
       CATEGORIES: '/categories',
+      TAGS: '/tags',
       BY_CATEGORY: (category: string) => `/products/category/${category}`
     },
     
@@ -38,8 +39,11 @@ export const API_CONFIG = {
       GET_BY_USER_ID: '/coupons/get-voucher-by-userId'
     },
 
+    TAGS: {
+      BASE: '/tags',
+      BY_ID: (id: number | string) => `/tags/${id}`,
+    },
 
-    
     // Auth endpoints
     AUTH: {
       LOGIN: '/auth/login',

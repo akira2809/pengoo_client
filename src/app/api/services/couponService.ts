@@ -30,6 +30,7 @@ interface NextMilestoneCouponResponse {
 interface VerifyVoucherResponse {
   valid: boolean;
   message?: string;
+  vouchers: UserCoupon[];
 }
 
 export const couponService = {
@@ -54,14 +55,13 @@ export const couponService = {
   // Redeem coupon via token
   async redeemCoupon(token: string) {
     return apiClient.get<RedeemCouponResponse>(
-      `${API_CONFIG.ENDPOINTS.COUPONS.BASE}/redeem`,
-      { token }
-    );
-  },
+  `${API_CONFIG.ENDPOINTS.COUPONS.BASE}/redeem?token=${token}`
+  );
+},
 
   // Update coupon
   async updateCoupon(id: number, data: Partial<Coupon>) {
-    return apiClient.put<Coupon>(`${API_CONFIG.ENDPOINTS.COUPONS.BASE}/${id}`, data);
+    return apiClient.patch<Coupon>(`${API_CONFIG.ENDPOINTS.COUPONS.BASE}/${id}`, data);
   },
 
   // Delete coupon

@@ -84,6 +84,14 @@ export const productService = {
     }>>(API_CONFIG.ENDPOINTS.PRODUCTS.CATEGORIES);
   },
 
+  async getTags() {
+    return apiClient.get<Array<{
+      id: string;
+      name: string;
+      type: string;
+    }>>(API_CONFIG.ENDPOINTS.PRODUCTS.TAGS);
+  },
+
 };
 
 // Example usage:

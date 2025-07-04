@@ -15,7 +15,6 @@ export default function CouponsPage() {
   const error = useStore((state) => state.error);
 
   const [inputCode, setInputCode] = useState('');
-  const [message, setMessage] = useState('');
   const [checking, setChecking] = useState(false);
 
 
@@ -24,21 +23,18 @@ export default function CouponsPage() {
   }, [user?.id]);
 
   const handleCheckCoupon = async () => {
-    if (!inputCode.trim()) return;
+  if (!inputCode.trim()) return;
 
-    setChecking(true);
-    const isValid = await verifyVoucher(inputCode.trim());
-    setChecking(false);
+  setChecking(true);
+  const isValid = await verifyVoucher(inputCode.trim());
+  setChecking(false);
 
-    if (isValid) {
-      setMessage('🎉 Đã thêm mã vào tài khoản của bạn!');
-      setInputCode('');
-      fetchMyVouchers();
-      setTimeout(() => setMessage(''), 3000);
-    } else {
-      setMessage('❌ Mã không hợp lệ hoặc bạn không đủ điểm!');
-    }
-  };
+  if (isValid) {
+    setInputCode('');
+    fetchMyVouchers();
+  }
+};
+
 
 
   return (
@@ -67,7 +63,6 @@ export default function CouponsPage() {
           </button>
         </div>
 
-        {message && <p className="mt-2 text-sm text-blue-600">{message}</p>}
         {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       </div>
 

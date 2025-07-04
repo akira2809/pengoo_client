@@ -37,6 +37,10 @@ interface ProductPageLayoutProps {
     slug: string;
     productCount: number;
   }>;
+  tags: Array<{
+    id: string; 
+    name: string;
+  }>;
 }
 
 type PriceRange = {
@@ -63,11 +67,13 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   error,
   setFilters,
   categories,
+  tags
 }) => {
   const [sortSelected, setSortSelected] = useState(sortOptions[0]);
   const [sortedProducts, setSortedProducts] = useState(products);
   const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>({
     min: 0,
     max: 5000000,
@@ -115,9 +121,21 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
       ? prev.filter((id) => id !== categoryId)
       : [...prev, categoryId]
   );
-
-  setFilters((prev) => ({ ...prev, category: categoryId }));
+ 
+  setFilters((prev) => ({ ...prev, category: categoryId}));
 }, [setFilters]);
+
+
+const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const tagId = e.target.value;
+  setSelectedTags((prev) =>
+    prev.includes(tagId)
+      ? prev.filter((id) => id !== tagId)
+      : [...prev, tagId]
+  );
+  setFilters((prev) => ({ ...prev, tags: tagId }));
+}, [setFilters]);
+
 
 
   const formatPrice = useCallback((price: number | string) => {
@@ -332,6 +350,9 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
           categories={categories}
           selectedCategories={selectedCategories}
           onCategoryChange={handleCategoryChange}
+          tags={tags}
+          selectedTags={selectedTags}
+          onTagChange={handleTagChange}
           priceRange={priceRange}
           displayRange={displayRange}
           showOutOfStock={showOutOfStock}

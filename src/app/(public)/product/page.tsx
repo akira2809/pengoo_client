@@ -21,6 +21,7 @@ export default function ProductsPage() {
   });
 
   const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
 
   // 🛠️ CHỈ fetch product MỘT LẦN
   useEffect(() => {
@@ -41,8 +42,18 @@ export default function ProductsPage() {
       }
     };
 
+    const loadTags = async () => {
+    try {
+      const response = await productService.getTags();
+      setTags(response.data);
+    } catch (err) {
+      console.error('Failed to fetch tags:', err);
+    }
+  };
+
     loadProducts();
     loadCategories();
+    loadTags();
   }, []); // 👈 KHÔNG phụ thuộc filters nữa
 
   if (isLoading) {
@@ -90,6 +101,7 @@ export default function ProductsPage() {
       error={error} 
       setFilters={setFilters} 
       categories={categories} 
+      tags={tags}
     />
   );
 }
