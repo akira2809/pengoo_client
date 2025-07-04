@@ -79,10 +79,16 @@ function HomePage() {
     const fetchFeaturedProducts = async () => {
       try {
         setIsLoading(true);
-        // Fetch featured products (you might want to add a specific endpoint for featured products)
         const response = await productService.getProducts();
-        if (response?.data) {
-          setFeaturedProducts(response.data.slice(0, 20)); // Get first 4 products as featured
+        // If response is { data: Product[] }
+        // const products = response.data;
+        // If response is Product[]
+        const products = Array.isArray(response) ? response : response?.data;
+
+        if (products && Array.isArray(products)) {
+          setFeaturedProducts(products.slice(0, 4));
+        } else {
+          throw new Error('Invalid response format');
         }
       } catch (err) {
         console.error('Error fetching featured products:', err);
@@ -94,6 +100,8 @@ function HomePage() {
 
     fetchFeaturedProducts();
   }, []);
+
+
 
   return (
     <>

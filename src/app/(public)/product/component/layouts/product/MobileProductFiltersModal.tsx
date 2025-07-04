@@ -1,5 +1,5 @@
 // src/components/product/MobileProductFiltersModal.tsx
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, Fragment, SetStateAction } from 'react';
 import { MobileFilterModal } from '@/components/common/MobileFilterModal'; // Đảm bảo đường dẫn đúng
 import { Listbox, Transition, Switch } from '@headlessui/react';
 import { FaCheck, FaChevronDown } from 'react-icons/fa';
@@ -25,7 +25,7 @@ interface PriceRange {
 
 interface MobileProductFiltersModalProps {
   isOpen: boolean;
-  onClose: (e: React.MouseEvent) => void;
+  onClose: () => void;
   sortOptions: SortOption[];
   sortSelected: SortOption;
   setSortSelected: Dispatch<SetStateAction<SortOption>>;

@@ -11,7 +11,11 @@ const nextConfig: NextConfig = {
       'picsum.photos',
       'loremflickr.com',
       'assets.awwwards.com',
+      'placehold.co',
     ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;"
   },
   experimental: {
     scrollRestoration: true,

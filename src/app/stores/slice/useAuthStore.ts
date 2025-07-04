@@ -200,17 +200,29 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Gửi id của user cùng với các thông tin cập nhật
           const result = await authService.updateUser({ ...userDataToUpdate, id: user.id }, token);
-          
+
           if (result.success && result.user) {
-            // Cập nhật thông tin user trong store bằng cách merge dữ liệu mới
+            // Chuyển đổi result.user về kiểu User nếu cần thiết
+            const updatedUser: User = {
+              id: result.user.id || user.id,
+              username: result.user.username || user.username,
+              email: result.user.email || user.email,
+              full_name: result.user.full_name || user.full_name,
+              phone_number: result.user.phone_number || user.phone_number,
+              avatar_url: result.user.avatar_url || user.avatar_url,
+              address: result.user.address || user.address,
+              role: result.user.role || user.role,
+            };
             set(state => ({
-              user: { ...state.user, ...result.user } as User,
+              user: { ...state.user, ...updatedUser } as User,
               isLoading: false,
               error: null,
             }));
-            return { success: true, message: result.message, user: result.user };
+            return { success: true, message: result.message, user: updatedUser };
           } else {
-            // throw new Error(result.message || 'Cập nhật thông tin người dùng thất bại.');
+            const message = result.message || 'Cập nhật thông tin người dùng thất bại.';
+            set({ isLoading: false, error: message });
+            return { success: false, message };
           }
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định khi cập nhật người dùng.';
@@ -359,7 +371,7 @@ export const useAuthStore = create<AuthState>()(
         removeItem: (name) => localStorage.removeItem(name),
       },
       // Chỉ lưu các trường cần thiết vào localStorage để tránh lưu trữ quá nhiều dữ liệu không cần thiết
-      partialize: (state) => ({
+      partialize: (state: AuthState): Partial<AuthState> => ({
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
