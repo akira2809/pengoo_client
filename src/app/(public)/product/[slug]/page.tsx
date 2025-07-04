@@ -1,13 +1,14 @@
 // src/app/(public)/product/[slug]/page.tsx
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { ProductData, ProductFeature } from '@/app/type/product';
+import { ProductData } from '@/app/type/product';
 import { productService } from '@/app/api/services/productService';
 import { Skeleton } from '@/components/common/UI/Skeleton';
-import { mockFeatureSections, mockMainIntro } from '@/app/api/data/mockProducts';
+import { mockMainIntro } from '@/app/api/data/mockProducts';
+import ProductReviewsSection from '@/components/common/ProductReviewsSection';
 
 // Dynamic imports for large components
 const ProductImageGallery = dynamic(
@@ -60,14 +61,17 @@ const ProductDetailPage: React.FC<ProductPageProps> = ({
         </div>
         <div className="w-full md:w-1/2 md:pl-8">
           <ProductDetailsSection 
+            productId={product.id}
             productName={product.product_name || 'Sản phẩm không có tên'}
             originalPrice={product.product_price || 0}
-            discountedPrice={product.discount || 0}
+            discount={product.discount || 0}
             description={product.description || ''}
             features={product.features?.map(f => f.title) || []}
             warranty={product.warranty || 'Không có thông tin bảo hành'}
             shippingInfo={product.shipping_info || 'Vận chuyển toàn quốc'}
-            isLoading={false} 
+            isLoading={false}
+            image_url={product.images?.[0]?.url || ''}
+            slug={product.slug || String(product.id)}
           />
         </div>
       </div>
@@ -91,13 +95,16 @@ const ProductDetailPage: React.FC<ProductPageProps> = ({
         })) || []}
       />
       
+      <ProductReviewsSection productId={product.id} />
+      
       <BlogSection />
     </div>
   );
 };
 
 export default function ProductDetailPageWrapper() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params?.slug as string | undefined;
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -196,14 +203,12 @@ export default function ProductDetailPageWrapper() {
 
 
 
-  const featureSections: ProductFeature[] = mockFeatureSections;
   const mainIntro = mockMainIntro;
   
   return (
     <ProductDetailPage 
       product={product}
       mainIntro={mainIntro}
-      featureSections={featureSections}
     />
   );
 }

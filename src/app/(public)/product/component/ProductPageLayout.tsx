@@ -81,31 +81,44 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   const [itemsPerPage] = useState(22); // Số sản phẩm mỗi trang
 
   // --- Handlers for Filters ---
-  const handleCategoryChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const categoryId = e.target.value;
+  // const handleCategoryChange = useCallback(
+  //   (e: React.ChangeEvent<HTMLInputElement>) => {
+  //     e.preventDefault();
+  //     e.stopPropagation();
+  //     const categoryId = e.target.value;
   
-      setSelectedCategories((prev) => {
-        const newSelectedCategories = prev.includes(categoryId)
-          ? prev.filter((id) => id !== categoryId)
-          : [...prev, categoryId];
-        return newSelectedCategories;
-      });
+  //     setSelectedCategories((prev) => {
+  //       const newSelectedCategories = prev.includes(categoryId)
+  //         ? prev.filter((id) => id !== categoryId)
+  //         : [...prev, categoryId];
+  //       return newSelectedCategories;
+  //     });
   
-      // Move setFilters outside of setSelectedCategories
-      const newSelectedCategories = selectedCategories.includes(categoryId)
-        ? selectedCategories.filter((id) => id !== categoryId)
-        : [...selectedCategories, categoryId];
+  //     // Move setFilters outside of setSelectedCategories
+  //     const newSelectedCategories = selectedCategories.includes(categoryId)
+  //       ? selectedCategories.filter((id) => id !== categoryId)
+  //       : [...selectedCategories, categoryId];
       
-      setFilters((prevFilters) => ({
-        ...prevFilters,
-        category: newSelectedCategories.length > 0 ? newSelectedCategories[0] : "",
-      }));
-    },
-    [selectedCategories, setFilters]
+  //     setFilters((prevFilters) => ({
+  //       ...prevFilters,
+  //       category: newSelectedCategories.length > 0 ? newSelectedCategories[0] : "",
+  //     }));
+  //   },
+  //   [selectedCategories, setFilters]
+  // );
+
+  //e.preventDefault() và e.stopPropagation() chặn event xử lí checked
+  const handleCategoryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const categoryId = e.target.value;
+  setSelectedCategories((prev) =>
+    prev.includes(categoryId)
+      ? prev.filter((id) => id !== categoryId)
+      : [...prev, categoryId]
   );
+
+  setFilters((prev) => ({ ...prev, category: categoryId }));
+}, [setFilters]);
+
 
   const formatPrice = useCallback((price: number | string) => {
     const numPrice = typeof price === "string" ? parseFloat(price) : price;

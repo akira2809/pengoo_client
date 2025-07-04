@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Import useEffect
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuthStore } from '../../stores/slice/useAuthStore'; // IMPORT CỬA HÀNG CỦA BẠN Ở ĐÂY
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  
+  const token = searchParams.get('token'); // Lấy token từ URL
+
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -19,6 +20,16 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  // Lấy hàm resetPassword từ Zustand store
+  const resetPassword = useAuthStore((state) => state.resetPassword);
+
+  // Thêm useEffect để kiểm tra token khi component mount
+  useEffect(() => {
+    if (!token) {
+      setError('Mã token đặt lại mật khẩu không được tìm thấy hoặc không hợp lệ.');
+    }
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,22 +43,22 @@ export default function ResetPasswordPage() {
 
   const validateForm = () => {
     if (!formData.password) {
-      setError('Password is required');
+      setError('Mật khẩu là bắt buộc.');
       return false;
     }
     
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Mật khẩu phải có ít nhất 6 ký tự.');
       return false;
     }
     
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Mật khẩu không khớp.');
       return false;
     }
     
-    if (!token) {
-      setError('Invalid or expired reset token');
+    if (!token) { // Kiểm tra token ở đây một lần nữa
+      setError('Mã token không hợp lệ hoặc đã hết hạn.');
       return false;
     }
     
@@ -63,25 +74,43 @@ export default function ResetPasswordPage() {
       setIsLoading(true);
       setError('');
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // In a real app, you would send the token and new password to your API
-      // const response = await fetch('/api/reset-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token, password: formData.password })
-      // });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.message || 'Something went wrong');
-      
-      setIsSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      // GỌI HÀM resetPassword TỪ useAuthStore
+      const result = await resetPassword(token as string, formData.password); // Truyền token và mật khẩu mới
+
+      if (result.success) {
+        setIsSuccess(true);
+        // Tùy chọn: Chuyển hướng người dùng sau vài giây
+        setTimeout(() => {
+          router.push('/signin');
+        }, 3000);
+      } else {
+        setError(result.message || 'Đặt lại mật khẩu thất bại. Vui lòng thử lại.');
+      }
+    } catch (err: any) { // Catch lỗi mạng hoặc lỗi không xác định
+      console.error('Lỗi khi gửi yêu cầu đặt lại mật khẩu:', err);
+      setError('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Nếu không có token hợp lệ ban đầu, hoặc nếu đặt lại thành công
+  if (!token && !isSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h2>
+          <p className="text-gray-700 mb-6">Mã token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới.</p>
+          <Link
+            href="/forgot-password"
+            className="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Yêu cầu đặt lại mật khẩu mới
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
@@ -116,15 +145,15 @@ export default function ResetPasswordPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Password Reset Successful</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Đặt lại mật khẩu thành công</h1>
             <p className="text-gray-600 mb-6">
-              Your password has been successfully reset. You can now sign in with your new password.
+              Mật khẩu của bạn đã được đặt lại thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới của mình.
             </p>
             <Link
               href="/signin"
               className="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Back to Sign In
+              Quay lại Đăng nhập
             </Link>
           </div>
         </div>
@@ -152,9 +181,9 @@ export default function ResetPasswordPage() {
       <div className="w-full md:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Đặt lại mật khẩu</h1>
             <p className="text-gray-600">
-              Enter your new password below.
+              Nhập mật khẩu mới của bạn bên dưới.
             </p>
           </div>
 
@@ -167,7 +196,7 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                New Password
+                Mật khẩu mới
               </label>
               <div className="relative">
                 <input
@@ -175,12 +204,13 @@ export default function ResetPasswordPage() {
                   id="password"
                   name="password"
                   className={`w-full px-4 py-2 border ${
-                    error.includes('Password') ? 'border-red-500' : 'border-gray-300'
+                    error.includes('Mật khẩu') ? 'border-red-500' : 'border-gray-300' // Cập nhật điều kiện error
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
-                  placeholder="Enter your new password"
+                  placeholder="Nhập mật khẩu mới của bạn"
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isLoading}
+                  required
                 />
                 <button
                   type="button"
@@ -204,7 +234,7 @@ export default function ResetPasswordPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm New Password
+                Xác nhận mật khẩu mới
               </label>
               <div className="relative">
                 <input
@@ -212,12 +242,13 @@ export default function ResetPasswordPage() {
                   id="confirmPassword"
                   name="confirmPassword"
                   className={`w-full px-4 py-2 border ${
-                    error.includes('match') ? 'border-red-500' : 'border-gray-300'
+                    error.includes('khớp') ? 'border-red-500' : 'border-gray-300' // Cập nhật điều kiện error
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
-                  placeholder="Confirm your new password"
+                  placeholder="Xác nhận mật khẩu mới của bạn"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   disabled={isLoading}
+                  required
                 />
                 <button
                   type="button"
@@ -247,16 +278,16 @@ export default function ResetPasswordPage() {
                   isLoading ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
-                {isLoading ? 'Resetting Password...' : 'Reset Password'}
+                {isLoading ? 'Đang đặt lại mật khẩu...' : 'Đặt lại mật khẩu'}
               </button>
             </div>
           </form>
 
           <div className="mt-6 text-center text-sm">
             <p className="text-gray-600">
-              Remember your password?{' '}
+              Nhớ mật khẩu của bạn?{' '}
               <Link href="/signin" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign in
+                Đăng nhập
               </Link>
             </p>
           </div>

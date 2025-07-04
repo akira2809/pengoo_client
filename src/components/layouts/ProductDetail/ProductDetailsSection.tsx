@@ -7,42 +7,51 @@ import Button from './component/Button';
 import InfoItem from './component/InfoItem';
 import { useCartStore } from '@/app/stores/slice/cartStore';
 import toast from 'react-hot-toast';
-// import FeatureAccordion from './component/FeatureAccordion';
 
 interface ProductDetailsSectionProps {
+  productId: string | number;
   productName: string;
   originalPrice: number;
-  discountedPrice?: number;
-  discount?: number;
+  discount?: number; // Đây là phần trăm giảm giá (ví dụ: 12 cho 12%)
   description: string;
   features: string[];
   warranty: string;
   shippingInfo: string;
   isLoading?: boolean;
+  image_url?: string;
+  slug?: string;
 }
 
 const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
+  productId,
   productName,
   originalPrice,
-  discountedPrice,
+  discount, // Lấy prop discount từ đây
   description,
   features,
   warranty,
   shippingInfo,
+  image_url = '',
+  slug = ''
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const addItem = useCartStore(state => state.addItem);
 
+  // Tính toán discountedPrice dựa trên originalPrice và discount (phần trăm)
+  const calculatedDiscountedPrice = discount && discount > 0
+    ? originalPrice * (1 - discount / 100)
+    : originalPrice; // Nếu không có discount, giá giảm chính là giá gốc
+
   const handleAddToCart = () => {
-    // Add item to cart with the specified quantity
-    for (let i = 0; i < quantity; i++) {
-      addItem({
-        id: Date.now(), // Using timestamp as a simple unique ID
-        name: productName,
-        price: discountedPrice || originalPrice,
-        image_url: '' // You might want to pass the product image URL as a prop
-      });
-    }
+    addItem({
+      id: Number(productId),
+      product_name: productName,
+      product_price: calculatedDiscountedPrice,
+      quantity: quantity,
+      image_url: image_url,
+      slug: slug,
+      description: description
+    });
     
     toast.success(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng!`, {
       duration: 3000,
@@ -59,7 +68,6 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
 
   const handleBuyNow = () => {
     handleAddToCart();
-    // You might want to navigate to the cart page here
     console.log(`Mua ngay ${quantity} sản phẩm "${productName}".`);
     toast.success(`Đang tiến hành mua ${quantity} sản phẩm "${productName}"!`, {
       duration: 3000,
@@ -94,8 +102,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       <div className="mb-6">
         <PriceDisplay 
           originalPrice={originalPrice} 
-          discountedPrice={discountedPrice}
-          discount={0} // Pass the discount amount here if available
+          percentageDiscount={discount} // Truyền percentageDiscount xuống đây
         />
       </div>
       
@@ -106,13 +113,13 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         </p>
       </div>
       
-      {/* Features */}
-      <div className="mb-6">
-        {/* <FeatureAccordion 
+      {/* Features - uncomment khi cần */}
+      {/* <div className="mb-6">
+        <FeatureAccordion 
           title="Tính năng sản phẩm"
           features={features} 
-        /> */}
-      </div>
+        />
+      </div> */}
       
       {/* Quantity Selector */}
       <div className="mb-6">

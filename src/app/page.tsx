@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { productService } from '@/app/api/services/productService';
 import { ProductData } from '@/app/type/product';
 import { Skeleton } from '@/components/common/UI/Skeleton';
+import ScratchMinigamePopup from '@/components/common/scratch-minigame/ScratchMinigamePopup';
+
 
 // Tạo một component fallback mặc định
 const Fallback = ({ className = '' }: { className?: string }) => (
@@ -77,10 +79,16 @@ function HomePage() {
     const fetchFeaturedProducts = async () => {
       try {
         setIsLoading(true);
-        // Fetch featured products (you might want to add a specific endpoint for featured products)
         const response = await productService.getProducts();
-        if (response?.data) {
-          setFeaturedProducts(response.data.slice(0, 20)); // Get first 4 products as featured
+        // If response is { data: Product[] }
+        // const products = response.data;
+        // If response is Product[]
+        const products = Array.isArray(response) ? response : response?.data;
+
+        if (products && Array.isArray(products)) {
+          setFeaturedProducts(products.slice(0, 4));
+        } else {
+          throw new Error('Invalid response format');
         }
       } catch (err) {
         console.error('Error fetching featured products:', err);
@@ -92,6 +100,8 @@ function HomePage() {
 
     fetchFeaturedProducts();
   }, []);
+
+
 
   return (
     <>
@@ -106,7 +116,7 @@ function HomePage() {
           </h2>
           
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, index) => (
                 <div key={index} className="flex flex-col space-y-3">
                   <Skeleton className="h-64 w-full rounded-lg" />
@@ -127,14 +137,14 @@ function HomePage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {featuredProducts.map((product) => (
                   <DynamicProductCard key={product.id} product={product} />
                 ))}
               </div>
               <div className="flex justify-center mt-10">
                 <Link
-                  href="/products"
+                  href="/product"
                   className="px-6 py-3 border border-black rounded-full text-sm sm:text-base font-medium hover:bg-black hover:text-white transition-colors duration-300"
                 >
                   Xem tất cả sản phẩm
@@ -180,6 +190,9 @@ function HomePage() {
       <Suspense fallback={<div className="h-[400px] w-full bg-gray-100 animate-pulse my-8" />}>
         <BlogSection />
       </Suspense>
+
+      {}
+      <ScratchMinigamePopup buttonImage="/images/greenssrb.png" />
     </>
   );
 }

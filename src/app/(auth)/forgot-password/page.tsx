@@ -1,8 +1,10 @@
+// pages/forgot-password.tsx
 "use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuthStore } from '../../stores/slice/useAuthStore'; // Import the store
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -10,10 +12,13 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Get the forgotPassword function from the Zustand store
+  const forgotPassword = useAuthStore((state) => state.forgotPassword);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
+    setError(''); // Clear previous errors
+
     // Basic email validation
     if (!email) {
       setError('Email is required');
@@ -25,15 +30,23 @@ export default function ForgotPasswordPage() {
       return;
     }
     
+    setIsLoading(true); // Set loading state
     try {
-      setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setIsSubmitted(true);
-    } catch (_error) {
-      setError('Something went wrong. Please try again.');
+      // Call the forgotPassword function from the useAuthStore
+      const result = await forgotPassword(email);
+
+      if (result.success) {
+        setIsSubmitted(true); // Show success message
+      } else {
+        // Display error message from the store's response
+        setError(result.message || 'Something went wrong. Please try again.');
+      }
+    } catch (_error: any) {
+      // Catch any unexpected errors during the process
+      console.error("Forgot password submission error:", _error);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Reset loading state
     }
   };
 
@@ -84,7 +97,7 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    if (error) setError('');
+                    if (error) setError(''); // Clear error when user starts typing
                   }}
                   disabled={isLoading}
                 />

@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "../components/layouts/Header/Header";
 import Footer from "../components/layouts/Footer/Footer"; // Đảm bảo đã import Footer
 import { Roboto,  } from "next/font/google";
+import Chatbot from '@/components/Chatbot/Chatbot';
 // const robotoSlab = Roboto_Slab({ subsets: ["latin"] });
 import { Metadata } from "next";
 import { Toaster } from 'react-hot-toast';
@@ -46,8 +47,8 @@ export default function RootLayout({
             }}
           />
           {children}
-  
         </main>
+        <Chatbot />
         <Footer />
       </body>
     </html>

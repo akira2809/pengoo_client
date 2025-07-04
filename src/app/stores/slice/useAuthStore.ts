@@ -1,8 +1,12 @@
+// src/store/useAuthStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+// Điều chỉnh đường dẫn theo cấu trúc thư mục của bạn
+import { authService } from '../../api/services/authService';
 
 // Định nghĩa interface User để đảm bảo kiểu dữ liệu nhất quán
-interface User {
+// Export để có thể tái sử dụng ở các component
+export interface User {
   id: string;
   username: string;
   email: string;
@@ -35,7 +39,10 @@ interface AuthState {
     role?: string;
   }) => Promise<{ success: boolean; message: string }>;
   verifyToken: (token: string) => Promise<{ success: boolean; user?: User; message?: string }>;
+  forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (token: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   updateUser: (userData: Partial<User> & { id: string }) => Promise<{ success: boolean; message: string; user?: User }>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   clearError: () => void;
   logout: () => void;
 }
@@ -49,151 +56,186 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
 
+      /**
+       * Xử lý quá trình đăng nhập người dùng.
+       * Bao gồm gọi API đăng nhập và xác minh token để lấy thông tin người dùng.
+       */
       login: async (credentials) => {
-        console.log('Login attempt with credentials:', credentials);
         set({ isLoading: true, error: null });
         try {
-          // Bước 1: Gọi API đăng nhập để lấy access_token
-          const signInResponse = await fetch('http://localhost:3000/api/auth/signin', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password
-            }),
-          });
+          const signInData = await authService.signIn(credentials);
+          console.log('Sign in response from service:', signInData);
 
-          const signInData = await signInResponse.json();
-          console.log('Sign in response:', signInData);
+          const verifyData = await authService.verifyToken(signInData.access_token!); // Dùng ! vì đã kiểm tra presence trong service
+          console.log('Verify token response from service:', verifyData);
 
-          // Kiểm tra xem access_token có tồn tại không
-          if (!signInData.access_token) {
-            console.error('No token in response:', signInData);
-            throw new Error('No authentication token received from server');
+          if (!verifyData.isValid || !verifyData.decoded) {
+            throw new Error(verifyData.message || 'Xác thực token thất bại sau đăng nhập.');
           }
 
-          // Bước 2: Sử dụng access_token để xác thực và lấy thông tin người dùng
-          const verifyResponse = await fetch('http://localhost:3000/api/auth/verify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              token: signInData.access_token // Gửi access_token để xác minh
-            }),
-          });
+          // Chuyển đổi dữ liệu decoded từ service thành kiểu User của store
+          const decodedUser: User = {
+            id: verifyData.decoded.sub || verifyData.decoded.userId || '',
+            username: verifyData.decoded.username || verifyData.decoded.email || '',
+            email: verifyData.decoded.email || '',
+            full_name: verifyData.decoded.full_name || verifyData.decoded.name || '',
+            phone_number: verifyData.decoded.phone_number || verifyData.decoded.phone || '',
+            avatar_url: verifyData.decoded.avatar_url || verifyData.decoded.picture || '',
+            address: verifyData.decoded.address || '',
+            role: verifyData.decoded.role || 'user'
+          };
 
-          const verifyData = await verifyResponse.json();
-
-          if (!verifyResponse.ok) {
-            throw new Error(verifyData.message || 'Token verification failed after sign-in');
-          }
-
-          // Cập nhật trạng thái của store sau khi đăng nhập thành công
-          const authState = {
-            user: verifyData.user || null,
-            token: signInData.access_token, // Lưu access_token vào store
+          set({
+            user: decodedUser,
+            token: signInData.access_token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
-          };
+          });
 
-          set(authState);
-
-          return { success: true, message: 'Login successful' };
+          return { success: true, message: 'Đăng nhập thành công.' };
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'An error occurred during login';
-          console.error('Login error:', error);
-          set({ error: errorMessage, isLoading: false });
+          const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi không xác định khi đăng nhập.';
+          console.error('Lỗi đăng nhập:', error);
+          // Đảm bảo xóa trạng thái xác thực khi đăng nhập thất bại
+          set({ error: errorMessage, isLoading: false, user: null, token: null, isAuthenticated: false });
           return { success: false, message: errorMessage };
         }
       },
 
+      /**
+       * Xử lý quá trình đăng ký người dùng mới.
+       * Sau khi đăng ký thành công, sẽ tự động thử đăng nhập.
+       */
       register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ...userData,
-              role: userData.role || 'user',
-              avatar_url: userData.avatar_url || '',
-              address: userData.address || '',
-            }),
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.error || 'Registration failed');
-          }
-
-          set({
-            user: data.user,
-            token: data.token,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-
-          return { success: true, message: 'Registration successful' };
-        } catch (error: unknown) {
-          console.error('Error in register:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-          set({ error: errorMessage, isLoading: false });
-          return { success: false, message: errorMessage };
-        }
-      },
-
-      clearError: () => set({ error: null }),
-      
-      updateUser: async (userData) => {
-        const { token } = get();
-        if (!token) {
-          return { success: false, message: 'Chưa đăng nhập' };
-        }
-
-        try {
-          set({ isLoading: true, error: null });
+          const data = await authService.register(userData); // Gọi qua authService
           
-          const response = await fetch('http://localhost:3000/api/users/update', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(userData)
-          });
+          console.log("Register API raw response:", data);
 
-          const data = await response.json();
+          // Nếu backend trả về thông tin người dùng (ví dụ: data.id) hoặc không ném lỗi
+          // thì chúng ta coi là đăng ký thành công.
+          if (data.id || data.message) { // Kiểm tra nếu có id hoặc message thành công
+            console.log('Registration successful. Response:', data);
 
-          if (!response.ok) {
-            throw new Error(data.message || 'Cập nhật thất bại');
+            // Tự động đăng nhập người dùng sau khi đăng ký thành công
+            const loginResult = await get().login({
+              email: userData.email,
+              password: userData.password,
+            });
+
+            if (loginResult.success) {
+              return { success: true, message: 'Đăng ký và đăng nhập thành công.' };
+            } else {
+              // Đăng ký thành công nhưng đăng nhập tự động thất bại
+              return { success: false, message: `Đăng ký thành công nhưng không thể tự động đăng nhập: ${loginResult.message}` };
+            }
+          } else {
+              // Nếu không có 'id' hoặc 'message' và không có lỗi từ authService.register
+              throw new Error('Đăng ký thành công nhưng phản hồi từ máy chủ không rõ ràng.');
           }
 
-          // Cập nhật thông tin user trong store
-          set(state => ({
-            user: { ...state.user, ...userData } as User,
-            isLoading: false
-          }));
-
-          return { 
-            success: true, 
-            message: 'Cập nhật thông tin thành công',
-            user: { ...get().user, ...userData } as User
-          };
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Lỗi khi cập nhật thông tin';
+          console.error('Lỗi khi đăng ký:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Đăng ký thất bại.';
+          // Đảm bảo xóa trạng thái xác thực khi đăng ký thất bại
+          set({ error: errorMessage, isLoading: false, user: null, token: null, isAuthenticated: false });
+          return { success: false, message: errorMessage };
+        }
+      },
+
+      /**
+       * Gửi yêu cầu đặt lại mật khẩu qua email.
+       */
+      forgotPassword: async (email: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const data = await authService.forgotPassword(email);
+          return { success: true, message: data.message || 'Yêu cầu đã được gửi thành công.' };
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra khi yêu cầu đặt lại mật khẩu.';
+          set({ error: errorMessage });
+          return { success: false, message: errorMessage };
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      /**
+       * Thực hiện đặt lại mật khẩu bằng token và mật khẩu mới.
+       */
+      resetPassword: async (token: string, newPassword: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const data = await authService.resetPassword(token, newPassword);
+          return { success: true, message: data.message || 'Mật khẩu đã được đặt lại thành công.' };
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra khi đặt lại mật khẩu.';
+          set({ error: errorMessage });
+          return { success: false, message: errorMessage };
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      /**
+       * Cập nhật thông tin người dùng.
+       * Yêu cầu người dùng phải đang đăng nhập.
+       */
+      updateUser: async (userDataToUpdate) => {
+        const { token, user } = get();
+        if (!token) {
+          return { success: false, message: 'Người dùng chưa đăng nhập.' };
+        }
+        if (!user || !user.id) { // Đảm bảo có user và id để cập nhật
+          return { success: false, message: 'Không tìm thấy thông tin người dùng để cập nhật.' };
+        }
+
+        set({ isLoading: true, error: null });
+        try {
+          // Gửi id của user cùng với các thông tin cập nhật
+          const result = await authService.updateUser({ ...userDataToUpdate, id: user.id }, token);
+
+          if (result.success && result.user) {
+            // Chuyển đổi result.user về kiểu User nếu cần thiết
+            const updatedUser: User = {
+              id: result.user.id || user.id,
+              username: result.user.username || user.username,
+              email: result.user.email || user.email,
+              full_name: result.user.full_name || user.full_name,
+              phone_number: result.user.phone_number || user.phone_number,
+              avatar_url: result.user.avatar_url || user.avatar_url,
+              address: result.user.address || user.address,
+              role: result.user.role || user.role,
+            };
+            set(state => ({
+              user: { ...state.user, ...updatedUser } as User,
+              isLoading: false,
+              error: null,
+            }));
+            return { success: true, message: result.message, user: updatedUser };
+          } else {
+            const message = result.message || 'Cập nhật thông tin người dùng thất bại.';
+            set({ isLoading: false, error: message });
+            return { success: false, message };
+          }
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định khi cập nhật người dùng.';
+          console.error('Lỗi cập nhật người dùng:', error);
           set({ error: errorMessage, isLoading: false });
           return { success: false, message: errorMessage };
         }
       },
-      
 
+      /**
+       * Xóa thông báo lỗi hiện tại.
+       */
+      clearError: () => set({ error: null }),
+
+      /**
+       * Đăng xuất người dùng, xóa tất cả trạng thái xác thực.
+       */
       logout: () => {
         set({
           user: null,
@@ -202,35 +244,44 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           error: null,
         });
+        // Bạn có thể thêm logic xóa các dữ liệu khác liên quan đến phiên làm việc nếu cần
       },
 
-      // Hàm verifyToken được cải thiện
-      verifyToken: async (token: string) => {
+      /**
+       * Cập nhật mật khẩu người dùng
+       */
+      updatePassword: async (currentPassword: string, newPassword: string) => {
+        const { token } = get();
+        if (!token) {
+          return { success: false, message: 'Người dùng chưa đăng nhập.' };
+        }
+
+        set({ isLoading: true, error: null });
         try {
-          const response = await fetch('http://localhost:3000/api/auth/verify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token }),
-          });
+          const result = await authService.updatePassword(currentPassword, newPassword, token);
+          set({ isLoading: false });
+          return { success: true, message: result.message || 'Cập nhật mật khẩu thành công.' };
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
+          console.error('Lỗi đổi mật khẩu:', error);
+          set({ error: errorMessage, isLoading: false });
+          return { success: false, message: errorMessage };
+        }
+      },
 
-          let data: any;
-          try {
-            data = await response.json();
-            console.log('Verify Token API Response Data:', data);
-          } catch (jsonError) {
-            console.error('Error parsing JSON response from /api/auth/verify:', jsonError);
-            console.error('Raw response status:', response.status);
-            return { 
-              success: false, 
-              message: `Lỗi xử lý phản hồi từ máy chủ (Mã lỗi: ${response.status})` 
-            };
-          }
+      /**
+       * Xác minh một token đã cho.
+       * Được sử dụng để kiểm tra token từ localStorage khi khởi động ứng dụng.
+       */
+      verifyToken: async (token: string) => {
+        set({ isLoading: true, error: null }); // Đặt loading khi bắt đầu xác minh
+        try {
+          const data = await authService.verifyToken(token);
+          console.log('Verify Token API Response Data:', data);
 
-          // Kiểm tra nếu API trả về isValid thay vì user
           if (data.isValid && data.decoded) {
-            const userData = {
+            // Chuyển đổi dữ liệu decoded thành kiểu User của store
+            const userData: User = {
               id: data.decoded.sub || data.decoded.userId || '',
               username: data.decoded.username || data.decoded.email || '',
               email: data.decoded.email || '',
@@ -241,66 +292,63 @@ export const useAuthStore = create<AuthState>()(
               role: data.decoded.role || 'user'
             };
 
-            // Cập nhật trạng thái store
             set({
               user: userData,
               isAuthenticated: true,
-              token: token,
+              token: token, // Lưu token hợp lệ vào store
               isLoading: false,
               error: null,
             });
-
-            return { 
-              success: true, 
-              user: userData 
-            };
+            return { success: true, user: userData, message: data.message || 'Token hợp lệ.' };
+          } else {
+            // Nếu token không hợp lệ hoặc phản hồi không mong đợi, xóa trạng thái
+            set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: data.message || 'Token không hợp lệ.' });
+            return { success: false, message: data.message || 'Token không hợp lệ.' };
           }
-
-          // Nếu không phải định dạng mong đợi
-          return { 
-            success: false, 
-            message: data.message || 'Định dạng dữ liệu không hợp lệ từ máy chủ' 
-          };
         } catch (error: unknown) {
-          // Bắt các lỗi mạng hoặc lỗi xảy ra trước khi có phản hồi JSON
-          let errorMessage = 'An unexpected network error occurred during token verification.';
+          let errorMessage = 'Lỗi mạng không mong muốn khi xác minh token.';
           if (error instanceof Error) {
-            errorMessage = error.message || 'Unknown network error occurred.';
+            errorMessage = error.message || 'Lỗi mạng không xác định.';
           } else if (typeof error === 'string') {
             errorMessage = error;
           }
-
-          console.error('Error in verifyToken outer catch block (useAuthStore):', error);
-          return {
-            success: false,
-            message: errorMessage
-          };
+          console.error('Lỗi khi xác minh token:', error);
+          // Luôn xóa trạng thái người dùng khi có lỗi xác minh token để đảm bảo an toàn
+          set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: errorMessage });
+          return { success: false, message: errorMessage };
         }
       }
     }),
     {
       name: 'auth-storage', // Tên cho localStorage
       storage: {
+        // Tùy chỉnh getItem để xử lý dữ liệu từ localStorage một cách an toàn
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-          return JSON.parse(str);
+          try {
+            const data = JSON.parse(str);
+            // Kiểm tra xem dữ liệu có đúng định dạng persist mong đợi không
+            if (data && typeof data.state === 'object' && data.version !== undefined) {
+              return data;
+            } else {
+              console.warn(`Dữ liệu localStorage cho '${name}' không đúng định dạng persist, cố gắng khôi phục.`);
+              // Nếu data không phải là object chứa 'state', giả định đó là state cũ
+              return { state: data, version: 0 };
+            }
+          } catch (e) {
+            console.error('Lỗi phân tích cú pháp localStorage item:', name, e);
+            return null; // Trả về null để zustand không khôi phục state từ localStorage
+          }
         },
+        // Tùy chỉnh setItem để lưu trữ toàn bộ object `value` (bao gồm `state` và `version`)
         setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify({
-            state: {
-              ...value.state,
-              user: value.state.user,
-              token: value.state.token,
-              isAuthenticated: value.state.isAuthenticated,
-            },
-            version: value.version,
-          }));
+          localStorage.setItem(name, JSON.stringify(value));
         },
         removeItem: (name) => localStorage.removeItem(name),
       },
-      // Chỉ lưu các trường cần thiết vào localStorage
-      partialize: (state) => ({
+      // Chỉ lưu các trường cần thiết vào localStorage để tránh lưu trữ quá nhiều dữ liệu không cần thiết
+      partialize: (state: AuthState): Partial<AuthState> => ({
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,

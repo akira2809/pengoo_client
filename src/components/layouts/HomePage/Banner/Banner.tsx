@@ -4,10 +4,10 @@ import { gsap } from "gsap";
 import Image from "next/image";
 
 const images = [
-  "/board-game-card-design_699907-1.webp",
-  "/board-game-card-design_699907-1.webp",
-  "/board-game-card-design_699907-1.webp",
-  "/board-game-card-design_699907-1.webp",
+  "/banner1.png",
+  "/Spacefest-Poker_HeroBanner_PC-min.png",
+  "/Hero-Banner_Mua4tang1_4000x2000_min.webp",
+  "/Nomad_Homepage-banner_4000x2000_fdc9b88b-bca2-4ee8-80a4-cbabec9fe2b9.webp",
 ];
 
 // Preload images

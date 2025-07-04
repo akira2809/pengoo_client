@@ -35,7 +35,7 @@ export const PriceRangeFilter: React.FC<PriceRangeFilterProps> = ({
   formatPrice,
 }) => {
   return (
-    <FilterDropdown title="Giá" initialOpen={true}>
+    <FilterDropdown title="Giá" initialOpen={false}>
       <div className="text-gray-700 text-base">
         <p>Khoảng giá: {formatPrice(priceRange.min)} - {formatPrice(priceRange.max)}</p>
         <div className="flex justify-between items-center mt-2 text-sm">

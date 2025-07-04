@@ -60,13 +60,36 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
     
   // Convert images to the correct format
   const productImages = Array.isArray(item.images) 
-    ? item.images.map((img, index) => ({
-        id: index + 1, // Generate a simple ID if not available
-        url: typeof img === 'string' ? img : ''
-      }))
+    ? item.images.map((img, index) => {
+        if (typeof img === 'string') {
+          return {
+            id: index + 1,
+            url: img,
+            name: index === 0 ? 'main' : '',
+            ord: index
+          };
+        }
+        return {
+          id: img.id || index + 1,
+          url: img.url || '',
+          name: 'name' in img ? String(img.name) : (index === 0 ? 'main' : ''),
+          ord: 'ord' in img ? Number(img.ord) : index
+        };
+      })
     : [];
+    
+  // If no images but we have an image_url, use that as the main image
+  if (productImages.length === 0 && item.image_url) {
+    productImages.push({
+      id: 1,
+      url: item.image_url,
+      name: 'main',
+      ord: 0
+    });
+  }
 
-  return {
+  // Create the base product object
+  const productData = {
     id: String(item.id),
     product_name: item.product_name || '',
     name: item.product_name || '',
@@ -77,21 +100,29 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
     status: item.status === 'Available' ? 1 : 0,
     meta_title: item.meta_title || '',
     meta_description: item.meta_description || '',
-    image_url: imageUrl,
+    image_url: productImages[0]?.url || imageUrl, // Use first image URL or fallback to image_url
     quantity_sold: item.quantity_sold || 0,
     category_ID: categoryId,
     publisher_ID: publisherID,
-    tags: item.tags || [],
+    tags: Array.isArray(item.tags) ? item.tags : [],
     images: productImages,
-    features: (item.features || []).map(f => ({
-      id: f.id,
-      title: f.title || '',
-      content: f.content || '',
-      image: f.image || ''
-    })),
-    created_at: item.created_at,
-    updated_at: item.updated_at,
+    features: Array.isArray(item.features) 
+      ? item.features.map(f => ({
+          id: f.id || 0,
+          title: f.title || '',
+          content: f.content || '',
+          image: f.image || ''
+        }))
+      : [],
+    created_at: item.created_at || new Date().toISOString(),
+    updated_at: item.updated_at || new Date().toISOString(),
+    quantity_stock: 'quantity_stock' in item ? Number(item.quantity_stock) : 0,
+    warranty: 'warranty' in item ? String(item.warranty || '') : '',
+    shipping_info: 'shipping_info' in item ? String(item.shipping_info || '') : ''
   };
+  
+  console.log('Mapped product data:', productData); // Debug log
+  return productData;
 };
 
 // Helper function to handle errors

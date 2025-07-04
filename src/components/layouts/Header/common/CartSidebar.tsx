@@ -7,12 +7,23 @@ import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { useCartStore } from "@/app/stores/slice/cartStore";
 
+// Format number to VND without decimal part and space
+const formatVND = (amount: number | string): string => {
+  // Convert to number and round to nearest integer
+  const num = Math.round(Number(amount) * 1);
+  // Format with thousand separators and add ₫
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + '₫';
+};
+
 export interface CartItem {
   id: number;
-  name: string;
-  price: number;
+  product_name: string;
+  product_price: number | string;
   quantity: number;
-  image_url: string;
+  image_url?: string;
+  discount?: number;
+  slug?: string;
+  description?: string;
 }
 
 interface CartSidebarProps {
@@ -30,7 +41,13 @@ function CartSidebarContent({
   const cartItemsRef = useRef<HTMLDivElement>(null);
 
   const totalAmount = cartItems.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
+    (sum, item) => {
+      const price = typeof item.product_price === 'string' 
+        ? parseFloat(item.product_price) 
+        : item.product_price;
+      const discount = item.discount || 0;
+      return sum + (price * item.quantity * (1 - discount / 100));
+    },
     0
   );
 
@@ -38,9 +55,10 @@ function CartSidebarContent({
     removeItem(id);
   };
 
-  const handleQuantityChange = (id: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    updateQuantity(id, newQuantity);
+  const handleQuantityChange = (id: number, newQuantity: number | string) => {
+    const quantity = Math.max(1, Math.round(Number(newQuantity)));
+    if (isNaN(quantity)) return;
+    updateQuantity(id, quantity);
   };
 
   // Animation logic (di chuyển từ Header.tsx)
@@ -94,11 +112,11 @@ function CartSidebarContent({
       className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[999] flex flex-col"
       style={{ display: cartOpen ? "flex" : "none" }}
     >
-        <div className="flex justify-between items-center p-4 border-b bg-background-300 text-text-950">
-          <h3 className="text-lg font-semibold">Shopping Cart</h3>
+        <div className="flex justify-between items-center p-4 border-b bg-background-700 text-text-950">
+          <h3 className="text-lg font-semibold text-text-50">Shopping Cart</h3>
           <button
             onClick={onClose}
-            className="text-text-nav hover:text-teal-50 p-1"
+            className="text-text-50 hover:text-teal-50 p-1"
             aria-label="Close cart"
           >
             <CloseIcon />
@@ -112,8 +130,8 @@ function CartSidebarContent({
                 className="mb-4 text-text-700"
                 style={{ fontSize: "4rem" }}
               />
-              <p className="text-lg">Your cart is empty</p>
-              <p className="text-sm mt-2">Add some products to get started!</p>zz
+              <p className="text-lg">Giỏ hàng của bạn đang trống</p>
+              <p className="text-sm mt-2">Thêm sản phẩm để bắt đầu mua sắm!</p>
             </div>
           ) : (
             <div ref={cartItemsRef} className="p-4 space-y-4 ">
@@ -122,43 +140,82 @@ function CartSidebarContent({
                   key={item.id}
                   className="flex items-center space-x-4 text-text-900  bg-background-50 p-4 rounded-lg hover:bg-sky-200 transition-colors"
                 >
-                  {item.image_url? (
-                    <Image
-                      src={item.image_url}
-                      alt={item.name}
-                      fill
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <ShoppingBagIcon className="text-gray-400" />
-                    </div>
-                  )}
+                  {(() => {
+                    // Check if we have a valid image URL
+                    const imageUrl = item.image_url;
+                    const isValidUrl = imageUrl && 
+                                     typeof imageUrl === 'string' && 
+                                     imageUrl.trim() !== '' &&
+                                     (imageUrl.startsWith('http') || 
+                                      imageUrl.startsWith('/') || 
+                                      imageUrl.startsWith('data:image'));
+                    
+                    if (!isValidUrl) {
+                      return (
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <ShoppingBagIcon className="text-gray-400" />
+                        </div>
+                      );
+                    }
+                    
+                    // Format the URL if needed
+                    const formattedUrl = imageUrl.startsWith('http') || 
+                                      imageUrl.startsWith('/') ||
+                                      imageUrl.startsWith('data:image')
+                                      ? imageUrl 
+                                      : `/${imageUrl}`;
+                    
+                    return (
+                      <div key={`img-${item.id}`} className="relative w-16 h-16 flex-shrink-0">
+                        <Image
+                          src={formattedUrl}
+                          alt={item.product_name || 'Product image'}
+                          width={64}
+                          height={64}
+                          className="object-cover rounded-lg"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = '/images/placeholder-product.jpg';
+                          }}
+                        />
+                      </div>
+                    );
+                  })()}
                   <div className="flex-1">
                     <h4 className="font-medium text-text-heading mb-1">
-                      {item.name}
+                      {item.product_name}
                     </h4>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-text-900">Qty:</span>
+                        <div className="text-sm text-text-700">{formatVND(item.product_price)}</div>
                         <div className="flex items-center space-x-2 bg-white rounded px-2 py-1">
                           <button 
                             className="text-text-heading hover:text-gray-600 w-6 h-6 flex items-center justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleQuantityChange(item.id, item.quantity - 1);
+                              handleQuantityChange(item.id, Number(item.quantity) - 1);
                             }}
                           >
                             -
                           </button>
-                          <span className="text-sm font-medium w-6 text-center">
-                            {item.quantity}
-                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            className="w-10 text-center text-sm border-0 focus:ring-0 p-0"
+                            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                            onBlur={(e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              updateQuantity(item.id, value);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
                           <button 
                             className="text-text-heading hover:text-gray-600 w-6 h-6 flex items-center justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleQuantityChange(item.id, item.quantity + 1);
+                              handleQuantityChange(item.id, Number(item.quantity) + 1);
                             }}
                           >
                             +
@@ -166,11 +223,21 @@ function CartSidebarContent({
                         </div>
                       </div>
                       <span className="font-semibold text-primary">
-                        ${(Number(item.price) * item.quantity).toFixed(2)}
+                        {formatVND(Number(item.product_price) * Number(item.quantity) * (1 - (Number(item.discount) || 0) / 100))}
+                        {item.discount && item.discount > 0 && (
+                          <span className="text-xs text-red-500 ml-1">
+                            (-{Math.round(Number(item.discount))}%)
+                          </span>
+                        )}
                       </span> 
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      ${Number(item.price).toFixed(2)}
+                      {formatVND(Number(item.product_price))}
+                      {item.discount && item.discount > 0 && (
+                        <span className="text-green-500 ml-1">
+                          (Tiết kiệm {formatVND(Number(item.product_price) * Number(item.quantity) * (Number(item.discount) / 100))})
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button 
@@ -195,7 +262,7 @@ function CartSidebarContent({
                 Total:
               </span>
               <span className="text-xl font-bold text-primary">
-                ${totalAmount.toFixed(2)}
+                {formatVND(totalAmount)}
               </span>
             </div>
             <div className="space-y-3">
@@ -205,8 +272,14 @@ function CartSidebarContent({
               >
                 View Cart
               </button>
-              <button className="w-full bg-background-900 text-text-100 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors">
-                Checkout
+              <button 
+                onClick={() => {
+                  router.push('/checkout');
+                  onClose();
+                }}
+                className="w-full bg-background-900 text-text-100 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors"
+              >
+                Thanh toán
               </button>
             </div>
           </div>
