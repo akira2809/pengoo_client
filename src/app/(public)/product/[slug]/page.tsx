@@ -8,6 +8,7 @@ import { ProductData } from '@/app/type/product';
 import { productService } from '@/app/api/services/productService';
 import { Skeleton } from '@/components/common/UI/Skeleton';
 import { mockMainIntro } from '@/app/api/data/mockProducts';
+import ProductReviewsSection from '@/components/common/ProductReviewsSection';
 
 // Dynamic imports for large components
 const ProductImageGallery = dynamic(
@@ -93,6 +94,8 @@ const ProductDetailPage: React.FC<ProductPageProps> = ({
           isFirstBlock: index === 0
         })) || []}
       />
+      
+      <ProductReviewsSection productId={product.id} />
       
       <BlogSection />
     </div>
