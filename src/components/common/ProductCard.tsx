@@ -4,10 +4,12 @@
 import React, { useEffect, useRef, MouseEvent, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Heart } from "lucide-react";
 import { ProductData } from "@/app/type/product";
 import { useCartStore } from "@/app/stores/slice/cartStore";
 import toast from "react-hot-toast";
+import { wishlistService } from "@/app/api/services/wishlistService";
+import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 
 interface ImageType {
   id: number;
@@ -59,6 +61,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const hasDiscount = discountPercentage > 0;
   const cardRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((state) => state.addItem);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -184,6 +187,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     });
   };
 
+  const handleAddToWishlist = async (e: MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!user || !user.id) {
+    toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
+    return;
+  }
+
+  try {
+    await wishlistService.addToWishlist(user.id, product.id);
+    toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích ❤️`, {
+      duration: 2000,
+      position: "top-center",
+      style: {
+        background: "#EF4444",
+        color: "#fff",
+        padding: "12px 20px",
+        borderRadius: "8px",
+      },
+    });
+  } catch (error: any) {
+    toast.error(error.message || "Không thể thêm vào yêu thích.");
+  }
+};
+
+
   return (
     <Link href={`/product/${product.slug}`} className="block group" passHref>
       <article
@@ -238,20 +268,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
           </div>
 
-          {/* Nút Thêm vào giỏ */}
-          <button
-            onClick={handleAddToCart}
-            className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background-50"
-            aria-label="Thêm vào giỏ hàng"
-          >
-            <Plus className="w-5 h-5 text-text-900" />
-          </button>
+          <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Nút trái tim */}
+            <button
+              onClick={handleAddToWishlist}
+              className="p-2 bg-white rounded-full shadow hover:bg-background-50"
+              aria-label="Yêu thích"
+            >
+              <Heart className="w-5 h-5 text-red-500" />
+            </button>
+
+            {/* Nút giỏ hàng */}
+            <button
+              onClick={handleAddToCart}
+              className="p-2 bg-white rounded-full shadow hover:bg-background-50"
+              aria-label="Thêm vào giỏ hàng"
+            >
+              <Plus className="w-5 h-5 text-text-900" />
+            </button>
+          </div>
         </div>
 
         {/* Thông tin sản phẩm */}
         <div className="px-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <h2
-            className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 h-10 first-letter:uppercase"
+            className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
             itemProp="name"
           >
             {product.product_name}

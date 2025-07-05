@@ -15,7 +15,6 @@ export default function ProductsPage() {
   const [filters, setFilters] = useState({
     name: '',
     category: '',
-    tags: '',
     minPrice: 0,
     maxPrice: 5000000
   });

@@ -74,6 +74,8 @@ export const productService = {
     }>(API_CONFIG.ENDPOINTS.PRODUCTS.BY_CATEGORY(category), params);
   },
 
+
+
   // Get all product categories
   async getCategories() {
     return apiClient.get<Array<{

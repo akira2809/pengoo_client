@@ -25,6 +25,7 @@ interface DisplayRange {
 interface Tag {
   id: string;
   name: string;
+  type: string;
 }
 
 interface ProductSidebarFiltersProps {

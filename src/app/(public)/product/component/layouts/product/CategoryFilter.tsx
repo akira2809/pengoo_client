@@ -1,6 +1,6 @@
 // src/components/product/filters/CategoryFilter.tsx
 import React from 'react';
-import { FilterDropdown } from '@/components/common/FilterDropdown'; // Đảm bảo đường dẫn đúng
+import { FilterDropdown } from '@/components/common/FilterDropdown';
 
 interface Category {
   id: string;

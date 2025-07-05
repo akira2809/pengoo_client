@@ -1,19 +1,20 @@
 import React from 'react';
-import { FilterDropdown } from '@/components/common/FilterDropdown'; // Đảm bảo đường dẫn đúng
+import { FilterDropdown } from '@/components/common/FilterDropdown'; 
 
 interface Tag {
   id: string;
   name: string;
+  type: string; 
 }
 
 interface TagFilterProps {
-  tags?: Tag[];
+  tags: Tag[];
   selectedTags: string[];
   onTagChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const TagFilter: React.FC<TagFilterProps> = ({
-  tags = [],
+  tags,
   selectedTags,
   onTagChange,
 }) => {
@@ -21,15 +22,15 @@ export const TagFilter: React.FC<TagFilterProps> = ({
    <FilterDropdown title="Tags" initialOpen={false}>
       <div className="space-y-2">
       {tags.map((tag) => (
-        <label key={tag.id} className="flex items-center space-x-1">
+        <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
           <input
             type="checkbox"
-            value={tag.id}
-            checked={selectedTags.includes(tag.id)}
+            value={String(tag.id)}
+            checked={selectedTags.includes(String(tag.id))}
             onChange={onTagChange}
-            className="accent-primary"
+            className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
           />
-          <span>{tag.name}</span>
+          <span className="ml-2 text-base">{tag.name}</span>
         </label>
       ))}
       </div>

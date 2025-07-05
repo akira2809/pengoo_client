@@ -14,7 +14,8 @@ export const API_CONFIG = {
       SEARCH: '/products?name=',
       CATEGORIES: '/categories',
       TAGS: '/tags',
-      BY_CATEGORY: (category: string) => `/products/category/${category}`
+      BY_CATEGORY: (category: string) => `/products/category/${category}`,
+      BY_TAG: (tag: string) => `/products/tag/${tag}`,
     },
     
     // Order endpoints
@@ -43,6 +44,14 @@ export const API_CONFIG = {
       BASE: '/tags',
       BY_ID: (id: number | string) => `/tags/${id}`,
     },
+    
+    WISHLIST: {
+      BASE: '/wishlist',
+      BY_USER_ID: (userId: number) => `/wishlist?userId=${userId}`,
+      BY_PRODUCT_ID: (productId: number) => `/wishlist/${productId}`,
+      MOVE_TO_ORDER: (orderId: number) => `/wishlist/move-to-order/${orderId}`,
+    },
+
 
     // Auth endpoints
     AUTH: {
