@@ -167,8 +167,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     addItem({
       id: Number(product.id),
       product_name: product.product_name,
-      product_price: Number(product.discount || product.product_price),
-      quantity: 1,
+      product_price: Number(product.discount ? product.product_price - (product.product_price * (product.discount / 100)) : product.product_price),
+      quantity: Number(1),
       image_url: mainImage,
       slug: product.slug,
       description: product.meta_description,

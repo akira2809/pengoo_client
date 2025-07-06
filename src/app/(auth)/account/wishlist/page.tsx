@@ -1,77 +1,136 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, MouseEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { wishlistService } from '@/app/api/services/wishlistService';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
-import { ProductData } from '@/app/type/product';
+import { useCartStore } from '@/app/stores/slice/cartStore';
+import toast from 'react-hot-toast';
+
+type WishlistItem = {
+  id: number;
+  product: {
+    id: number;
+    product_name: string;
+    product_price: number;
+    image?: string;
+    quantity_stock: number;
+    rating: number;
+    reviewCount: number;
+    slug?: string;
+    meta_description?: string;
+    discount?: number;
+  };
+};
 
 export default function WishlistPage() {
   const { user } = useAuthStore();
-  const [wishlist, setWishlist] = useState<ProductData[]>([]);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const addItem = useCartStore(state => state.addItem);
 
   useEffect(() => {
     const fetchWishlist = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
+      if (!user?.id) return;
       try {
         const res = await wishlistService.getWishlist(user.id);
         setWishlist(res.data);
-      } catch (err) {
-        console.error(err);
-        setError('Không thể tải danh sách yêu thích.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchWishlist();
   }, [user?.id]);
 
-  const toggleSelectItem = (id: string) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+  const calculateFinalPrice = (originalPrice: number, discount?: number) => {
+    const validDiscount = discount && discount > 0 ? discount : 0;
+    const finalPrice = Math.max(0, originalPrice * (1 - validDiscount / 100));
+    return {
+      finalPrice,
+      discountPercentage: validDiscount,
+    };
+  };
+
+   // Helper function to validate and normalize image URL
+  const getValidImageUrl = (url: string | undefined | null): string | null => {
+    if (!url || typeof url !== 'string' || url.trim() === '') {
+      return null;
+    }
+    // If it's already a full URL or starts with /, return as is
+    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) {
+      return url;
+    }
+    // Otherwise, assume it's a relative path
+    return `/${url.replace(/^\//, '')}`; // Ensure single leading slash
+  };
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+    }).format(price);
+
+  const toggleSelectItem = (id: number) => {
+    setSelectedItems(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
   const selectAllItems = () => {
-    if (selectedItems.length === wishlist.length) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(wishlist.map((item) => item.id.toString()));
-    }
+    setSelectedItems(
+      selectedItems.length === wishlist.length ? [] : wishlist.map(i => i.id)
+    );
   };
 
   const removeSelectedItems = async () => {
     if (!user?.id || selectedItems.length === 0) return;
-    if (!confirm('Bạn có chắc chắn muốn xóa các sản phẩm đã chọn?')) return;
+    if (!confirm('Bạn có chắc muốn xoá các sản phẩm đã chọn?')) return;
 
     await Promise.all(
-      selectedItems.map((id) =>
-        wishlistService.removeFromWishlist(user.id, Number(id))
-      )
+      selectedItems.map(id => wishlistService.removeFromWishlist(user.id, id))
     );
-
-    setWishlist(wishlist.filter((item) => !selectedItems.includes(item.id.toString())));
+    setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
     setSelectedItems([]);
   };
+  
 
-  const handleRemoveSingle = async (id: string | number) => {
+  const handleRemove = async (productId: number) => {
     if (!user?.id) return;
-    await wishlistService.removeFromWishlist(user.id, Number(id));
-    setWishlist(wishlist.filter((item) => item.id !== id));
-    setSelectedItems(selectedItems.filter((i) => i !== id.toString()));
+    await wishlistService.removeFromWishlist(user.id, productId);
+    setWishlist(prev => prev.filter(item => item.product.id !== productId));
+    setSelectedItems(prev => prev.filter(id => id !== productId));
   };
 
-  const moveToCart = (productId: string | number) => {
-    alert(`Đã thêm sản phẩm vào giỏ hàng (ID: ${productId})`);
+  const handleAddToCart = (e: MouseEvent, product: WishlistItem['product']) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const { finalPrice } = calculateFinalPrice(product.product_price, product.discount);
+
+    addItem({
+      id: product.id,
+      product_name: product.product_name,
+      product_price: finalPrice,
+      quantity: 1,
+      image_url: product.image || '',
+      slug: product.slug || '',
+      description: product.meta_description || '',
+    });
+
+    toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
+      duration: 2000,
+      position: "top-center",
+      style: {
+        background: "#4CAF50",
+        color: "#fff",
+        padding: "12px 20px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+      },
+    });
   };
 
   if (!user?.id) {
@@ -82,104 +141,154 @@ export default function WishlistPage() {
     return <div className="text-center py-16 text-gray-600">Đang tải...</div>;
   }
 
-  if (error) {
-    return <div className="text-center py-16 text-red-600">{error}</div>;
+  if (wishlist.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Danh sách yêu thích trống
+        </h3>
+        <p className="text-gray-500 mb-6">
+          Bạn chưa có sản phẩm nào trong danh sách yêu thích.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
+        >
+          Tiếp tục mua sắm
+        </Link>
+      </div>
+    );
   }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+      <div className="flex justify-between mb-4">
         <h1 className="text-2xl font-bold">Sản phẩm yêu thích</h1>
-        <div className="text-sm text-gray-600 mt-2 md:mt-0">
-          {wishlist.length} sản phẩm
-        </div>
+        <span className="text-sm text-gray-600">{wishlist.length} sản phẩm</span>
       </div>
 
-      {wishlist.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-gray-500 mb-4">Danh sách yêu thích của bạn trống.</p>
-          <Link href="/" className="text-primary-600 underline">
-            Quay lại trang mua sắm
-          </Link>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedItems.length === wishlist.length}
+            onChange={selectAllItems}
+            className="h-4 w-4 text-primary-600 border-gray-300 rounded"
+          />
+          <label className="ml-2 text-sm text-gray-700">
+            Chọn tất cả ({selectedItems.length})
+          </label>
         </div>
-      ) : (
-        <>
-          <div className="mb-4 flex items-center justify-between">
-            <label className="flex items-center text-sm">
-              <input
-                type="checkbox"
-                checked={selectedItems.length === wishlist.length && wishlist.length > 0}
-                onChange={selectAllItems}
-                className="mr-2"
-              />
-              Chọn tất cả ({selectedItems.length})
-            </label>
-            {selectedItems.length > 0 && (
-              <button onClick={removeSelectedItems} className="text-red-600 text-sm">
-                Xóa đã chọn
-              </button>
-            )}
-          </div>
+        {selectedItems.length > 0 && (
+          <button
+            onClick={removeSelectedItems}
+            className="text-sm text-red-600 hover:text-red-800 flex items-center"
+          >
+            Xoá đã chọn
+          </button>
+        )}
+      </div>
 
-          <div className="space-y-6">
-            {wishlist.map((product) => (
-              <div
-                key={product.id}
-                className="flex flex-col md:flex-row items-start md:items-center border-b pb-4"
-              >
+      <div className="space-y-6 border-t border-gray-200">
+        {wishlist.map(({ id, product }) => {
+          const { finalPrice, discountPercentage } = calculateFinalPrice(product.product_price, product.discount);
+          const savedAmount = product.product_price - finalPrice;
+
+          return (
+            <div
+              key={id}
+              className="flex flex-col md:flex-row items-start md:items-center py-6 border-b border-gray-200"
+            >
+              <div className="flex w-full items-start">
                 <input
                   type="checkbox"
-                  checked={selectedItems.includes(product.id.toString())}
-                  onChange={() => toggleSelectItem(product.id.toString())}
-                  className="mr-2 mt-2"
+                  checked={selectedItems.includes(id)}
+                  onChange={() => toggleSelectItem(id)}
+                  className="h-4 w-4 mt-6 text-primary-600 border-gray-300 rounded"
                 />
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.product_name || 'Sản phẩm'}
-                    width={100}
-                    height={100}
-                    className="rounded object-cover mr-4"
-                  />
-                ) : (
-                  <div className="w-[100px] h-[100px] bg-gray-200 flex items-center justify-center text-xs text-gray-500 mr-4">
-                    No image
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h3 className="text-base font-medium">{product.product_name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {product.quantity_stock ? 'Còn hàng' : 'Hết hàng'}
-                  </p>
-                  <div className="text-base text-gray-800 mt-1">
-                    {product.price?.toLocaleString() ?? 0}đ{' '}
-                    {product.originalPrice && (
-                      <span className="text-sm text-gray-500 line-through ml-2">
-                        {product.originalPrice?.toLocaleString()}đ
-                      </span>
-                    )}
-                  </div>
+                <div className="ml-4 w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
+                  {product.image ? (
+                    <Image
+                      src={getValidImageUrl(product.image)}
+                      alt={product.product_name}
+                      width={96}
+                      height={96}
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = "https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image";
+                      }}
+                    />
+
+                  ) : (
+                    <Image
+                      src="https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image"
+                      alt="No image"
+                      width={96}
+                      height={96}
+                      className="object-cover w-full h-full"
+                    />
+                  )}
                 </div>
-                <div className="mt-2 md:mt-0 flex flex-col gap-2">
-                  <button
-                    className="text-sm text-white bg-primary-600 hover:bg-primary-700 px-4 py-1 rounded"
-                    disabled={!product.inStock}
-                    onClick={() => moveToCart(product.id)}
-                  >
-                    Thêm vào giỏ
-                  </button>
-                  <button
-                    className="text-sm text-gray-600 hover:text-red-600"
-                    onClick={() => handleRemoveSingle(product.id)}
-                  >
-                    Xóa
-                  </button>
+
+                <div className="ml-4 flex-1">
+                  <div className="flex flex-col md:flex-row md:justify-between">
+                    <div>
+                      <h3 className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase">
+                        {product.product_name}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.meta_description}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        ({product.reviewCount || 0} đánh giá)
+                      </p>
+                    </div>
+
+                    <div className="text-right mt-2 md:mt-0">
+                      {discountPercentage > 0 ? (
+                        <div className="space-y-1">
+                          <div className="text-red-500 font-semibold text-base">
+                            {formatPrice(finalPrice)}
+                          </div>
+                          <div className="text-gray-400 text-sm line-through">
+                            {formatPrice(product.product_price)}
+                          </div>
+                          <div className="text-xs text-green-600">
+                            Tiết kiệm: {formatPrice(savedAmount)}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-gray-800 font-semibold text-base">
+                          {formatPrice(product.product_price)}
+                        </div>
+                      )}
+                      <div className={`text-sm mt-1 ${product.quantity_stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {product.quantity_stock > 0 ? 'Còn hàng' : 'Hết hàng'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-end gap-4 w-full">
+                    <button
+                      onClick={(e) => handleAddToCart(e, product)}
+                      disabled={product.quantity_stock === 0}
+                      className={`w-40 py-2 px-4 text-sm font-medium rounded-md text-white bg-background-900 hover:bg-background-800 ${product.quantity_stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      Thêm vào giỏ hàng
+                    </button>
+                    <button
+                      onClick={() => handleRemove(product.id)}
+                      className="w-25 py-2 px-4 text-sm font-medium rounded-md text-red-600 border border-gray-400 hover:bg-gray-100"
+                    >
+                      Xoá
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

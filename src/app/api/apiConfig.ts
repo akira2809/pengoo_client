@@ -37,6 +37,7 @@ export const API_CONFIG = {
     COUPONS: {
       BASE: '/coupons',
       VERIFY_VOUCHER: '/coupons/verify-voucher',
+      APPLYVOUCHER: '/coupons/validate',
       GET_BY_USER_ID: '/coupons/get-voucher-by-userId'
     },
 

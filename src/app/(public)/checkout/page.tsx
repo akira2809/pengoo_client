@@ -34,11 +34,13 @@ interface FormData {
 const CheckoutPage: React.FC = () => {
   const myVouchers = useStore((state) => state.myVouchers);
   const fetchMyVouchers = useStore((state) => state.fetchMyVouchers);
+  const applyVoucher = useStore((state) => state.applyVoucher);
   const [showCouponList, setShowCouponList] = useState(false); // Dropdown toggle
   const router = useRouter();
   const { items: cartItems, clearCart } = useCartStore();
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [listVouchers, setListVouchers] = useState([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [discountAmount, setDiscountAmount] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
@@ -127,26 +129,53 @@ const CheckoutPage: React.FC = () => {
     }));
     setErrors(prev => ({ ...prev, [name]: undefined })); // Clear error on change
   };
+  const handleShowCouponList = async () => {
+    const result = await Promise.all(myVouchers.map(async(voucher:any) => {
+      const data = await applyVoucher(voucher.coupon.code, subtotal);
+      return data ? {...voucher,active: true} : {...voucher,active: false};
+    }))
+    result.sort((a, b) => {
+      if (a.active && !b.active) return -1; // a is active, b is not
+      if (!a.active && b.active) return 1; // b is active, a is not
+      return 0; // both are either active or inactive
+    });
+    setListVouchers(result);
+    console.log('Fetching vouchers...', result);
+    setShowCouponList(true);
+  }
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async() => {
   const code = formData.couponCode?.trim().toUpperCase();
 
   if (!code) {
     toast.error('Vui lòng nhập mã giảm giá.');
     return;
   }
-
-  // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
-  if (code === 'SAVE10') {
-    const discount = subtotal * 0.1;
-    setDiscountAmount(discount);
+  const data = await applyVoucher(code, subtotal);
+  console.log('Coupon data:', data);
+  if (!data) {
+    toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn.');
+    setDiscountAmount(0);
+    setIsCouponApplied(false)
+    toast.error('Mã giảm giá không hợp lệ.');
+    return;
+  }else{
+    setDiscountAmount(data.discount);
     setIsCouponApplied(true);
     toast.success('Áp dụng mã giảm giá thành công!');
-  } else {
-    setDiscountAmount(0);
-    setIsCouponApplied(false);
-    toast.error('Mã giảm giá không hợp lệ.');
   }
+  // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
+  // if (code === 'SAVE10') {
+  //   const discount = subtotal * 0.1;
+  //   setDiscountAmount(discount);
+  //   setIsCouponApplied(true);
+  //   toast.success('Áp dụng mã giảm giá thành công!');
+  // } else {
+  //   setDiscountAmount(0);
+  //   setIsCouponApplied(false);
+  //   toast.error('Mã giảm giá không hợp lệ.');
+  // }
+
 };
 
   const validateForm = () => {
@@ -516,7 +545,7 @@ const CheckoutPage: React.FC = () => {
                   type="text"
                   placeholder="Mã giảm giá"
                   value={formData.couponCode}
-                  onFocus={() => setShowCouponList(true)}
+                  onFocus={() => handleShowCouponList()}
                   onBlur={() => setTimeout(() => setShowCouponList(false), 150)} // delay để chọn được
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -526,9 +555,9 @@ const CheckoutPage: React.FC = () => {
                   }
                   className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3"
                 />
-                {showCouponList && myVouchers.length > 0 && (
-                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full mt-1 shadow-sm max-h-48 overflow-auto">
-                    {myVouchers.map((uc) => (
+                {showCouponList && listVouchers.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full mt-1 shadow-lg max-h-60 overflow-auto divide-y divide-gray-100">
+                    {listVouchers.map((uc) => (
                       <li
                         key={uc.id}
                         onClick={() => {
@@ -538,9 +567,12 @@ const CheckoutPage: React.FC = () => {
                           }));
                           setShowCouponList(false);
                         }}
-                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                        className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
+                          ${uc.active ? 'bg-green-50 hover:bg-green-100 text-green-800' : 'bg-red-50 hover:bg-red-100 text-red-700'}
+                        `}
                       >
-                        {uc.coupon.code} - {uc.coupon.description || 'Không có mô tả'}
+                        <div className="font-semibold">{uc.coupon.code}</div>
+                        <div className="text-xs italic">{uc.coupon.description || 'Không có mô tả'}</div>
                       </li>
                     ))}
                   </ul>

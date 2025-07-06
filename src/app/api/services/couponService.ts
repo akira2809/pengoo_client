@@ -105,6 +105,14 @@ export const couponService = {
     return res.data;
   },
 
+  async validateAndApply(code: string, orderValue: number) {
+    const res = await apiClient.post(
+      API_CONFIG.ENDPOINTS.COUPONS.APPLYVOUCHER,
+      {  code,orderValue }
+    );
+    return res.data;
+  },
+
   // Get vouchers by user ID (for admin or current user)
   async getVoucherByUserId() {
     return apiClient.post<{ vouchers: UserCoupon[] }>(

@@ -22,9 +22,14 @@ export const wishlistService = {
     return apiClient.post(`/wishlist/${productId}`, { userId });
   },
 
-  // 📌 Xoá khỏi yêu thích
+  // 📌 Xoá khỏi yêu thích từng product
   async removeFromWishlist(userId: number, productId: number) {
     return apiClient.delete(`/wishlist/${productId}`, { data: { userId } });
+  },
+
+  // Dùng cho xoá all products
+  removeFromAllWishlist(userId: number, productId: number) {
+    return apiClient.delete(`/wishlist`, { data: { userId, productId } });
   },
 
   // 📌 Chuyển toàn bộ wishlist sang đơn hàng
