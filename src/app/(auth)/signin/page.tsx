@@ -16,10 +16,10 @@ export default function SignInPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [mfaStep, setMfaStep] = useState(false);
-  const [mfaCode, setMfaCode] = useState('');
-  const [mfaLoading, setMfaLoading] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState(''); // Add this state
+  // const [mfaStep, setMfaStep] = useState(false); // legacy MFA state
+  // const [mfaCode, setMfaCode] = useState('');    // legacy MFA state
+  // const [mfaLoading, setMfaLoading] = useState(false); // legacy MFA state
+  // const [googleEmail, setGoogleEmail] = useState(''); // legacy MFA state
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -63,23 +63,22 @@ export default function SignInPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Step 1: Submit email/password
+  // Step 1: Submit email/password (now uses simple-login, no MFA)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/signin`, {
+      // Use simple-login endpoint for main site (no MFA)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/simple-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      if (res.ok && data.mfaRequired) {
-        setMfaStep(true);
-        toast.success(data.message || "Vui lòng kiểm tra email để lấy mã xác thực.");
-      } else if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        await verifyToken(data.token);
+      const token = data.token || data.access_token;
+      if (res.ok && token) {
+        localStorage.setItem("token", token);
+        await verifyToken(token);
         toast.success("Đăng nhập thành công!");
         router.push('/');
       } else {
@@ -90,50 +89,54 @@ export default function SignInPage() {
     }
   };
 
-  // Step 2: Submit MFA code
-  const handleVerifyMfa = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMfaLoading(true);
-    try {
-      const emailToUse = googleEmail || formData.email;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/verify-mfa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailToUse, code: mfaCode }),
-      });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        await verifyToken(data.token);
-        toast.success("Đăng nhập thành công!");
-        router.push('/');
-      } else {
-        toast.error(data.message || "Mã xác thực không đúng hoặc đã hết hạn.");
-      }
-    } catch {
-      toast.error("Đã xảy ra lỗi khi xác thực mã.");
-    }
-    setMfaLoading(false);
-  };
+  // Step 2: Submit MFA code (legacy, commented)
+  // const handleVerifyMfa = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setMfaLoading(true);
+  //   try {
+  //     const emailToUse = googleEmail || formData.email;
+  //     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/verify-mfa`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ email: emailToUse, code: mfaCode }),
+  //     });
+  //     const data = await res.json();
+  //     if (res.ok && data.token) {
+  //       localStorage.setItem("token", data.token);
+  //       await verifyToken(data.token);
+  //       toast.success("Đăng nhập thành công!");
+  //       router.push('/');
+  //     } else {
+  //       toast.error(data.message || "Mã xác thực không đúng hoặc đã hết hạn.");
+  //     }
+  //   } catch {
+  //     toast.error("Đã xảy ra lỗi khi xác thực mã.");
+  //   }
+  //   setMfaLoading(false);
+  // };
 
+  // Google login (now skips MFA for main site)
   const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
 
+      // Always send skipMfa: true for main site
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken, skipMfa: true }), // <--- skipMfa: true
       });
       const data = await res.json();
 
-      if (res.ok && data.mfaRequired) {
-        setGoogleEmail(result.user.email || ""); // Save Google email for MFA step
-        setMfaStep(true);
-        toast.success(data.message || "Vui lòng kiểm tra email để lấy mã xác thực.");
-      } else if (res.ok && data.token) {
+      // Legacy MFA logic (commented)
+      // if (res.ok && data.mfaRequired) {
+      //   setGoogleEmail(result.user.email || ""); // Save Google email for MFA step
+      //   setMfaStep(true);
+      //   toast.success(data.message || "Vui lòng kiểm tra email để lấy mã xác thực.");
+      // } else 
+      if (res.ok && data.token) {
         localStorage.setItem("token", data.token);
         await verifyToken(data.token);
         toast.success("Đăng nhập Google thành công!");
@@ -152,6 +155,7 @@ export default function SignInPage() {
     }
   };
 
+  // Facebook login (now skips MFA for main site)
   const handleFacebookLogin = async () => {
     try {
       // Ensure FB SDK is loaded
@@ -163,20 +167,23 @@ export default function SignInPage() {
         if (response.authResponse) {
           (async () => {
             const accessToken = response.authResponse.accessToken;
+            // Always send skipMfa: true for main site
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/facebook`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accessToken }),
+              body: JSON.stringify({ accessToken, skipMfa: true }), // <--- skipMfa: true
             });
             const data = await res.json();
 
-            if (res.ok && data.mfaRequired) {
-              (window as any).FB.api('/me', { fields: 'email' }, (fbUser: any) => {
-                setGoogleEmail(fbUser.email || "");
-                setMfaStep(true);
-                toast.success(data.message || "Vui lòng kiểm tra email để lấy mã xác thực.");
-              });
-            } else if (res.ok && data.token) {
+            // Legacy MFA logic (commented)
+            // if (res.ok && data.mfaRequired) {
+            //   (window as any).FB.api('/me', { fields: 'email' }, (fbUser: any) => {
+            //     setGoogleEmail(fbUser.email || "");
+            //     setMfaStep(true);
+            //     toast.success(data.message || "Vui lòng kiểm tra email để lấy mã xác thực.");
+            //   });
+            // } else 
+            if (res.ok && data.token) {
               localStorage.setItem("token", data.token);
               await verifyToken(data.token);
               toast.success("Đăng nhập Facebook thành công!");
@@ -238,7 +245,8 @@ export default function SignInPage() {
             <p className="text-gray-600">Please sign in to your account</p>
           </div>
 
-          {!mfaStep ? (
+          {/* Legacy MFA logic (commented) */}
+          {/* {!mfaStep ? ( */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -300,7 +308,7 @@ export default function SignInPage() {
                 {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
             </form>
-          ) : (
+          {/* ) : (
             <form onSubmit={handleVerifyMfa} className="space-y-6">
               <div>
                 <label htmlFor="mfaCode" className="block text-sm font-medium text-gray-700 mb-1">
@@ -325,7 +333,7 @@ export default function SignInPage() {
                 {mfaLoading ? 'Đang xác thực...' : 'Xác nhận mã'}
               </button>
             </form>
-          )}
+          )} */}
 
           <div className="mt-6">
             <div className="relative">
