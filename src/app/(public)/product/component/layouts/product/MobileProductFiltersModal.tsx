@@ -17,6 +17,11 @@ interface Category {
   slug: string;
   productCount: number;
 }
+interface Tag {
+  id: string;
+  name: string;
+  type: string;
+}
 
 interface PriceRange {
   min: number;
@@ -32,6 +37,9 @@ interface MobileProductFiltersModalProps {
   categories: Category[];
   selectedCategories: string[];
   onCategoryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  tags: Tag[];
+  selectedTags: string[];
+  onTagChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   priceRange: PriceRange;
   displayRange: { min: string; max: string; }; // Display range for inputs
   handlePriceChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => void;
@@ -51,6 +59,9 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
   categories,
   selectedCategories,
   onCategoryChange,
+  tags,
+  selectedTags, 
+  onTagChange,
   priceRange,
   displayRange,
   handlePriceChange,
@@ -122,16 +133,16 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
         <div className="mb-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Danh mục</h3>
           {/* Tái sử dụng CategoryFilter */}
-          <FilterDropdown title="Sản phẩm" initialOpen={true}>
+          <FilterDropdown title="Sản phẩm" initialOpen={false}>
             <div className="space-y-2">
               {categories.map(category => (
                 <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
                   <input
                     type="checkbox"
-                    value={category.id}
-                    checked={selectedCategories.includes(category.id)}
+                    value={String(category.id)}
+                    checked={selectedCategories.includes(String(category.id))}
                     onChange={onCategoryChange}
-                    className="form-checkbox h-4 w-4 text-amber-800 rounded focus:ring-amber-500"
+                    className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
                   />
                   <span className="ml-2 text-base">{category.name}</span>
                 </label>
@@ -141,9 +152,31 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
         </div>
 
         <div className="mb-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">Tags</h3>
+          {/* Tái sử dụng TagFilter */}
+          <FilterDropdown title="Sản phẩm" initialOpen={false}>
+            <div className="space-y-2">
+              {tags.map(tag => (
+                <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value={String(tag.id)}
+                    checked={selectedTags.includes(String(tag.id))}
+                    onChange={onTagChange}
+                    className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
+                  />
+                  <span className="ml-2 text-base">{tag.name}</span>
+                </label>
+              ))}
+            </div>
+          </FilterDropdown>
+        </div>
+        
+
+        <div className="mb-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Giá</h3>
           {/* Tái sử dụng logic của PriceRangeFilter, nhưng UI có thể khác một chút do MobileFilterModal */}
-          <FilterDropdown title="Giá" initialOpen={true}>
+          <FilterDropdown title="Giá" initialOpen={false}>
             <div className="text-gray-700 text-base">
               <p>Khoảng giá: {formatPrice(priceRange.min)} - {formatPrice(priceRange.max)}</p>
               <div className="flex justify-between items-center mt-2 text-sm">

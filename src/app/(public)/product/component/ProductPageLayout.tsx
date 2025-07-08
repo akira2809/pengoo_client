@@ -26,7 +26,7 @@ interface ProductPageLayoutProps {
     SetStateAction<{
       name: string;
       category: string;
-      tags: string;
+
       minPrice: number;
       maxPrice: number;
     }>
@@ -36,6 +36,11 @@ interface ProductPageLayoutProps {
     name: string;
     slug: string;
     productCount: number;
+  }>;
+  tags: Array<{
+    id: string; 
+    name: string;
+    type: string; 
   }>;
 }
 
@@ -63,11 +68,13 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   error,
   setFilters,
   categories,
+  tags
 }) => {
   const [sortSelected, setSortSelected] = useState(sortOptions[0]);
   const [sortedProducts, setSortedProducts] = useState(products);
   const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>({
     min: 0,
     max: 5000000,
@@ -115,9 +122,23 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
       ? prev.filter((id) => id !== categoryId)
       : [...prev, categoryId]
   );
-
-  setFilters((prev) => ({ ...prev, category: categoryId }));
+ 
+  setFilters((prev) => ({ ...prev, category: categoryId}));
 }, [setFilters]);
+
+
+const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const tagId = e.target.value;
+  setSelectedTags((prev) =>
+    prev.includes(tagId)
+      ? prev.filter((id) => id !== tagId)
+      : [...prev, tagId]
+  );
+
+  // ❌ Không cần setFilters nếu lọc client-side
+  // setFilters((prev) => ({ ...prev, tags: tagId }));
+}, []);
+
 
 
   const formatPrice = useCallback((price: number | string) => {
@@ -215,7 +236,6 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
     setFilters({
       name: "",
       category: "",
-      tags: "",
       minPrice: 0,
       maxPrice: 5000000,
     });
@@ -223,6 +243,8 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   }, [setFilters]);
 
   // --- Effects for Sorting ---
+
+  
   useEffect(() => {
     const sorted = [...products];
     switch (sortSelected.value) {
@@ -267,6 +289,17 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
       });
     }
 
+    // Filter by tags
+    if (selectedTags.length > 0) {
+      currentProducts = currentProducts.filter((product) => {
+        if (!product.tags || !Array.isArray(product.tags)) return false;
+
+        const productTagIds = product.tags.map((id) => String(id));
+        return selectedTags.every((tagId) => productTagIds.includes(tagId));
+      });
+    }
+
+
     // Filter out of stock if needed
     if (!showOutOfStock) {
       currentProducts = currentProducts.filter((product) => {
@@ -282,12 +315,12 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
     });
 
     return currentProducts;
-  }, [sortedProducts, showOutOfStock, selectedCategories, priceRange]);
+  }, [sortedProducts, showOutOfStock, selectedCategories, selectedTags, priceRange]);
 
   // Add this new useEffect to handle page reset when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategories, priceRange, showOutOfStock, sortSelected]);
+  }, [selectedCategories,priceRange, showOutOfStock, sortSelected, selectedTags]);
 
   // --- Loading and Error States ---
   if (isLoading) {
@@ -330,6 +363,9 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
           categories={categories}
           selectedCategories={selectedCategories}
           onCategoryChange={handleCategoryChange}
+          tags={tags}
+          selectedTags={selectedTags}
+          onTagChange={handleTagChange}
           priceRange={priceRange}
           displayRange={displayRange}
           showOutOfStock={showOutOfStock}
@@ -415,6 +451,9 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
         categories={categories}
         selectedCategories={selectedCategories}
         onCategoryChange={handleCategoryChange}
+        tags={tags}
+        selectedTags={selectedTags}
+        onTagChange={handleTagChange}
         priceRange={priceRange}
         displayRange={displayRange}
         handlePriceChange={handlePriceChange}

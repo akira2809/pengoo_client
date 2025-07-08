@@ -9,7 +9,7 @@ interface AboutUsBannerProps {
 
 const AboutUsBanner: React.FC<AboutUsBannerProps> = ({ title, backgroundImage }) => {
   return (
-    <div className="relative w-full h-[64vw] md:h-[56vw] flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-[60vw] md:h-[45vw] flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
         src={backgroundImage}

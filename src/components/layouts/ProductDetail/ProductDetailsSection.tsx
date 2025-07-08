@@ -137,14 +137,14 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <Button 
           variant="primary" 
-          className="flex-1 justify-center py-3 text-sm font-medium"
+          className="flex-1 justify-center py-3 text-sm font-medium bg-background-900 hover:bg-background-800 text-white"
           onClick={handleAddToCart}
         >
           Thêm vào giỏ hàng
         </Button>
         <Button 
           variant="secondary" 
-          className="flex-1 justify-center py-3 text-sm font-medium"
+          className="flex-1 justify-center py-3 text-sm font-medium border border-background-900 text-background-900 hover:bg-background-50"
           onClick={handleBuyNow}
         >
           Mua ngay

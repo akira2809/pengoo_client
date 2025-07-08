@@ -13,7 +13,9 @@ export const API_CONFIG = {
       BY_SLUG: (slug: string) => `/products/slug/${slug}`,
       SEARCH: '/products?name=',
       CATEGORIES: '/categories',
-      BY_CATEGORY: (category: string) => `/products/category/${category}`
+      TAGS: '/tags',
+      BY_CATEGORY: (category: string) => `/products/category/${category}`,
+      BY_TAG: (tag: string) => `/products/tag/${tag}`,
     },
     
     // Order endpoints
@@ -30,7 +32,28 @@ export const API_CONFIG = {
       ADDRESSES: '/users/addresses',
       FAVORITES: '/users/favorites'
     },
+
+    // Coupon endpoints
+    COUPONS: {
+      BASE: '/coupons',
+      VERIFY_VOUCHER: '/coupons/verify-voucher',
+      APPLYVOUCHER: '/coupons/validate',
+      GET_BY_USER_ID: '/coupons/get-voucher-by-userId'
+    },
+
+    TAGS: {
+      BASE: '/tags',
+      BY_ID: (id: number | string) => `/tags/${id}`,
+    },
     
+    WISHLIST: {
+      BASE: '/wishlist',
+      BY_USER_ID: (userId: number) => `/wishlist?userId=${userId}`,
+      BY_PRODUCT_ID: (productId: number) => `/wishlist/${productId}`,
+      MOVE_TO_ORDER: (orderId: number) => `/wishlist/move-to-order/${orderId}`,
+    },
+
+
     // Auth endpoints
     AUTH: {
       LOGIN: '/auth/login',

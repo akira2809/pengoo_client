@@ -9,6 +9,8 @@ import InputField from '../../(public)/checkout/component/InputField';
 import RadioButton from '../../(public)/checkout/component/RadioButton';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
+import { useStore } from '@/app/stores/store';
+
 //  
 
 interface FormData {
@@ -26,14 +28,22 @@ interface FormData {
   paymentMethod: 'payos' | 'cod';
   billingAddress: 'sameAsShipping' | 'different';
   note?: string;
+  couponCode?: string;
 }
 
 const CheckoutPage: React.FC = () => {
+  const myVouchers = useStore((state) => state.myVouchers);
+  const fetchMyVouchers = useStore((state) => state.fetchMyVouchers);
+  const applyVoucher = useStore((state) => state.applyVoucher);
+  const [showCouponList, setShowCouponList] = useState(false); // Dropdown toggle
   const router = useRouter();
   const { items: cartItems, clearCart } = useCartStore();
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [listVouchers, setListVouchers] = useState([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: user?.email || '',
     country: 'Vietnam',
@@ -49,21 +59,29 @@ const CheckoutPage: React.FC = () => {
     paymentMethod: 'payos',
     billingAddress: 'sameAsShipping',
     note: '',
+    couponCode: '',
   });
 
   // Update form data when user data changes
   useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        email: user.email || prev.email,
-        firstName: user.full_name ? user.full_name.split(' ').slice(0, -1).join(' ') : prev.firstName,
-        lastName: user.full_name ? user.full_name.split(' ').slice(-1)[0] : prev.lastName,
-        address: user.address || prev.address,
-        phone: user.phone_number || prev.phone,
-      }));
+    if (!user?.id) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      email: user.email || prev.email,
+      firstName: user.full_name?.split(' ').slice(0, -1).join(' ').trim() || prev.firstName,
+      lastName: user.full_name?.split(' ').slice(-1)[0] || prev.lastName,
+      address: user.address || prev.address,
+      phone: user.phone_number || prev.phone,
+    }));
+  }, [user?.id]);
+  // Gọi API lấy mã giảm giá
+  useEffect(() => {
+    if (user?.id) {
+      fetchMyVouchers();
     }
-  }, [user]);
+  }, [user?.id]);
+
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -84,7 +102,7 @@ const CheckoutPage: React.FC = () => {
   const shippingCost = formData.shippingMethod === 'localHCM' ? 25000 : 40000;
 
   // Calculate total
-  const total = subtotal + shippingCost;
+  const total = subtotal - shippingCost - discountAmount;
 
   // Redirect if cart is empty or user not logged in
   useEffect(() => {
@@ -111,6 +129,54 @@ const CheckoutPage: React.FC = () => {
     }));
     setErrors(prev => ({ ...prev, [name]: undefined })); // Clear error on change
   };
+  const handleShowCouponList = async () => {
+    const result = await Promise.all(myVouchers.map(async(voucher:any) => {
+      const data = await applyVoucher(voucher.coupon.code, subtotal);
+      return data ? {...voucher,active: true} : {...voucher,active: false};
+    }))
+    result.sort((a, b) => {
+      if (a.active && !b.active) return -1; // a is active, b is not
+      if (!a.active && b.active) return 1; // b is active, a is not
+      return 0; // both are either active or inactive
+    });
+    setListVouchers(result);
+    console.log('Fetching vouchers...', result);
+    setShowCouponList(true);
+  }
+
+  const handleApplyCoupon = async() => {
+  const code = formData.couponCode?.trim().toUpperCase();
+
+  if (!code) {
+    toast.error('Vui lòng nhập mã giảm giá.');
+    return;
+  }
+  const data = await applyVoucher(code, subtotal);
+  console.log('Coupon data:', data);
+  if (!data) {
+    toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn.');
+    setDiscountAmount(0);
+    setIsCouponApplied(false)
+    toast.error('Mã giảm giá không hợp lệ.');
+    return;
+  }else{
+    setDiscountAmount(data.discount);
+    setIsCouponApplied(true);
+    toast.success('Áp dụng mã giảm giá thành công!');
+  }
+  // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
+  // if (code === 'SAVE10') {
+  //   const discount = subtotal * 0.1;
+  //   setDiscountAmount(discount);
+  //   setIsCouponApplied(true);
+  //   toast.success('Áp dụng mã giảm giá thành công!');
+  // } else {
+  //   setDiscountAmount(0);
+  //   setIsCouponApplied(false);
+  //   toast.error('Mã giảm giá không hợp lệ.');
+  // }
+
+};
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
@@ -149,7 +215,7 @@ const CheckoutPage: React.FC = () => {
         {
           ...formData,
           total,
-          couponCode: '' // Add coupon code if available
+          couponCode: formData.couponCode || '', // ✅ Gửi mã
         },
         cartItems,
         user?.id ? parseInt(user.id.toString(), 10) : undefined
@@ -190,6 +256,7 @@ const CheckoutPage: React.FC = () => {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-white py-10">
@@ -414,7 +481,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.billingAddress === 'sameAsShipping'}
                   onChange={handleInputChange}
                   label="Giống địa chỉ vận chuyển"
-                  isCustomClass={true}
+                  // isCustomClass={true}
                 />
                 <RadioButton
                   id="different"
@@ -423,7 +490,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.billingAddress === 'different'}
                   onChange={handleInputChange}
                   label="Sử dụng địa chỉ thanh toán khác"
-                  isCustomClass={true}
+                  // isCustomClass={true}
                 />
               </div>
 
@@ -431,7 +498,7 @@ const CheckoutPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-400 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
                   isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
@@ -473,19 +540,52 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               {/* Mã giảm giá */}
-              <div className="px-4 py-4 border-t border-gray-200 flex items-center">
+              <div className="px-4 py-4 border-t border-gray-200 relative">
                 <input
                   type="text"
                   placeholder="Mã giảm giá"
-                  className="flex-1 block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3 mr-2"
+                  value={formData.couponCode}
+                  onFocus={() => handleShowCouponList()}
+                  onBlur={() => setTimeout(() => setShowCouponList(false), 150)} // delay để chọn được
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      couponCode: e.target.value,
+                    }))
+                  }
+                  className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3"
                 />
+                {showCouponList && listVouchers.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full mt-1 shadow-lg max-h-60 overflow-auto divide-y divide-gray-100">
+                    {listVouchers.map((uc) => (
+                      <li
+                        key={uc.id}
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            couponCode: uc.coupon.code,
+                          }));
+                          setShowCouponList(false);
+                        }}
+                        className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
+                          ${uc.active ? 'bg-green-50 hover:bg-green-100 text-green-800' : 'bg-red-50 hover:bg-red-100 text-red-700'}
+                        `}
+                      >
+                        <div className="font-semibold">{uc.coupon.code}</div>
+                        <div className="text-xs italic">{uc.coupon.description || 'Không có mô tả'}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <button
                   type="button"
-                  className="bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-300 transition-colors"
+                  onClick={handleApplyCoupon}
+                  className="mt-2 w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-300 transition-colors"
                 >
                   Áp dụng
                 </button>
               </div>
+
 
               {/* Tổng kết */}
               <div className="px-4 py-4 border-t border-gray-200 text-sm">
@@ -493,9 +593,15 @@ const CheckoutPage: React.FC = () => {
                   <span>Tổng phụ</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
+                {isCouponApplied && (
+                  <div className="flex justify-between text-green-600 mb-2">
+                    <span>Giảm giá</span>
+                    <span>-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Vận chuyển</span>
-                  <span>{shippingCost === 0 ? 'Miễn phí' : formatCurrency(shippingCost)}</span>
+                  <span>- {shippingCost === 0 ? 'Miễn phí' : formatCurrency(shippingCost)}</span>
                 </div>
               </div>
 

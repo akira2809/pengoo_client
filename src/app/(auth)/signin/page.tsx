@@ -6,14 +6,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import toast from 'react-hot-toast';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "@/app/api/firebaseClient";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { verifyToken, isAuthenticated, isLoading, error, clearError } = useAuthStore();
-
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore();
+  
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   // const [mfaStep, setMfaStep] = useState(false); // legacy MFA state
@@ -30,6 +31,7 @@ export default function SignInPage() {
   useEffect(() => {
     if (error) {
       toast.error(error);
+      clearError();
     }
   }, [error, clearError]);
 
@@ -39,6 +41,8 @@ export default function SignInPage() {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -49,16 +53,19 @@ export default function SignInPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    
     if (!formData.email) {
       newErrors.email = 'Vui lòng nhập email';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email không hợp lệ';
     }
+    
     if (!formData.password) {
       newErrors.password = 'Vui lòng nhập mật khẩu';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -202,23 +209,6 @@ export default function SignInPage() {
     }
   };
 
-  useEffect(() => {
-    if (!(window as any).FB) {
-      const script = document.createElement('script');
-      script.src = "https://connect.facebook.net/en_US/sdk.js";
-      script.async = true;
-      script.onload = () => {
-        (window as any).FB.init({
-          appId: '1283564656771505',
-          cookie: true,
-          xfbml: true,
-          version: 'v19.0'
-        });
-      };
-      document.body.appendChild(script);
-    }
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* Left side - Image */}
@@ -267,38 +257,38 @@ export default function SignInPage() {
                 )}
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
-                  </label>
-                  <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    className={`w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                    placeholder="Mật khẩu"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? 'Ẩn' : 'Hiện'}
-                  </button>
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-                  )}
-                </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                  Forgot password?
+                </Link>
               </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  className={`w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Mật khẩu"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? 'Ẩn' : 'Hiện'}
+                </button>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+            </div>
 
               <button
                 type="submit"
@@ -349,9 +339,8 @@ export default function SignInPage() {
               <button
                 type="button"
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                onClick={handleGoogleLogin}
               >
-                <span className="mr-2">Đăng nhập với Google</span>
+                <span className="sr-only">Sign in with Google</span>
                 <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
                 </svg>
@@ -360,9 +349,8 @@ export default function SignInPage() {
               <button
                 type="button"
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                onClick={handleFacebookLogin}
               >
-                <span className="mr-2">Đăng nhập với Facebook</span>
+                <span className="sr-only">Sign in with Facebook</span>
                 <svg className="w-5 h-5" aria-hidden="true" fill="#1877F2" viewBox="0 0 24 24">
                   <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
                 </svg>

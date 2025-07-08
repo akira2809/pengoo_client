@@ -36,6 +36,7 @@ export interface ProductData {
   meta_description: string;
   quantity_sold: number;
   category_ID: Category | number;
+  tag_ID: string | number; // Assuming tag_ID can be a string or number
   publisher_ID: Publisher | number;
   tags: string[];
   images: Array<{

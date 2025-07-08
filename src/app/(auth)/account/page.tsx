@@ -16,6 +16,7 @@ interface User {
   avatar_url: string;
   address: string;
   role: string;
+  points?: number; 
 }
 
 export default function AccountPage() {
@@ -38,6 +39,7 @@ export default function AccountPage() {
       });
       setAccountData(user);
     }
+      console.log('User data:', user);
   }, [user]);
 
   // Handle input changes for form fields
@@ -287,11 +289,15 @@ export default function AccountPage() {
                     <p className="text-2xl font-semibold text-gray-900 leading-tight">
                       {accountData.full_name || accountData.username || 'Chưa cập nhật'}
                     </p>
-                    <p className="text-base text-gray-600">{accountData.email}</p>
+                    <p className="text-base text-gray-600"><strong>Email: </strong>{accountData.email}</p>
                     <p className="text-base text-gray-600">
+                      <strong>Số điện thoại: </strong>
                       {accountData.phone_number || 'Chưa cập nhật số điện thoại'}
                     </p>
-                    <p className="text-sm text-gray-500">Tên người dùng: {accountData.username}</p>
+                    <p className="text-sm text-gray-500"><strong>Tên người dùng: </strong>{accountData.username}</p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Điểm của bạn: </strong>{accountData.points ?? 0}
+                    </p>
                   </div>
                 )}
               </div>

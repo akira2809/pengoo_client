@@ -3,7 +3,7 @@ import React, { Dispatch, SetStateAction } from 'react';
 import { CategoryFilter } from './CategoryFilter';
 import { PriceRangeFilter } from './PriceRangeFilter';
 import { IoOptionsOutline } from "react-icons/io5";
-
+import { TagFilter } from './TagFilter';
 
 interface Category {
   id: string;
@@ -22,6 +22,12 @@ interface DisplayRange {
   max: string;
 }
 
+interface Tag {
+  id: string;
+  name: string;
+  type: string;
+}
+
 interface ProductSidebarFiltersProps {
   categories: Category[];
   selectedCategories: string[];
@@ -34,6 +40,9 @@ interface ProductSidebarFiltersProps {
   handleBlur: (type: 'min' | 'max') => void;
   setShowOutOfStock: Dispatch<SetStateAction<boolean>>;
   formatPrice: (price: number | string) => string;
+  tags: Tag[];
+  selectedTags: string[];
+  onTagChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const ProductSidebarFilters: React.FC<ProductSidebarFiltersProps> = ({
@@ -48,6 +57,9 @@ export const ProductSidebarFilters: React.FC<ProductSidebarFiltersProps> = ({
   handleBlur,
   setShowOutOfStock,
   formatPrice,
+  tags,
+  selectedTags,
+  onTagChange,
 }) => {
   return (
     <aside className="hidden lg:block w-full lg:w-1/4 mb-8 lg:mb-0 bg-gray-50 p-6 rounded-lg shadow-sm
@@ -60,6 +72,11 @@ export const ProductSidebarFilters: React.FC<ProductSidebarFiltersProps> = ({
         categories={categories}
         selectedCategories={selectedCategories}
         onCategoryChange={onCategoryChange}
+      />
+      <TagFilter
+        tags={tags}
+        selectedTags={selectedTags}
+        onTagChange={onTagChange}
       />
       <PriceRangeFilter
         priceRange={priceRange}

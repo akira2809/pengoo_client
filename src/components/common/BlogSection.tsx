@@ -92,7 +92,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                   <p className="text-sm text-gray-500 mb-2">{post.date}</p>
 
                   {/* Title - Điều chỉnh font và kích thước để giống UI */}
-                  <h3 className="text-2xl font-extrabold text-gray-900 mb-3 group-hover:text-amber-800 transition-colors duration-200  leading-tight">
+                  <h3 className="text-2xl font-extrabold text-gray-900 mb-3 group-hover:text-background-800 transition-colors duration-200  leading-tight">
                     {post.title}
                   </h3>
 

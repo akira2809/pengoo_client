@@ -58,7 +58,7 @@ const Cart: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 sm:py-8 md:px-6 lg:px-8 xl:px-20 xl:py-16 min-h-screen">
+    <div className="container mx-auto px-4 py-6 sm:py-8 md:px-6 lg:px-8 xl:px-20 xl:py-16 min-h-screen shadow-sm">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-6 sm:mb-8">
         Giỏ hàng
       </h1>
@@ -148,7 +148,7 @@ const Cart: React.FC = () => {
         </div>
 
         {/* Phần tổng tiền và thanh toán */}
-        <div className="w-full lg:w-96 xl:w-[28rem] border border-gray-200 flex-shrink-0 p-4 sm:p-6 bg-gray-50 rounded-lg">
+        <div className="w-full lg:w-96 xl:w-[28rem] border border-gray-200 flex-shrink-0 p-4 sm:p-6 bg-gray-50 rounded-lg shadow-sm">
           <div className="space-y-3 mb-6">
             <div className="flex justify-between items-center">
               <span className="text-gray-700 text-sm sm:text-base">Tổng</span>
@@ -181,7 +181,7 @@ const Cart: React.FC = () => {
 
           <button
             type="button"
-            className={`w-full bg-amber-900 hover:bg-amber-800 text-white font-medium py-2 sm:py-3 rounded-md text-sm sm:text-base flex items-center justify-center space-x-2 transition-colors ${cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full bg-background-900 hover:bg-background-800 text-white font-medium py-2 sm:py-3 rounded-md text-sm sm:text-base flex items-center justify-center space-x-2 transition-colors ${cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={handleCheckout}
             disabled={cartItems.length === 0}
           >
