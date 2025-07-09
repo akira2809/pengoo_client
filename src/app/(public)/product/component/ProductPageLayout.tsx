@@ -37,6 +37,12 @@ interface ProductPageLayoutProps {
     slug: string;
     productCount: number;
   }>;
+  collections: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    productCount: number;
+  }>;
   tags: Array<{
     id: string; 
     name: string;

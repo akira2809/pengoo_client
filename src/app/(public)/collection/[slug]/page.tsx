@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useStore } from '@/app/stores/store';
-import { productService } from '@/app/api/services/productService';
+// import { productService } from '@/app/api/services/productService';
+import { collectionService } from '@/app/api/services/collectionService';
 import { ProductPageLayout } from '@/app/(public)/product/component/ProductPageLayout';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/app/stores/type';
@@ -26,6 +27,16 @@ interface Category {
   products?: Product[];
 }
 
+interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image_url: string;
+  productCount?: number;
+  products: Product[];
+}
+
 interface CollectionPageProps {
   params: {
     /**
@@ -33,7 +44,7 @@ interface CollectionPageProps {
      * Hiện tại đang sử dụng ID để tương thích với API hiện có
      */
     id: string;
-    slug: string; 
+    slug: string;  
   };
 }
 
@@ -62,8 +73,7 @@ export default function CollectionPage({ params }: CollectionPageProps) {
   const { 
     products, 
     isLoading, 
-    error, 
-    fetchProductsByCategory 
+    error,  
   } = useStore();
   
   // Map the products to match the expected type for ProductPageLayout
@@ -113,7 +123,9 @@ export default function CollectionPage({ params }: CollectionPageProps) {
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  // const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  // const [collection, setCollection] = useState<Collection | null>(null);
+  const [currentCollection, setCurrentCollection] = useState<Collection | null>(null);
 
   // Handle filters change
   const handleFiltersChange = useCallback((filters: FilterType | ((prev: FilterType) => FilterType)) => {
@@ -123,55 +135,49 @@ export default function CollectionPage({ params }: CollectionPageProps) {
   }, []);
 
   // Load category and products by ID
-  useEffect(() => {
+useEffect(() => {
   let isMounted = true;
 
-  const loadCategory = async () => {
+  const loadCollection = async () => {
     try {
-      const response = await productService.getCategories();
+      const res = await collectionService.getCollectionById(slug);
       if (!isMounted) return;
 
-      if (response?.data) {
-        const categoriesData = response.data as Category[];
-        setCategories(categoriesData);
-
-        // Tối ưu: Dùng Map để tra cứu nhanh
-        const categoryMap = new Map(categoriesData.map(cat => [String(cat.id), cat]));
-        // Khi có slug: categoryMap.get(slug)
-        const category = categoryMap.get(String(slug));
-        console.log('Categories loaded:', category);
-
-        if (category) {
-          setCurrentCategory(category);
-        } else {
-          console.warn(`Category with slug ${slug} not found`);
-          router.push('/404');
-        }
+      if (res?.data) {
+        setCurrentCollection({
+          id: String(res.data.id),
+          name: res.data.name,
+          slug: String(slug),
+          description: res.data.description,
+          image: res.data.image_url,
+          products: res.data.products
+        });
+      } else {
+        console.warn(`Collection with slug ${slug} not found`);
+        router.push('/404');
       }
     } catch (err) {
-      console.error('Error loading category:', err);
-      if (isMounted) {
-        console.error('Failed to load category data');
-      }
+      console.error('Error loading collection:', err);
     }
   };
 
-  loadCategory();
+  loadCollection();
 
   return () => {
     isMounted = false;
   };
-}, [slug, router, fetchProductsByCategory]);
+}, [slug, router]);
+
 
   // Update document title
   useEffect(() => {
-    if (currentCategory?.name) {
-      document.title = `${currentCategory.name} | Tên cửa hàng`;
+    if (currentCollection?.name) {
+      document.title = `${currentCollection.name} | Tên cửa hàng`;
     }
     return () => {
       document.title = 'Tên cửa hàng';
     };
-  }, [currentCategory]);
+  }, [currentCollection]);
 
   if (isLoading) {
     return (
@@ -207,17 +213,17 @@ export default function CollectionPage({ params }: CollectionPageProps) {
   return (
     <div className="container mx-auto py-12 px-4">
       <h1 className="text-3xl font-bold mb-8">
-        {currentCategory?.name || 'Danh mục sản phẩm'}
+        {currentCollection?.name || 'Danh mục sản phẩm'}
       </h1>
       
-      {currentCategory?.description && (
+      {currentCollection?.description && (
         <div className="mb-8 text-gray-600">
-          {currentCategory.description}
+          {currentCollection.description}
         </div>
       )}
       
 <ProductPageLayout 
-        products={currentCategory?.products ?? []}
+        products={currentCollection?.products ?? []}
         isLoading={isLoading}
         error={error} 
         setFilters={handleFiltersChange}
