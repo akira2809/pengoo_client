@@ -63,7 +63,7 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
     <div
       ref={mobileMenuRef}
       // THAY ĐỔI TẠI ĐÂY: Đặt z-index là một giá trị cực kỳ cao
-      className="fixed inset-0 bg-background-300 z-[99999] flex-col p-4 text-text-50" // Đã tăng z-index
+      className="fixed inset-0 bg-background-900 z-[99999] flex-col p-4 text-text-50" // Đã tăng z-index
       style={{ display: menuOpen ? "flex" : "none" }}
     >
       <div className="flex justify-start items-center py-3 mb-4">
