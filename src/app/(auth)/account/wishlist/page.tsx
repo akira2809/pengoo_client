@@ -90,7 +90,13 @@ export default function WishlistPage() {
     if (!confirm('Bạn có chắc muốn xoá các sản phẩm đã chọn?')) return;
 
     await Promise.all(
-      selectedItems.map(id => wishlistService.removeFromWishlist(user.id, id))
+      selectedItems.map(wishlistId => {
+        const item = wishlist.find(i => i.id === wishlistId);
+        if (item) {
+          return wishlistService.removeFromWishlist(user.id, item.product.id);
+        }
+        return Promise.resolve();
+      })
     );
     setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
     setSelectedItems([]);
@@ -101,7 +107,10 @@ export default function WishlistPage() {
     if (!user?.id) return;
     await wishlistService.removeFromWishlist(user.id, productId);
     setWishlist(prev => prev.filter(item => item.product.id !== productId));
-    setSelectedItems(prev => prev.filter(id => id !== productId));
+    setSelectedItems(prev => prev.filter(id => {
+      const item = wishlist.find(i => i.id === id);
+      return item && item.product.id !== productId;
+    }));
   };
 
   const handleAddToCart = (e: MouseEvent, product: WishlistItem['product']) => {

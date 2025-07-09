@@ -1,21 +1,17 @@
 import { apiClient } from '../apiClient';
-// import { WishlistItem } from '@/app/type/wishlist';
 import { ProductData } from '@/app/type/product';
 
 export const wishlistService = {
   // 📌 Lấy danh sách sản phẩm yêu thích (trả về mảng sản phẩm)
-  // ✅ Dùng GET với query param
-    getWishlist(userId: number) {
+  getWishlist(userId: number) {
     return apiClient.get<ProductData[]>(`/wishlist?userId=${userId}`);
-    },
-    // wishlistService.ts
+  },
+   // wishlistService.ts
     // async getWishlist(userId: number) {
     // return apiClient.get<ProductData[]>(`/wishlist`, {
     //     params: { userId }, // sẽ tự sinh ?userId=123
     // });
     // },
-
-
 
   // 📌 Thêm vào yêu thích
   async addToWishlist(userId: number, productId: number) {

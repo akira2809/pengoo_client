@@ -10,6 +10,7 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/app/api/services/wishlistService";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
+import { useRouter } from "next/navigation";
 
 interface ImageType {
   id: number;
@@ -62,6 +63,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((state) => state.addItem);
   const { user } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -188,30 +190,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const handleAddToWishlist = async (e: MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (!user || !user.id) {
-    toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
-    return;
-  }
+    if (!user || !user.id) {
+      toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
+      router.push("/signin"); // Navigate to sign in page
+      return;
+    }
 
-  try {
-    await wishlistService.addToWishlist(user.id, product.id);
-    toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích ❤️`, {
-      duration: 2000,
-      position: "top-center",
-      style: {
-        background: "#EF4444",
-        color: "#fff",
-        padding: "12px 20px",
-        borderRadius: "8px",
-      },
-    });
-  } catch (error: any) {
-    toast.error(error.message || "Không thể thêm vào yêu thích.");
-  }
-};
+    try {
+      await wishlistService.addToWishlist(user.id, product.id);
+      toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích ❤️`, {
+        duration: 2000,
+        position: "top-center",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          padding: "12px 20px",
+          borderRadius: "8px",
+        },
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Không thể thêm vào yêu thích.");
+    }
+  };
 
 
   return (
