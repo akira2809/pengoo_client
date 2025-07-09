@@ -229,7 +229,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         setIsWishlisted(false);
       }
     } catch (error: any) {
-      toast.error(error.message || "Lỗi xử lý yêu thích.");
+      // Only show error if not a duplicate add
+      if (!isWishlisted) {
+        toast.error(error.message || "Lỗi xử lý yêu thích.");
+      }
     }
   };
 
