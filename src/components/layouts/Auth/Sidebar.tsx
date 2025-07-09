@@ -8,7 +8,6 @@ import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 const menuItems = [
   { name: 'Thông tin tài khoản', href: '/account' },
   { name: 'Đơn hàng của tôi', href: '/account/orders' },
-  { name: 'Địa chỉ giao hàng', href: '/account/addresses' },
   { name: 'Đổi mật khẩu', href: '/account/change-password' },
   { name: 'Yêu thích', href: '/account/wishlist' },
   { name: 'Voucher của tôi', href: '/account/voucher' },
