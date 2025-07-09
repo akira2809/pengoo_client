@@ -10,17 +10,26 @@ interface Category {
   slug: string;
   image?: string;
 }
+interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string;
+}
 
 interface CategoryGridProps {
   categories: Category[];
 }
+interface CollectionGridProps {
+  collections: Collection[];
+}
 
-export default function CategoryGrid({ categories }: CategoryGridProps) {
-  if (!categories || categories.length === 0) return null;
+export default function CategoryGrid({ collections }: CollectionGridProps) {
+  if (!collections || collections.length === 0) return null;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {categories.map((cat) => (
+      {collections.map((cat) => (
         <Link
           key={cat.id}
           href={`/collection/${cat.slug}`}

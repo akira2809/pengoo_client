@@ -74,7 +74,7 @@ export const ProductSidebarFilters: React.FC<ProductSidebarFiltersProps> = ({
         onCategoryChange={onCategoryChange}
       />
       <TagFilter
-        tags={tags}
+        tags={tags || []}
         selectedTags={selectedTags}
         onTagChange={onTagChange}
       />

@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/common/UI/Skeleton';
 import { mockMainIntro } from '@/app/api/data/mockProducts';
 import ProductReviewsSection from '@/components/common/ProductReviewsSection';
 
+
 // Dynamic imports for large components
 const ProductImageGallery = dynamic(
   () => import('@/components/layouts/ProductDetail/ProductImageGallery').then(mod => mod.default),
@@ -97,7 +98,6 @@ const ProductDetailPage: React.FC<ProductPageProps> = ({
       />
       
       <ProductReviewsSection productId={product.id} />
-      
       <BlogSection />
     </div>
   );

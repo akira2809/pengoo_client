@@ -1,7 +1,7 @@
 // components/ProductCard.tsx
 "use client";
 
-import React, { useEffect, useRef, MouseEvent, useMemo } from "react";
+import React, { useState, useEffect, useRef, MouseEvent, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Plus, Heart } from "lucide-react";
@@ -63,7 +63,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((state) => state.addItem);
   const { user } = useAuthStore();
+<<<<<<< HEAD
   const router = useRouter();
+=======
+  const [isWishlisted, setIsWishlisted] = useState(false);
+>>>>>>> 79a8e877732215bff0291fcb09d67465a8f3ff9f
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -84,7 +88,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         }
       }, 100);
     }
-  }, [product.id]);
+
+    // Kiểm tra sản phẩm có trong wishlist không (nếu đã đăng nhập)
+    const fetchWishlist = async () => {
+      if (!user || !user.id) return;
+
+      try {
+        const wishlist = await wishlistService.getWishlistByUserId(user.id);
+        const exists = wishlist.some((item: any) => item.product_id === product.id);
+        setIsWishlisted(exists);
+      } catch (error) {
+        console.error("Lỗi khi kiểm tra wishlist:", error);
+      }
+    };
+
+    fetchWishlist();
+  },  [product.id, user?.id]);
 
   // Helper function to validate and normalize image URL
   const getValidImageUrl = (url: string | undefined | null): string | null => {
@@ -172,6 +191,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       product_price: Number(product.discount ? product.product_price - (product.product_price * (product.discount / 100)) : product.product_price),
       quantity: Number(1),
       image_url: mainImage,
+      discount: Number(product.discount) || 0,
       slug: product.slug,
       description: product.meta_description,
     });
@@ -193,6 +213,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
 
+<<<<<<< HEAD
     if (!user || !user.id) {
       toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
       router.push("/signin"); // Navigate to sign in page
@@ -215,13 +236,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       toast.error(error.message || "Không thể thêm vào yêu thích.");
     }
   };
+=======
+  if (!user || !user.id) {
+    toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
+    window.location.href = `/signin`;
+    return;
+  }
+
+  try {
+    if (!isWishlisted) {
+      await wishlistService.addToWishlist(user.id, product.id);
+      toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích`);
+      setIsWishlisted(true);
+    } else {
+      await wishlistService.removeFromWishlist(user.id, product.id);
+      toast.success(`Đã xóa "${product.product_name}" khỏi danh sách yêu thích`);
+      setIsWishlisted(false);
+    }
+  } catch (error: any) {
+    toast.error(error.message || "Lỗi xử lý yêu thích.");
+  }
+};
+>>>>>>> 79a8e877732215bff0291fcb09d67465a8f3ff9f
+
 
 
   return (
     <Link href={`/product/${product.slug}`} className="block group" passHref>
       <article
         ref={cardRef}
-        className="relative product-card bg-white border border-gray-200 rounded-lg  flex flex-col justify-between min-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         itemScope
         itemType="https://schema.org/Product"
       >
@@ -240,13 +284,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Ảnh sản phẩm */}
-        <div className="relative w-full h-64 flex items-center justify-center overflow-hidden group bg-gray-50 p-4">
+        <div className="relative w-full h-64 flex items-center justify-center rounded-xl overflow-hidden group bg-gray-50 p-4">
           <div className="relative w-full h-full">
             <Image
               src={mainImage}
               alt={product.product_name}
               fill
-              className="object-contain transition-opacity duration-300 group-hover:opacity-0"
+              className="object-contain transition-opacity rounded-t-xl duration-300 group-hover:opacity-0"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority
               onError={(e) => {
@@ -260,7 +304,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 src={hoverImage}
                 alt={`${product.product_name} - Hover`}
                 fill
-                className="object-contain opacity-0 transition-opacity duration-300 group-hover:opacity-100 absolute inset-0"
+                className="object-contain opacity-0 transition-opacity rounded-t-xl duration-300 group-hover:opacity-100 absolute inset-0"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -275,10 +319,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {/* Nút trái tim */}
             <button
               onClick={handleAddToWishlist}
-              className="p-2 bg-white rounded-full shadow hover:bg-background-50"
+              className={`p-2 rounded-full shadow hover:bg-background-50 ${
+                isWishlisted ? 'bg-red-100' : 'bg-white'
+              }`}
               aria-label="Yêu thích"
             >
-              <Heart className="w-5 h-5 text-red-500" />
+              <Heart className={`w-5 h-5 ${isWishlisted ? 'text-red-500' : 'text-gray-500'}`} />
             </button>
 
             {/* Nút giỏ hàng */}
@@ -309,8 +355,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   <span className="text-red-500 font-semibold text-base">
                     {formatPrice(finalPrice)}
                   </span>
-                </div>
-                <div className="flex items-center">
                   <span className="text-gray-400 text-xs line-through">
                     {formatPrice(product.product_price)}
                   </span>
@@ -334,7 +378,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Nút Mua ngay */}
-        <button className="w-full bg-background-900 text-white py-2 rounded-b-lg hover:bg-background-800 transition">
+        <button className="w-full bg-background-900 text-white py-2 rounded-b-xl hover:bg-background-800 transition">
           Mua ngay
         </button>
       </article>

@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 type PopUpProps = {
   isOpen: boolean;
@@ -9,15 +12,14 @@ type PopUpProps = {
 export default function PopupSignup({ isOpen, onClose }: PopUpProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
-      // Delay để cho phép animation play
       setTimeout(() => setIsVisible(true), 10);
     } else {
       setIsVisible(false);
-      // Delay 500ms để animation chạy xong rồi mới gỡ DOM
       setTimeout(() => setShouldRender(false), 500);
     }
   }, [isOpen]);
@@ -30,10 +32,9 @@ export default function PopupSignup({ isOpen, onClose }: PopUpProps) {
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={() => {
-      setIsVisible(false);
-      setTimeout(onClose, 500);
-    }}
-
+        setIsVisible(false);
+        setTimeout(onClose, 500);
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -41,44 +42,36 @@ export default function PopupSignup({ isOpen, onClose }: PopUpProps) {
           isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
         }`}
       >
-        {/* Nút đóng */}
         <button
           onClick={() => {
-          setIsVisible(false);
-          setTimeout(onClose, 500);
-        }}
-
+            setIsVisible(false);
+            setTimeout(onClose, 500);
+          }}
           className="absolute top-3 right-3 text-xl font-bold text-gray-500 hover:text-black z-10"
         >
           ×
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-          {/* Form bên trái */}
-          <div className="bg-black text-white p-6 flex flex-col justify-center">
-            <h2 className="text-2xl font-bold text-center mb-2">SIGN UP</h2>
-            <h2 className="text-2xl font-bold text-center mb-2">& GET 10% OFF</h2>
-            <p className="text-sm text-center mb-4">Applied to your first order</p>
-            <input
-              type="email"
-              placeholder="Email"
-              className="mb-3 px-3 py-2 rounded w-full text-black"
-            />
-            <input
-              type="tel"
-              placeholder="Phone number"
-              className="mb-3 px-3 py-2 rounded w-full text-black"
-            />
-            <button className="bg-[#D2AE7E] text-black font-semibold py-2 rounded w-full">
-              Join
+          {/* Nội dung bên trái */}
+          <div className="bg-black text-white p-6 flex flex-col justify-center items-center text-center">
+            <h2 className="text-2xl font-bold mb-2">ĐĂNG KÝ</h2>
+            <h2 className="text-2xl font-bold mb-2">& NHẬN 10% GIẢM GIÁ</h2>
+            <p className="text-sm mb-6">Áp dụng cho đơn hàng đầu tiên của bạn</p>
+
+            <button
+              onClick={() => router.push('/signup')}
+              className="bg-[#D2AE7E] text-black font-semibold py-2 px-6 rounded"
+            >
+              THAM GIA NGAY
             </button>
+
             <button
               onClick={() => {
-              setIsVisible(false);
-              setTimeout(onClose, 500);
-            }}
-
-              className="text-sm mt-2 underline text-center"
+                setIsVisible(false);
+                setTimeout(onClose, 500);
+              }}
+              className="text-sm mt-3 underline"
             >
               No, thanks
             </button>

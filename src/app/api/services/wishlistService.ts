@@ -32,4 +32,16 @@ export const wishlistService = {
   async moveToOrder(userId: number, orderId: number) {
     return apiClient.post(`/wishlist/move-to-order/${orderId}`, { userId });
   },
+
+  
+  getWishlistByUserId: async (userId: number) => {
+    const res = await fetch(`/api/wishlist?userId=${userId}`);
+    return res.json();
+  },
+
+  removeHeartWishlist(userId: number, productId: number) {
+  return apiClient.delete(`/wishlist/${productId}`, {
+    data: { userId },
+    });
+  },
 };

@@ -12,6 +12,8 @@ interface ProductImageGalleryProps {
 interface ImageItem {
   url: string;
   alt?: string;
+  name?: string;
+  ord?: number | null;
   isMain?: boolean;
 }
 
@@ -20,49 +22,73 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
   const [thumbnails, setThumbnails] = useState<ImageItem[]>([]);
 
   useEffect(() => {
-    // Set main image from product.image_url or first image in product.images
-    if (product.image_url) {
-      setMainImage(product.image_url);
-    } else if (Array.isArray(product.images) && product.images.length > 0) {
-      setMainImage(product.images[0].url);
+    if (!Array.isArray(product.images) || product.images.length === 0) {
+      setMainImage(product.image_url || '');
+      setThumbnails([]);
+      return;
     }
 
-    // Process additional images from product.images
-    if (Array.isArray(product.images) && product.images.length > 0) {
-      const processedImages = product.images
-        .filter(img => img?.url && img.url !== product.image_url)
-        .map(img => ({
-          url: img.url,
-          alt: product.product_name || 'Product image'
-        }));
+    // Find the main image (with name 'main' or use the first image as fallback)
+    const mainImg = product.images.find(img => img.name === 'main') || product.images[0];
+    const initialMainImage = mainImg?.url || product.image_url || '';
+    setMainImage(initialMainImage);
+
+    // Process all images including the main one for thumbnails
+    const uniqueImages = new Map();
+    const processedImages = [];
+    
+    // Include all unique images in thumbnails
+    for (const img of product.images) {
+      if (!img?.url) continue; // Skip if no URL
       
-      setThumbnails(processedImages);
+      // Create a unique key based on the image name and first part of filename
+      const urlParts = img.url.split('/');
+      const fileName = urlParts[urlParts.length - 1].split('.')[0];
+      const imageKey = img.name || fileName.split('_')[0]; // Use image name or first part of filename
+      
+      // Only add if we haven't seen an image with this key before
+      if (!uniqueImages.has(imageKey)) {
+        uniqueImages.set(imageKey, true);
+        processedImages.push({
+          url: img.url,
+          alt: `${product.product_name || 'Product image'} ${img.name || ''}`.trim(),
+          name: img.name,
+          ord: img.ord || 0,
+          isMain: img.url === initialMainImage
+        });
+      }
     }
+    
+    // Sort images by their order (ord) if specified
+    processedImages.sort((a, b) => (a.ord || 0) - (b.ord || 0));
+    
+    setThumbnails(processedImages);
   }, [product]);
 
   const handleThumbnailClick = (imageUrl: string) => {
     setMainImage(imageUrl);
   };
 
-  // Combine main image with additional thumbnails for display
-  const allImages = [
-    { url: mainImage, alt: product.product_name },
-    ...thumbnails
-  ].filter(img => img.url);
+  // Use the already sorted thumbnails and ensure main image is first
+  const sortedThumbnails = [...thumbnails].sort((a, b) => {
+    if (a.isMain) return -1;
+    if (b.isMain) return 1;
+    return 0;
+  });
 
   return (
     <div className="flex flex-col-reverse md:flex-row gap-4 w-full">
       {/* Thumbnails */}
-      {allImages.length > 1 && (
+      {(sortedThumbnails.length > 0) && (
         <div className="flex md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 md:pr-3">
-          {thumbnails.map((image, index) => (
+          {sortedThumbnails.map((image, index) => (
             <button
               key={index}
               className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 relative rounded overflow-hidden transition-all ${
                 mainImage === image.url 
                   ? 'ring-2 ring-[#4B3C2D] ring-offset-1' 
                   : 'hover:ring-1 hover:ring-gray-300'
-              }`}
+              } ${image.isMain ? 'border-2 border-[#4B3C2D]' : ''}`}
               onClick={() => handleThumbnailClick(image.url)}
             >
               <Image 
