@@ -35,8 +35,24 @@ export default function WishlistPage() {
     const fetchWishlist = async () => {
       if (!user?.id) return;
       try {
-        const res = await wishlistService.getWishlist(user.id);
-        setWishlist(res.data);
+        const res = await wishlistService.getWishlist(Number(user.id));
+        setWishlist(
+          (res.data ?? []).map((item: any) => ({
+            id: item.id,
+            product: item.product ? item.product : {
+              id: item.product_id ?? item.id,
+              product_name: item.product_name,
+              product_price: item.product_price,
+              image: item.image,
+              quantity_stock: item.quantity_stock,
+              rating: item.rating,
+              reviewCount: item.reviewCount,
+              slug: item.slug,
+              meta_description: item.meta_description,
+              discount: item.discount,
+            }
+          }))
+        );
       } finally {
         setLoading(false);
       }
@@ -93,7 +109,7 @@ export default function WishlistPage() {
       selectedItems.map(wishlistId => {
         const item = wishlist.find(i => i.id === wishlistId);
         if (item) {
-          return wishlistService.removeFromWishlist(user.id, item.product.id);
+          return wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id));
         }
         return Promise.resolve();
       })
@@ -105,7 +121,7 @@ export default function WishlistPage() {
 
   const handleRemove = async (productId: number) => {
     if (!user?.id) return;
-    await wishlistService.removeFromWishlist(user.id, productId);
+    await wishlistService.removeFromWishlist(Number(user.id), Number(productId));
     setWishlist(prev => prev.filter(item => item.product.id !== productId));
     setSelectedItems(prev => prev.filter(id => {
       const item = wishlist.find(i => i.id === id);
@@ -127,6 +143,7 @@ export default function WishlistPage() {
       image_url: product.image || '',
       slug: product.slug || '',
       description: product.meta_description || '',
+      discount: 0
     });
 
     toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
@@ -218,7 +235,7 @@ export default function WishlistPage() {
                 <div className="ml-4 w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
                   {product.image ? (
                     <Image
-                      src={getValidImageUrl(product.image)}
+                      src={getValidImageUrl(product.image) || "https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image"}
                       alt={product.product_name}
                       width={96}
                       height={96}

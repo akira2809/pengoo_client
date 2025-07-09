@@ -10,7 +10,6 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/app/api/services/wishlistService";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
-import { useRouter } from "next/navigation";
 import router from "next/router";
 
 interface ImageType {
@@ -66,6 +65,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { user } = useAuthStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
 
+  const userId = user ? user.id : null;
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const views = JSON.parse(localStorage.getItem("productViews") || "{}");
@@ -91,7 +92,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       if (!user || !user.id) return;
 
       try {
-        const wishlistRes = await wishlistService.getWishlistByUserId(user.id);
+        const wishlistRes = await wishlistService.getWishlistByUserId(Number(user.id));
         const wishlistArr = wishlistRes.data || [];
         const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: any) => item.product_id === product.id);
         setIsWishlisted(exists);
@@ -101,7 +102,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
 
     fetchWishlist();
-  },  [product.id, user?.id]);
+  },  [product.id, user, userId]);
 
   // Helper function to validate and normalize image URL
   const getValidImageUrl = (url: string | undefined | null): string | null => {
@@ -213,25 +214,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (!user || !user.id) {
       toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
-      router.push("/signin"); // Navigate to sign in page
+      router.push("/signin");
       return;
     }
 
-  try {
-    if (!isWishlisted) {
-      await wishlistService.addToWishlist(user.id, product.id);
-      toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích`);
-      setIsWishlisted(true);
-    } else {
-      await wishlistService.removeFromWishlist(user.id, product.id);
-      toast.success(`Đã xóa "${product.product_name}" khỏi danh sách yêu thích`);
-      setIsWishlisted(false);
+    try {
+      if (!isWishlisted) {
+        await wishlistService.addToWishlist(Number(user.id), Number(product.id));
+        toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích`);
+        setIsWishlisted(true);
+      } else {
+        await wishlistService.removeFromWishlist(Number(user.id), Number(product.id));
+        toast.success(`Đã xóa "${product.product_name}" khỏi danh sách yêu thích`);
+        setIsWishlisted(false);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Lỗi xử lý yêu thích.");
     }
-  } catch (error: any) {
-    toast.error(error.message || "Lỗi xử lý yêu thích.");
-  }
-};
-
+  };
 
 
   return (
