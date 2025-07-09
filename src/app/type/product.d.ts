@@ -42,6 +42,9 @@ export interface ProductData {
   images: Array<{
     id: number;
     url: string;
+    name?: string;
+    folder?: string | null;
+    ord?: number | null;
   }>;
   features: ProductFeature[];
   created_at: string;
