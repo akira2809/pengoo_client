@@ -2,46 +2,38 @@ import { apiClient } from '../apiClient';
 import { ProductData } from '@/app/type/product';
 
 export const wishlistService = {
-  // 📌 Lấy danh sách sản phẩm yêu thích (trả về mảng sản phẩm)
+  // Lấy danh sách sản phẩm yêu thích (trả về mảng sản phẩm)
   getWishlist(userId: number) {
-    return apiClient.get<ProductData[]>(`/wishlist?userId=${userId}`);
+    return apiClient.get<ProductData[]>(`/wishlist`, { userId });
   },
-   // wishlistService.ts
-    // async getWishlist(userId: number) {
-    // return apiClient.get<ProductData[]>(`/wishlist`, {
-    //     params: { userId }, // sẽ tự sinh ?userId=123
-    // });
-    // },
 
-  // 📌 Thêm vào yêu thích
+  // Thêm vào yêu thích
   async addToWishlist(userId: number, productId: number) {
     return apiClient.post(`/wishlist/${productId}`, { userId });
   },
 
-  // 📌 Xoá khỏi yêu thích từng product
+  // Xoá khỏi yêu thích từng product
   async removeFromWishlist(userId: number, productId: number) {
-    return apiClient.delete(`/wishlist/${productId}`, { data: { userId } });
+    return apiClient.delete(`/wishlist/${productId}`, { userId });
   },
 
-  // Dùng cho xoá all products
+  // Xoá all products
   removeFromAllWishlist(userId: number, productId: number) {
-    return apiClient.delete(`/wishlist`, { data: { userId, productId } });
+    return apiClient.delete(`/wishlist`, { userId, productId });
   },
 
-  // 📌 Chuyển toàn bộ wishlist sang đơn hàng
+  // Chuyển toàn bộ wishlist sang đơn hàng
   async moveToOrder(userId: number, orderId: number) {
     return apiClient.post(`/wishlist/move-to-order/${orderId}`, { userId });
   },
 
-  
-  getWishlistByUserId: async (userId: number) => {
-    const res = await fetch(`/api/wishlist?userId=${userId}`);
-    return res.json();
+  // Lấy wishlist theo userId (same as getWishlist)
+  async getWishlistByUserId(userId: number) {
+    return apiClient.get<ProductData[]>(`/wishlist`, { userId });
   },
 
+  // Xoá trái tim wishlist (same as removeFromWishlist)
   removeHeartWishlist(userId: number, productId: number) {
-  return apiClient.delete(`/wishlist/${productId}`, {
-    data: { userId },
-    });
+    return apiClient.delete(`/wishlist/${productId}`, { userId });
   },
 };

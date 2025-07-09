@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { wishlistService } from "@/app/api/services/wishlistService";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 import { useRouter } from "next/navigation";
+import router from "next/router";
 
 interface ImageType {
   id: number;
@@ -63,11 +64,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((state) => state.addItem);
   const { user } = useAuthStore();
-<<<<<<< HEAD
-  const router = useRouter();
-=======
   const [isWishlisted, setIsWishlisted] = useState(false);
->>>>>>> 79a8e877732215bff0291fcb09d67465a8f3ff9f
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -94,8 +91,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       if (!user || !user.id) return;
 
       try {
-        const wishlist = await wishlistService.getWishlistByUserId(user.id);
-        const exists = wishlist.some((item: any) => item.product_id === product.id);
+        const wishlistRes = await wishlistService.getWishlistByUserId(user.id);
+        const wishlistArr = wishlistRes.data || [];
+        const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: any) => item.product_id === product.id);
         setIsWishlisted(exists);
       } catch (error) {
         console.error("Lỗi khi kiểm tra wishlist:", error);
@@ -213,35 +211,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
 
-<<<<<<< HEAD
     if (!user || !user.id) {
       toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
       router.push("/signin"); // Navigate to sign in page
       return;
     }
-
-    try {
-      await wishlistService.addToWishlist(user.id, product.id);
-      toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích ❤️`, {
-        duration: 2000,
-        position: "top-center",
-        style: {
-          background: "#EF4444",
-          color: "#fff",
-          padding: "12px 20px",
-          borderRadius: "8px",
-        },
-      });
-    } catch (error: any) {
-      toast.error(error.message || "Không thể thêm vào yêu thích.");
-    }
-  };
-=======
-  if (!user || !user.id) {
-    toast.error("Bạn cần đăng nhập để thêm vào yêu thích.");
-    window.location.href = `/signin`;
-    return;
-  }
 
   try {
     if (!isWishlisted) {
@@ -257,7 +231,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     toast.error(error.message || "Lỗi xử lý yêu thích.");
   }
 };
->>>>>>> 79a8e877732215bff0291fcb09d67465a8f3ff9f
 
 
 
@@ -319,12 +292,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {/* Nút trái tim */}
             <button
               onClick={handleAddToWishlist}
-              className={`p-2 rounded-full shadow hover:bg-background-50 ${
-                isWishlisted ? 'bg-red-100' : 'bg-white'
-              }`}
+              className={`p-2 rounded-full shadow hover:bg-background-50 border transition-colors duration-200
+                ${isWishlisted ? 'bg-red-500 border-red-500' : 'bg-white border-gray-300'}`}
               aria-label="Yêu thích"
             >
-              <Heart className={`w-5 h-5 ${isWishlisted ? 'text-red-500' : 'text-gray-500'}`} />
+              <Heart
+                className={`w-5 h-5 transition-colors duration-200
+                  ${isWishlisted ? 'text-white fill-white' : 'text-gray-500'}`}
+                fill={isWishlisted ? '#ef4444' : 'none'}
+              />
             </button>
 
             {/* Nút giỏ hàng */}
