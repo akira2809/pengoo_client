@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { productService } from '@/app/api/services/productService';
 import { collectionService } from '@/app/api/services/collectionService';
-import CategoryGrid from '@/components/layouts/collection/CategoryGrid';
+import CategoryGrid from '@/components/collection/CategoryGrid';
 import { BlogSection } from '@/components/common/BlogSection';
 
 
@@ -10,7 +11,7 @@ interface RawCategory {
   id?: string | number;
   name?: string;
   slug?: string;
-  image_url: string;
+  image?: string;
 }
 
 interface Category {
@@ -27,6 +28,7 @@ interface Collection {
 }
 
 export default function CollectionsPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +46,7 @@ export default function CollectionsPage() {
             id: String(cat.id || ''),
             name: cat.name || 'Không tên',
             slug: cat.slug || String(cat.id || ''),
-            image: cat.image_url || '/placeholder.png',
+            image: cat.image || '/placeholder.png',
           }));
 
           setCollections(formatted);

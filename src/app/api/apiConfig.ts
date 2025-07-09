@@ -18,13 +18,6 @@ export const API_CONFIG = {
       BY_TAG: (tag: string) => `/products/tag/${tag}`,
     },
     
-    // Collection endpoints
-    COLLECTIONS: {
-      BASE: '/collections',
-      BY_ID: (id: string | number) => `/collections/${id}`,
-      BY_SLUG: (slug: string) => `/collections/slug/${slug}`,
-    },
-
     // Order endpoints
     ORDERS: {
       BASE: '/orders',
@@ -54,6 +47,15 @@ export const API_CONFIG = {
       BY_ID: (id: number | string) => `/tags/${id}`,
     },
     
+    // Collection endpoints
+    COLLECTIONS: {
+      BASE: '/collections',
+      BY_ID: (id: string | number) => `/collection/${id}`,
+      BY_SLUG: (slug: string) => `/collections/slug/${slug}`,
+      PRODUCTS: (collectionId: string | number) => `/collections/${collectionId}/products`,
+      PRODUCTS_BY_SLUG: (slug: string) => `/collections/slug/${slug}/products`,
+      FEATURED: '/collections/featured',
+    },
 
     // wishlist endpoints
     WISHLIST: {
