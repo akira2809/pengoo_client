@@ -1,12 +1,14 @@
 // components/Header/CollectionsDropdown.tsx
 import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
-import { productService } from "@/app/api/services/productService";
+// import { productService } from "@/app/api/services/productService";
+import { collectionService } from "@/app/api/services/collectionService";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-interface Category {
+
+interface Collection {
   id: string;
   name: string;
   slug: string;
@@ -24,7 +26,8 @@ export default function CollectionsDropdown({
   collectionsOpen,
   onClose,
 }: CollectionsDropdownProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
+  // const [categories, setCategories] = useState<Category[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,9 +36,9 @@ export default function CollectionsDropdown({
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await productService.getCategories();
+        const response = await collectionService.getCollections();
         if (response?.data) {
-          setCategories(response.data);
+          setCollections(response.data);
         }
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -139,16 +142,16 @@ export default function CollectionsDropdown({
           </div>
 
           <div ref={collectionsItemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => (
+            {collections.map((col) => (
               <Link
-                key={category.id}
-                href={`/collection/${category.id}`} // Sử dụng ID làm tham số có slug thì thay thành chữ slug
+                key={col.id}
+                href={`/collection/${col.id}`} // Sử dụng ID làm tham số có slug thì thay thành chữ slug
                 className="group flex items-center space-x-4 p-4 rounded-lg hover:bg-background-100 transition-colors"
               >
-                {category.image && (
+                {col.image && ( 
                   <Image
-                    src={category.image}
-                    alt={category.name}
+                    src={col.image}
+                    alt={col.name}
                     width={80}
                     height={60}
                     className="w-20 h-15 object-cover rounded-lg group-hover:scale-105 transition-transform"
@@ -156,16 +159,16 @@ export default function CollectionsDropdown({
                 )}
                 <div className="flex-1">
                   <h4 className="font-semibold text-text-900 group-hover:text-primary transition-colors">
-                    {category.name}
+                    {col.name}
                   </h4>
-                  {category.description && (
+                  {col.description && (
                     <p className="text-sm text-gray-500 mt-1">
-                      {category.description}
+                      {col.description}
                     </p>
                   )}
-                  {category.productCount !== undefined && (
+                  {col.productCount !== undefined && (
                     <span className="text-xs text-gray-400 mt-2 block">
-                      {category.productCount} sản phẩm
+                      {col.productCount} sản phẩm
                     </span>
                   )}
                 </div>
