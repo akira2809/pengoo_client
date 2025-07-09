@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { productService } from '@/app/api/services/productService';
+import { collectionService } from '@/app/api/services/collectionService';
 import CategoryGrid from '@/components/collection/CategoryGrid';
 import { BlogSection } from '@/components/common/BlogSection';
 
@@ -19,9 +20,16 @@ interface Category {
   slug: string;
   image?: string;
 }
+interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string;
+}
 
 export default function CollectionsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +37,7 @@ export default function CollectionsPage() {
 
     const loadCategories = async () => {
       try {
-        const response = await productService.getCategories();
+        const response = await collectionService.getCollections();
         console.log('Categories API response:', response);
 
         if (isMounted && response?.data && Array.isArray(response.data)) {
@@ -41,7 +49,7 @@ export default function CollectionsPage() {
             image: cat.image || '/placeholder.png',
           }));
 
-          setCategories(formatted);
+          setCollections(formatted);
         } else {
           console.warn('Dữ liệu danh mục không hợp lệ');
         }
@@ -66,8 +74,8 @@ export default function CollectionsPage() {
 
       {loading ? (
         <div className="text-gray-500">Đang tải danh mục...</div>
-      ) : categories.length > 0 ? (
-        <CategoryGrid categories={categories} />
+      ) : collections.length > 0 ? (
+        <CategoryGrid collections={collections} />
       ) : (
         <div className="text-gray-500">Không có danh mục nào để hiển thị.</div>
       )}

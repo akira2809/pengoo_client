@@ -156,7 +156,7 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
           {/* Tái sử dụng TagFilter */}
           <FilterDropdown title="Sản phẩm" initialOpen={false}>
             <div className="space-y-2">
-              {tags.map(tag => (
+              {tags?.map(tag => (
                 <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
                   <input
                     type="checkbox"

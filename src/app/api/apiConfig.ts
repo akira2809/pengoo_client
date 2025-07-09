@@ -41,11 +41,23 @@ export const API_CONFIG = {
       GET_BY_USER_ID: '/coupons/get-voucher-by-userId'
     },
 
+    // Tag endpoints
     TAGS: {
       BASE: '/tags',
       BY_ID: (id: number | string) => `/tags/${id}`,
     },
     
+    // Collection endpoints
+    COLLECTIONS: {
+      BASE: '/collections',
+      BY_ID: (id: string | number) => `/collection/${id}`,
+      BY_SLUG: (slug: string) => `/collections/slug/${slug}`,
+      PRODUCTS: (collectionId: string | number) => `/collections/${collectionId}/products`,
+      PRODUCTS_BY_SLUG: (slug: string) => `/collections/slug/${slug}/products`,
+      FEATURED: '/collections/featured',
+    },
+
+    // wishlist endpoints
     WISHLIST: {
       BASE: '/wishlist',
       BY_USER_ID: (userId: number) => `/wishlist?userId=${userId}`,

@@ -21,7 +21,7 @@ export const TagFilter: React.FC<TagFilterProps> = ({
   return (
    <FilterDropdown title="Tags" initialOpen={false}>
       <div className="space-y-2">
-      {tags.map((tag) => (
+      {tags?.map((tag) => (
         <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
           <input
             type="checkbox"
