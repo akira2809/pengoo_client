@@ -37,9 +37,11 @@ const CheckoutPage: React.FC = () => {
   const applyVoucher = useStore((state) => state.applyVoucher);
   const [showCouponList, setShowCouponList] = useState(false); // Dropdown toggle
   const router = useRouter();
-  const { items: cartItems, clearCart } = useCartStore();
-  const { user } = useAuthStore();
+  const { items: cartItems, clearCart, getTotalItems } = useCartStore();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isCartReady, setIsCartReady] = useState(false);
   const [listVouchers, setListVouchers] = useState([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -74,14 +76,14 @@ const CheckoutPage: React.FC = () => {
       address: user.address || prev.address,
       phone: user.phone_number || prev.phone,
     }));
-  }, [user?.id]);
+  }, [user?.id, user?.email, user?.full_name, user?.address, user?.phone_number]);
+
   // Gọi API lấy mã giảm giá
   useEffect(() => {
     if (user?.id) {
       fetchMyVouchers();
     }
-  }, [user?.id]);
-
+  }, [user?.id, fetchMyVouchers]);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -104,18 +106,67 @@ const CheckoutPage: React.FC = () => {
   // Calculate total
   const total = subtotal - shippingCost - discountAmount;
 
-  // Redirect if cart is empty or user not logged in
+  // Handle cart initialization
   useEffect(() => {
-    if (cartItems.length === 0) {
-      toast.error('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
-      router.push('/');
-    }
+    // Mark cart as ready after initial render
+    // This ensures we've had a chance to load from localStorage
+    const timer = setTimeout(() => {
+      setIsCartReady(true);
+    }, 100);
     
-    if (!user) {
-      toast.error('Vui lòng đăng nhập để thanh toán.');
-      router.push('/signin?redirect=/checkout');
-    }
-  }, [cartItems, router, user]);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle authentication and cart validation
+  useEffect(() => {
+    // Only run when cart is ready and auth is not already checked
+    if (!isCartReady || authChecked) return;
+    
+    const checkAuthAndCart = async () => {
+      // Check if cart is empty using getTotalItems to ensure we have the latest count
+      if (getTotalItems() === 0) {
+        toast.error('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
+        router.push('/');
+        return;
+      }
+      
+      // If auth is still loading, wait for it to complete
+      if (isAuthLoading) {
+        return;
+      }
+      
+      // If not authenticated after loading is complete
+      if (!isAuthenticated) {
+        toast.error('Vui lòng đăng nhập để thanh toán.');
+        router.push(`/signin?redirect=${encodeURIComponent('/checkout')}`);
+        return;
+      }
+      
+      setAuthChecked(true);
+    };
+    
+    checkAuthAndCart();
+  }, [isCartReady, cartItems, router, isAuthenticated, isAuthLoading, authChecked, getTotalItems]);
+
+  // Show loading state while checking auth or cart
+  if (isAuthLoading || !authChecked || !isCartReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  // Show empty cart message if no items after loading
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -130,10 +181,17 @@ const CheckoutPage: React.FC = () => {
     setErrors(prev => ({ ...prev, [name]: undefined })); // Clear error on change
   };
   const handleShowCouponList = async () => {
-    const result = await Promise.all(myVouchers.map(async(voucher:any) => {
+    interface Voucher {
+      coupon: {
+        code: string;
+      };
+      active?: boolean;
+    }
+    
+    const result = await Promise.all(myVouchers.map(async (voucher: Voucher) => {
       const data = await applyVoucher(voucher.coupon.code, subtotal);
-      return data ? {...voucher,active: true} : {...voucher,active: false};
-    }))
+      return data ? {...voucher, active: true} : {...voucher, active: false};
+    }));
     result.sort((a, b) => {
       if (a.active && !b.active) return -1; // a is active, b is not
       if (!a.active && b.active) return 1; // b is active, a is not
@@ -247,15 +305,7 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  if (cartItems.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-lg text-gray-600">Đang chuyển hướng về giỏ hàng...</p>
-        </div>
-      </div>
-    );
-  }
+
 
 
   return (

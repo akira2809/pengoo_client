@@ -5,11 +5,53 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
+import { useCartStore } from '@/app/stores/slice/cartStore';
 import toast from 'react-hot-toast';
 
 export default function SignUpPage() {
   const router = useRouter();
   const { register, isAuthenticated, isLoading, error, clearError } = useAuthStore();
+  const { items: cartItems } = useCartStore();
+  const [searchParams] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search);
+    }
+    return new URLSearchParams();
+  });
+  
+  // Get the redirect URL from query params, session storage, or use default
+  const getRedirectPath = () => {
+    // Check for explicit redirect in URL first
+    const explicitRedirect = searchParams.get('redirect');
+    if (explicitRedirect) return explicitRedirect;
+    
+    // Try to get the previous page from session storage
+    if (typeof window !== 'undefined') {
+      // Get the full URL including path and search params
+      const fullPath = sessionStorage.getItem('preAuthFullPath');
+      if (fullPath) {
+        // If redirecting to checkout but cart is empty, go to home
+        if (fullPath === '/checkout' && (!cartItems || cartItems.length === 0)) {
+          return '/';
+        }
+        return fullPath;
+      }
+      
+      // Fallback to just the path if full path is not available
+      const pathOnly = sessionStorage.getItem('preAuthPath');
+      if (pathOnly) {
+        // If redirecting to checkout but cart is empty, go to home
+        if (pathOnly === '/checkout' && (!cartItems || cartItems.length === 0)) {
+          return '/';
+        }
+        return pathOnly;
+      }
+    }
+    
+    return '/';
+  };
+  
+  const redirectTo = getRedirectPath();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -24,9 +66,10 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      // Redirect to the original page after successful signup and auto-login
+      router.push(redirectTo);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirectTo]);
 
   useEffect(() => {
     if (error) {
@@ -80,71 +123,47 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setApiError(''); // Clear previous API errors
     
-    if (!validateForm()) {
+    const validationErrors: Record<string, string> = {};
+    if (!formData.name) validationErrors.name = 'Vui lòng nhập tên';
+    if (!formData.email) {
+      validationErrors.email = 'Vui lòng nhập email';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      validationErrors.email = 'Email không hợp lệ';
+    }
+    if (!formData.password) {
+      validationErrors.password = 'Vui lòng nhập mật khẩu';
+    } else if (formData.password.length < 6) {
+      validationErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    if (formData.password !== formData.confirmPassword) {
+      validationErrors.confirmPassword = 'Mật khẩu không khớp';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
-    
+
     try {
-      const userData = {
-        username: formData.email.split('@')[0], // Using email prefix as username
+      const registrationResult = await register({
+        username: formData.name,
         email: formData.email,
         password: formData.password,
         full_name: formData.name,
-        phone_number: '', // Add empty values for required fields
-        address: '',
-        role: 'user',
-        avatar_url: ''
-      };
-      
-      console.log('Sending registration request:', userData);
-      
-      const result = await register(userData);
-      
-      if (result.success) {
-        toast.success('Đăng ký thành công!');
-        router.push('/signin');
-      } else {
-        // Handle case where register returns success: false but no error
-        const errorMsg = result.message || 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.';
-        toast.error(errorMsg);
-        setApiError(errorMsg);
-      }
-    } catch (err: any) {
-      console.error('Registration failed:', {
-        error: err,
-        response: err.response?.data,
-        status: err.response?.status,
-        message: err.message,
-        stack: err.stack
-      });
-      
-      // Handle specific error cases
-      console.error('Error details:', {
-        status: err.response?.status,
-        data: err.response?.data,
-        message: err.message
+        phone_number: '', // You might want to add this field to your form
+        role: 'customer',
       });
 
-      if (err.response?.status === 500) {
-        const errorMsg = 'Lỗi máy chủ. Vui lòng thử lại sau.';
-        toast.error(errorMsg);
-        setApiError(errorMsg);
-      } else if (err.response?.data?.message?.toLowerCase().includes('email') || 
-                err.message?.toLowerCase().includes('email')) {
-        setErrors(prev => ({
-          ...prev,
-          email: 'Email đã được sử dụng. Vui lòng sử dụng email khác.'
-        }));
-      } else if (err.response?.data?.message) {
-        // Display the error message from the server
-        setApiError(err.response.data.message);
+      if (registrationResult.success) {
+        // The useEffect will handle the redirect when isAuthenticated becomes true
+        toast.success('Đăng ký và đăng nhập thành công! Đang chuyển hướng...');
       } else {
-        const errorMsg = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
-        toast.error(errorMsg);
-        setApiError(errorMsg);
+        setApiError(registrationResult.message || 'Đăng ký thất bại');
       }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setApiError('Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại sau.');
     }
   };
 
@@ -342,12 +361,15 @@ export default function SignUpPage() {
           </div>
 
           <div className="mt-6 text-center text-sm">
-            <p className="text-gray-600">
-              Already have an account?{' '}
-              <Link href="/signin" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign in
-              </Link>
-            </p>
+            <p className="text-center text-sm text-gray-600">
+            Bạn đã có tài khoản?{' '}
+            <Link 
+              href={`/signin${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} 
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Đăng nhập ngay
+            </Link>
+          </p>
           </div>
         </div>
       </div>

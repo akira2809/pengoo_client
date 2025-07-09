@@ -296,7 +296,13 @@ export const useAuthStore = create<AuthState>()(
        * Được sử dụng để kiểm tra token từ localStorage khi khởi động ứng dụng.
        */
       verifyToken: async (token: string) => {
-        set({ isLoading: true, error: null }); // Đặt loading khi bắt đầu xác minh
+        if (!token) {
+          console.log('No token provided for verification');
+          return { success: false, message: 'No authentication token found' };
+        }
+
+        set({ isLoading: true, error: null });
+        
         try {
           const data = await authService.verifyToken(token);
           console.log('Verify Token API Response Data:', data);
@@ -318,27 +324,41 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: userData,
               isAuthenticated: true,
-              token: token, // Lưu token hợp lệ vào store
+              token: token,
               isLoading: false,
               error: null,
             });
             return { success: true, user: userData, message: data.message || 'Token hợp lệ.' };
           } else {
-            // Nếu token không hợp lệ hoặc phản hồi không mong đợi, xóa trạng thái
-            set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: data.message || 'Token không hợp lệ.' });
-            return { success: false, message: data.message || 'Token không hợp lệ.' };
+            console.log('Token verification failed:', data.message);
+            // Only clear auth state if we're certain the token is invalid
+            if (data.message?.includes('expired') || data.message?.includes('invalid')) {
+              set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: data.message });
+              return { success: false, message: data.message };
+            }
+            // For other cases, don't clear auth state to prevent logout on temporary issues
+            set({ isLoading: false });
+            return { 
+              success: false, 
+              message: data.message || 'Không thể xác minh token. Vui lòng thử lại sau.',
+              isNetworkError: true
+            };
           }
         } catch (error: unknown) {
-          let errorMessage = 'Lỗi mạng không mong muốn khi xác minh token.';
-          if (error instanceof Error) {
-            errorMessage = error.message || 'Lỗi mạng không xác định.';
-          } else if (typeof error === 'string') {
-            errorMessage = error;
-          }
           console.error('Lỗi khi xác minh token:', error);
-          // Luôn xóa trạng thái người dùng khi có lỗi xác minh token để đảm bảo an toàn
-          set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: errorMessage });
-          return { success: false, message: errorMessage };
+          // Don't clear auth state on network errors
+          set({ isLoading: false });
+          
+          let errorMessage = 'Lỗi mạng khi xác minh token. Vui lòng kiểm tra kết nối của bạn.';
+          if (error instanceof Error) {
+            errorMessage = error.message || errorMessage;
+          }
+          
+          return { 
+            success: false, 
+            message: errorMessage,
+            isNetworkError: true
+          };
         }
       }
     }),

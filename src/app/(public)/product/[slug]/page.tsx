@@ -52,6 +52,7 @@ interface ProductPageProps {
 const ProductDetailPage: React.FC<ProductPageProps> = ({
   product,
   mainIntro = { title: 'Đặc điểm nổi bật', description: 'Khám phá những điểm đặc biệt của sản phẩm' }
+  
 }) => {
   return (
     <div className="container mx-auto px-4">

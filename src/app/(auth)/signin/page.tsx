@@ -10,6 +10,35 @@ import toast from 'react-hot-toast';
 export default function SignInPage() {
   const router = useRouter();
   const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore();
+  const [searchParams] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search);
+    }
+    return new URLSearchParams();
+  });
+  
+  // Get the redirect URL from query params or use the current page as fallback
+  const getRedirectPath = () => {
+    // Check for explicit redirect in URL first
+    const explicitRedirect = searchParams.get('redirect');
+    if (explicitRedirect) return explicitRedirect;
+    
+    // If no explicit redirect, try to get the previous page from session storage
+    if (typeof window !== 'undefined') {
+      // Get the full URL including path and search params
+      const fullPath = sessionStorage.getItem('preAuthFullPath');
+      if (fullPath) return fullPath;
+      
+      // Fallback to just the path if full path is not available
+      const pathOnly = sessionStorage.getItem('preAuthPath');
+      if (pathOnly) return pathOnly;
+    }
+    
+    return '/';
+  };
+  
+  const redirectTo = getRedirectPath();
+  const fromSignup = searchParams.get('from') === 'signup';
   
   const [formData, setFormData] = useState({
     email: '',
@@ -24,9 +53,18 @@ export default function SignInPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      // If coming from signup, show success message
+      if (fromSignup) {
+        toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+        // Remove the 'from' param to avoid showing the message again on refresh
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('from');
+        router.replace(`/signin?${newParams.toString()}`);
+      } else {
+        router.push(redirectTo);
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirectTo, fromSignup, searchParams]);
 
   useEffect(() => {
     if (error) {
@@ -74,24 +112,17 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+    
     try {
-      // Use simple-login endpoint for main site (no MFA)
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/simple-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      const token = data.token || data.access_token;
-      if (res.ok && token) {
-        localStorage.setItem("token", token);
-        await verifyToken(token);
+      const result = await login(formData);
+      if (result.success) {
         toast.success("Đăng nhập thành công!");
-        router.push('/');
+        // The redirect will be handled by the useEffect above
       } else {
-        toast.error(data.message || "Đăng nhập thất bại");
+        toast.error(result.message || "Đăng nhập thất bại");
       }
-    } catch {
+    } catch (error) {
+      console.error('Login error:', error);
       toast.error("Đã xảy ra lỗi khi đăng nhập");
     }
   };
@@ -123,91 +154,76 @@ export default function SignInPage() {
   // };
 
   // Google login (now skips MFA for main site)
-  const handleGoogleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
+  // Google login handler (commented out as it's not being used)
+  // const handleGoogleLogin = async () => {
+  //   try {
+  //     const provider = new GoogleAuthProvider();
+  //     const result = await signInWithPopup(auth, provider);
+  //     const idToken = await result.user.getIdToken();
 
-      // Always send skipMfa: true for main site
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken, skipMfa: true }), // <--- skipMfa: true
-      });
-      const data = await res.json();
+  //     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/google`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ idToken, skipMfa: true }),
+  //     });
+  //     const data = await res.json();
 
-      // Legacy MFA logic (commented)
-      // if (res.ok && data.mfaRequired) {
-      //   setGoogleEmail(result.user.email || ""); // Save Google email for MFA step
-      //   setMfaStep(true);
-      //   toast.success(data.message || "Vui lòng kiểm tra email để lấy mã xác thực.");
-      // } else 
-      if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        await verifyToken(data.token);
-        toast.success("Đăng nhập Google thành công!");
-        if (!data.profileCompleted) {
-          toast("Vui lòng cập nhật thông tin tài khoản để sử dụng đầy đủ tính năng!", { icon: "⚠️" });
-          router.push('/account');
-        } else {
-          router.push('/');
-        }
-      } else {
-        toast.error(data.message || "Google login failed");
-      }
-    } catch (err) {
-      toast.error("Google login failed");
-      console.error(err);
-    }
-  };
+  //     if (res.ok && data.token) {
+  //       localStorage.setItem("token", data.token);
+  //       await verifyToken(data.token);
+  //       toast.success("Đăng nhập Google thành công!");
+  //       if (!data.profileCompleted) {
+  //         toast("Vui lòng cập nhật thông tin tài khoản để sử dụng đầy đủ tính năng!", { icon: "⚠️" });
+  //         router.push('/account');
+  //       } else {
+  //         router.push(redirectTo);
+  //       }
+  //     } else {
+  //       toast.error(data.message || "Đăng nhập Google thất bại");
+  //     }
+  //   } catch (err) {
+  //     console.error('Google login error:', err);
+  //     toast.error("Đã xảy ra lỗi khi đăng nhập bằng Google");
+  //   }
+  // };
 
-  // Facebook login (now skips MFA for main site)
-  const handleFacebookLogin = async () => {
-    try {
-      // Ensure FB SDK is loaded
-      if (!(window as any).FB) {
-        toast.error("Facebook SDK chưa được tải.");
-        return;
-      }
-      (window as any).FB.login((response: any) => {
-        if (response.authResponse) {
-          (async () => {
-            const accessToken = response.authResponse.accessToken;
-            // Always send skipMfa: true for main site
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/facebook`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accessToken, skipMfa: true }), // <--- skipMfa: true
-            });
-            const data = await res.json();
+  // Facebook login handler (commented out as it's not being used)
+  // const handleFacebookLogin = async () => {
+  //   try {
+  //     // Ensure FB SDK is loaded
+  //     if (!(window as any).FB) {
+  //       toast.error("Facebook SDK chưa được tải.");
+  //       return;
+  //     }
+  //     (window as any).FB.login((response: any) => {
+  //       if (response.authResponse) {
+  //         (async () => {
+  //           const accessToken = response.authResponse.accessToken;
+  //           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/facebook`, {
+  //             method: "POST",
+  //             headers: { "Content-Type": "application/json" },
+  //             body: JSON.stringify({ accessToken, skipMfa: true }),
+  //           });
+  //           const data = await res.json();
 
-            // Legacy MFA logic (commented)
-            // if (res.ok && data.mfaRequired) {
-            //   (window as any).FB.api('/me', { fields: 'email' }, (fbUser: any) => {
-            //     setGoogleEmail(fbUser.email || "");
-            //     setMfaStep(true);
-            //     toast.success(data.message || "Vui lòng kiểm tra email để lấy mã xác thực.");
-            //   });
-            // } else 
-            if (res.ok && data.token) {
-              localStorage.setItem("token", data.token);
-              await verifyToken(data.token);
-              toast.success("Đăng nhập Facebook thành công!");
-              router.push('/');
-            } else {
-              toast.error(data.message || "Facebook login failed");
-            }
-          })();
-        } else {
-          toast.error("Facebook login cancelled or failed");
-        }
-      }, { scope: 'email' });
-    } catch (err) {
-      toast.error("Facebook login failed");
-      console.error(err);
-    }
-  };
+  //           if (res.ok && data.token) {
+  //             localStorage.setItem("token", data.token);
+  //             await verifyToken(data.token);
+  //             toast.success("Đăng nhập Facebook thành công!");
+  //             router.push(redirectTo);
+  //           } else {
+  //             toast.error(data.message || "Đăng nhập Facebook thất bại");
+  //           }
+  //         })();
+  //       } else {
+  //         toast.error("Đã hủy đăng nhập Facebook");
+  //       }
+  //     }, { scope: 'email' });
+  //   } catch (err) {
+  //     console.error('Facebook login error:', err);
+  //     toast.error("Đã xảy ra lỗi khi đăng nhập bằng Facebook");
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
