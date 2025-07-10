@@ -142,9 +142,9 @@ useEffect(() => {
 
   const loadCollection = async () => {
     try {
-      const res = await collectionService.getCollectionById(slug);
+      const res = await collectionService.getCollectionBySlug(slug);
       if (!isMounted) return;
-
+console.log('Collection API response:', res);
       if (res?.data) {
         setCurrentCollection({
           id: String(res.data.id),
@@ -189,7 +189,8 @@ useEffect(() => {
       document.title = 'Tên cửa hàng';
     };
   }, [currentCollection]);
-
+  
+  console.log("Current collection:", currentCollection);
   if (isLoading) {
     return (
       <div className="container mx-auto py-12 px-4">

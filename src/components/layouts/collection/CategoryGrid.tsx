@@ -23,7 +23,7 @@ export default function CategoryGrid({ collections }: CollectionGridProps) {
       {collections.map((cat) => (
         <Link
           key={cat.id}
-          href={`/collection/${cat.id}`}
+          href={`/collection/${cat.slug}`}
           className="group relative block overflow-hidden aspect-square rounded-xl"
         >
           <div className="relative w-full h-full">

@@ -67,7 +67,6 @@ const sortOptions = [
   { id: 4, name: "Giá: Thấp đến Cao", value: "price_asc" },
   { id: 5, name: "Giá: Cao đến Thấp", value: "price_desc" },
 ];
-
 export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   products,
   isLoading,
@@ -78,6 +77,7 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
 }) => {
   const [sortSelected, setSortSelected] = useState(sortOptions[0]);
   const [sortedProducts, setSortedProducts] = useState(products);
+  console.log(products)
   const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
