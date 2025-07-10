@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useStore } from '@/app/stores/store';
 import { productService } from '@/app/api/services/productService';
 import { collectionService } from '@/app/api/services/collectionService';
-import { ProductPageLayout } from '@/app/(public)/product/component/ProductPageLayout';
+import { ProductPageLayout } from '@/app/(public)/products/component/ProductPageLayout';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/app/stores/type';
 import { tagService } from '@/app/api/services/tagService';
@@ -239,16 +239,16 @@ useEffect(() => {
         error={error} 
         setFilters={handleFiltersChange}
         categories={categories.map(c => ({
-    id: String(c.id),
-    name: c.name,
-    slug: String(c.slug),
-    productCount: c.productCount || 0
-  }))}
-  tags={tags.map(t => ({
-    id: String(t.id),
-    name: t.name,
-    type: t.type
-  }))}
+          id: String(c.id),
+          name: c.name,
+          slug: String(c.slug),
+          productCount: c.productCount || 0
+        }))}
+        tags={tags.map(t => ({
+          id: String(t.id),
+          name: t.name,
+          type: t.type
+        }))}
         // @todo: Thêm các prop bổ sung khi cần thiết
       />
     </div>

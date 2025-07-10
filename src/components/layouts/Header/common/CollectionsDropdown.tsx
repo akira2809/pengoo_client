@@ -149,12 +149,13 @@ export default function CollectionsDropdown({
               Xem tất cả
               <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
             </Link>
-          </div>
-          <div ref={collectionsItemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          </div> 
+          <div ref={collectionsItemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {collections.map((col) => (
               <Link
                 key={col.id}
-                href={`/collection/${col.slug}`}
+                href={`/collection/${col.id}`} // ✅ Sử dụng ID thay vì slug
+                onClick={onClose}
                 // ✅ Cập nhật màu sắc cho từng mục
                 className="group flex items-center space-x-4 p-5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/10"
               >
