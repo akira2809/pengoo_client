@@ -109,7 +109,7 @@ function CartSidebarContent({
   return (
     <div
       ref={cartPopupRef}
-      className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[999] flex flex-col"
+      className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[99999999] flex flex-col"
       style={{ display: cartOpen ? "flex" : "none" }}
     >
         <div className="flex justify-between items-center p-4 border-b bg-background-900 text-text-950">
