@@ -54,6 +54,38 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   const [nextCoupon, setNextCoupon] = useState<{ code: string; discount: number } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { isAuthenticated } = useAuthStore();
+  const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
+  const [initialUserPoints, setInitialUserPoints] = useState<number>(0);
+
+  // Fetch user's current points when modal opens
+  useEffect(() => {
+    const fetchUserPoints = async () => {
+      try {
+        const res = await apiClient.get<{ userPoints: number }>("/minigame/user-points");
+        const points = res.data?.userPoints ?? 0;
+        setInitialUserPoints(points);
+        setDisplayedUserPoints(points);
+      } catch {
+        setInitialUserPoints(0);
+        setDisplayedUserPoints(0);
+      }
+    };
+    fetchUserPoints();
+  }, []);
+
+  // When a new game starts, keep the previous points until scratch is done
+  useEffect(() => {
+    if (!playing) {
+      setDisplayedUserPoints(initialUserPoints);
+    }
+  }, [playing, initialUserPoints]);
+
+  // When scratch is completed, update the displayed points
+  useEffect(() => {
+    if (scratched && result?.userPoints !== undefined) {
+      setDisplayedUserPoints(result.userPoints);
+    }
+  }, [scratched, result?.userPoints]);
 
   // Fetch ticket count
   const fetchTickets = async () => {
@@ -220,7 +252,8 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
     fetchTickets();
   });
 
-  const userPoints = result?.userPoints ?? 0;
+  // Use displayedUserPoints for display
+  const userPoints = displayedUserPoints;
   const nextMilestone = milestoneCoupons.find((m) => userPoints < m.milestonePoints);
 
   // Helper to mask coupon code

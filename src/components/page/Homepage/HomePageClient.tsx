@@ -189,7 +189,7 @@ function HomePage() {
       <BlogSection />
 
       {}
-      <ScratchMinigamePopup buttonImage="/images/greenssrb.png" />
+      <ScratchMinigamePopup buttonImage="/images/minigame/greenssrb.png" />
     </>
   );
 }
