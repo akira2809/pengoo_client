@@ -24,7 +24,7 @@ interface FormData {
   postalCode: string;
   phone: string;
   saveInfo: boolean;
-  shippingMethod: 'localHCM' | 'outsideHCM';
+  delivery_id: number;
   paymentMethod: 'payos' | 'cod';
   billingAddress: 'sameAsShipping' | 'different';
   note?: string;
@@ -57,7 +57,7 @@ const CheckoutPage: React.FC = () => {
     postalCode: '',
     phone: user?.phone_number || '',
     saveInfo: true,
-    shippingMethod: 'outsideHCM',
+    delivery_id: 1,
     paymentMethod: 'payos',
     billingAddress: 'sameAsShipping',
     note: '',
@@ -101,7 +101,7 @@ const CheckoutPage: React.FC = () => {
   );
 
   // Calculate shipping cost
-  const shippingCost = formData.shippingMethod === 'localHCM' ? 25000 : 40000;
+  const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
 
   // Calculate total
   const total = subtotal - shippingCost - discountAmount;
@@ -113,7 +113,7 @@ const CheckoutPage: React.FC = () => {
     const timer = setTimeout(() => {
       setIsCartReady(true);
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -121,7 +121,7 @@ const CheckoutPage: React.FC = () => {
   useEffect(() => {
     // Only run when cart is ready and auth is not already checked
     if (!isCartReady || authChecked) return;
-    
+
     const checkAuthAndCart = async () => {
       // Check if cart is empty using getTotalItems to ensure we have the latest count
       if (getTotalItems() === 0) {
@@ -129,22 +129,22 @@ const CheckoutPage: React.FC = () => {
         router.push('/');
         return;
       }
-      
+
       // If auth is still loading, wait for it to complete
       if (isAuthLoading) {
         return;
       }
-      
+
       // If not authenticated after loading is complete
       if (!isAuthenticated) {
         toast.error('Vui lòng đăng nhập để thanh toán.');
         router.push(`/signin?redirect=${encodeURIComponent('/checkout')}`);
         return;
       }
-      
+
       setAuthChecked(true);
     };
-    
+
     checkAuthAndCart();
   }, [isCartReady, cartItems, router, isAuthenticated, isAuthLoading, authChecked, getTotalItems]);
 
@@ -156,7 +156,7 @@ const CheckoutPage: React.FC = () => {
       </div>
     );
   }
-  
+
   // Show empty cart message if no items after loading
   if (cartItems.length === 0) {
     return (
@@ -187,10 +187,10 @@ const CheckoutPage: React.FC = () => {
       };
       active?: boolean;
     }
-    
+
     const result = await Promise.all(myVouchers.map(async (voucher: Voucher) => {
       const data = await applyVoucher(voucher.coupon.code, subtotal);
-      return data ? {...voucher, active: true} : {...voucher, active: false};
+      return data ? { ...voucher, active: true } : { ...voucher, active: false };
     }));
     result.sort((a, b) => {
       if (a.active && !b.active) return -1; // a is active, b is not
@@ -202,39 +202,39 @@ const CheckoutPage: React.FC = () => {
     setShowCouponList(true);
   }
 
-  const handleApplyCoupon = async() => {
-  const code = formData.couponCode?.trim().toUpperCase();
+  const handleApplyCoupon = async () => {
+    const code = formData.couponCode?.trim().toUpperCase();
 
-  if (!code) {
-    toast.error('Vui lòng nhập mã giảm giá.');
-    return;
-  }
-  const data = await applyVoucher(code, subtotal);
-  console.log('Coupon data:', data);
-  if (!data) {
-    toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn.');
-    setDiscountAmount(0);
-    setIsCouponApplied(false)
-    toast.error('Mã giảm giá không hợp lệ.');
-    return;
-  }else{
-    setDiscountAmount(data.discount);
-    setIsCouponApplied(true);
-    toast.success('Áp dụng mã giảm giá thành công!');
-  }
-  // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
-  // if (code === 'SAVE10') {
-  //   const discount = subtotal * 0.1;
-  //   setDiscountAmount(discount);
-  //   setIsCouponApplied(true);
-  //   toast.success('Áp dụng mã giảm giá thành công!');
-  // } else {
-  //   setDiscountAmount(0);
-  //   setIsCouponApplied(false);
-  //   toast.error('Mã giảm giá không hợp lệ.');
-  // }
+    if (!code) {
+      toast.error('Vui lòng nhập mã giảm giá.');
+      return;
+    }
+    const data = await applyVoucher(code, subtotal);
+    console.log('Coupon data:', data);
+    if (!data) {
+      toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn.');
+      setDiscountAmount(0);
+      setIsCouponApplied(false)
+      toast.error('Mã giảm giá không hợp lệ.');
+      return;
+    } else {
+      setDiscountAmount(data.discount);
+      setIsCouponApplied(true);
+      toast.success('Áp dụng mã giảm giá thành công!');
+    }
+    // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
+    // if (code === 'SAVE10') {
+    //   const discount = subtotal * 0.1;
+    //   setDiscountAmount(discount);
+    //   setIsCouponApplied(true);
+    //   toast.success('Áp dụng mã giảm giá thành công!');
+    // } else {
+    //   setDiscountAmount(0);
+    //   setIsCouponApplied(false);
+    //   toast.error('Mã giảm giá không hợp lệ.');
+    // }
 
-};
+  };
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
@@ -253,7 +253,7 @@ const CheckoutPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Validate cart has items
     if (cartItems.length === 0) {
       toast.error('Giỏ hàng của bạn đang trống');
@@ -296,7 +296,7 @@ const CheckoutPage: React.FC = () => {
       // If no payment URL (e.g., COD), clear cart and redirect to success page
       clearCart();
       router.push(`/order/success?order_id=${response.order_id}`);
-      
+
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi đặt hàng');
@@ -455,25 +455,25 @@ const CheckoutPage: React.FC = () => {
               <div className="space-y-3 mb-6">
                 <RadioButton
                   id="localHCM"
-                  name="shippingMethod"
-                  value="localHCM"
-                  checked={formData.shippingMethod === 'localHCM'}
+                  name="delivery_id"
+                  value="1"
+                  checked={Number(formData.delivery_id) === 1}
                   onChange={handleInputChange}
                   label="Nội thành TP Hồ Chí Minh"
                   price={25000}
                   formatPrice={formatCurrency}
-                  // icon={<TruckIcon />}
+                // icon={<TruckIcon />}
                 />
                 <RadioButton
                   id="outsideHCM"
-                  name="shippingMethod"
-                  value="outsideHCM"
-                  checked={formData.shippingMethod === 'outsideHCM'}
+                  name="delivery_id"
+                  value="2"
+                  checked={Number(formData.delivery_id) === 2}
                   onChange={handleInputChange}
                   label="Ngoại thành TP Hồ Chí Minh"
                   price={40000}
                   formatPrice={formatCurrency}
-                  // icon={<CashIcon />}
+                // icon={<CashIcon />}
                 />
               </div>
 
@@ -497,9 +497,9 @@ const CheckoutPage: React.FC = () => {
                   <span className="flex flex-col">
                     <span className="block text-sm font-medium text-gray-900">Thanh toán trực tuyến (PayOS)</span>
                     <div className="mt-2 flex items-center space-x-2">
-                      <Image src="/images/visa.png" alt="Visa" width={30} height={20} className="object-contain"/>
-                      <Image src="/images/mastercard.png" alt="MasterCard" width={30} height={20} className="object-contain"/>
-                      <Image src="/images/jcb.png" alt="JCB" width={30} height={20} className="object-contain"/>
+                      <Image src="/images/visa.png" alt="Visa" width={30} height={20} className="object-contain" />
+                      <Image src="/images/mastercard.png" alt="MasterCard" width={30} height={20} className="object-contain" />
+                      <Image src="/images/jcb.png" alt="JCB" width={30} height={20} className="object-contain" />
                     </div>
                   </span>
                 </label>
@@ -517,7 +517,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.paymentMethod === 'cod'}
                   onChange={handleInputChange}
                   label="Thanh toán khi nhận hàng (COD)"
-                  // icon={<CashIcon />}
+                // icon={<CashIcon />}
                 />
               </div>
 
@@ -531,7 +531,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.billingAddress === 'sameAsShipping'}
                   onChange={handleInputChange}
                   label="Giống địa chỉ vận chuyển"
-                  // isCustomClass={true}
+                // isCustomClass={true}
                 />
                 <RadioButton
                   id="different"
@@ -540,7 +540,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.billingAddress === 'different'}
                   onChange={handleInputChange}
                   label="Sử dụng địa chỉ thanh toán khác"
-                  // isCustomClass={true}
+                // isCustomClass={true}
                 />
               </div>
 
@@ -548,9 +548,8 @@ const CheckoutPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
-                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
               >
                 {isSubmitting ? 'Đang xử lý...' : `Thanh toán ngay`}
               </button>
@@ -562,30 +561,30 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white rounded-md overflow-hidden">
               <div className="px-4 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">
-                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-200 text-sm font-bold mr-2">
-                        {cartItems.length}
-                    </span>
-      
+                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-200 text-sm font-bold mr-2">
+                    {cartItems.length}
+                  </span>
+
                 </h3>
               </div>
               <div className="p-4">
                 {cartItems.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between text-sm text-gray-700 mb-2 last:mb-0"> {/* Added mb-2 and last:mb-0 for spacing */}
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10 relative overflow-hidden rounded-md border border-gray-200">
-                                <Image
-                                    src={item.image_url || '/images/placeholder-product.png'}
-                                    alt={item.product_name}
-                                    fill
-                                    sizes="40px"
-                                    style={{ objectFit: 'cover' }}
-                                />
-                                <span className="absolute -top-1 -right-1 bg-gray-600 text-white text-xs px-1 rounded-full">{item.quantity}</span>
-                            </div>
-                            <span className="ml-3 font-medium text-gray-800">{item.product_name}</span>
-                        </div>
-                        <span className="text-gray-900">{formatCurrency(item.product_price * item.quantity * (1 - (item.discount || 0) / 100))}</span>
+                  <div key={item.id} className="flex items-center justify-between text-sm text-gray-700 mb-2 last:mb-0"> {/* Added mb-2 and last:mb-0 for spacing */}
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 relative overflow-hidden rounded-md border border-gray-200">
+                        <Image
+                          src={item.image_url || '/images/placeholder-product.png'}
+                          alt={item.product_name}
+                          fill
+                          sizes="40px"
+                          style={{ objectFit: 'cover' }}
+                        />
+                        <span className="absolute -top-1 -right-1 bg-gray-600 text-white text-xs px-1 rounded-full">{item.quantity}</span>
+                      </div>
+                      <span className="ml-3 font-medium text-gray-800">{item.product_name}</span>
                     </div>
+                    <span className="text-gray-900">{formatCurrency(item.product_price * item.quantity * (1 - (item.discount || 0) / 100))}</span>
+                  </div>
                 ))}
               </div>
 

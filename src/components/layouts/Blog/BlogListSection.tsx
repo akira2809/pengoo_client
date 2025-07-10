@@ -1,12 +1,11 @@
 // components/layouts/Blog/BlogListSection.tsx
 "use client"
 import React, { useState } from 'react';
-import BlogCard from './BlogCard'; // Import BlogCard
-import FeaturedBlogCard from './FeaturedBlogCard'; // Import FeaturedBlogCard
-import Pagination from './Pagination'; // Import Pagination
-import { ALL_BLOG_POSTS } from "@/app/api/data/blogPosts"
+import BlogCard from './BlogCard';
+import FeaturedBlogCard from './FeaturedBlogCard';
+import Pagination from './Pagination';
 
-interface BlogPost {
+export interface BlogPost {
   id: string;
   imageSrc?: string;
   title: string;
@@ -17,23 +16,22 @@ interface BlogPost {
 }
 
 interface BlogListSectionProps {
-  posts?: BlogPost[]; // Nhận danh sách bài viết (có thể từ props hoặc dùng dummy data)
+  posts: BlogPost[];
 }
 
-export const BlogListSection: React.FC<BlogListSectionProps> = ({ posts = ALL_BLOG_POSTS }) => {
-  // Lọc bài viết nổi bật và các bài viết khác
-  const featuredPost = posts.find(post => post.isFeatured);
-  const otherPosts = posts.filter(post => !post.isFeatured);
-
-  // Phân trang (ví dụ đơn giản, bạn có thể phức tạp hơn)
+const BlogListSection: React.FC<BlogListSectionProps> = ({ posts }) => {
+  // Lấy bài viết đầu tiên làm featured post
+  const [featuredPost, ...otherPosts] = posts;
+  
+  // Phân trang cho các bài viết còn lại
   const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 6; // Số bài viết mỗi trang (trừ bài nổi bật nếu có)
+  const postsPerPage = 9; // Số bài viết mỗi trang (sau khi đã tách featured post)
 
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentOtherPosts = otherPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const currentPosts = otherPosts.slice(indexOfFirstPost, indexOfLastPost);
 
-  const totalPages = Math.ceil(otherPosts.length / postsPerPage);
+  const totalPages = Math.ceil((posts.length - 1) / postsPerPage); // Trừ 1 vì đã tách featured post
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -43,18 +41,18 @@ export const BlogListSection: React.FC<BlogListSectionProps> = ({ posts = ALL_BL
   };
 
   return (
-    <section className=" py-16 md:py-20"> {/* Nền xám nhạt cho toàn bộ section */}
+    <section className="py-16 md:py-20">
       <div className="max-w-screen-xl mx-auto px-4">
-        {/* Phần bài viết nổi bật (nếu có) */}
+        {/* Hiển thị bài viết đầu tiên với giao diện lớn */}
         {featuredPost && (
-          <div className="mb-16"> {/* Margin dưới bài viết nổi bật */}
+          <div className="mb-16">
             <FeaturedBlogCard {...featuredPost} />
           </div>
         )}
 
-        {/* Grid cho các bài viết còn lại */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12"> {/* Khoảng cách giữa các cột và hàng */}
-          {currentOtherPosts.map((post) => (
+        {/* Hiển thị các bài viết còn lại dưới dạng grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+          {currentPosts.map((post) => (
             <BlogCard key={post.id} {...post} />
           ))}
         </div>
@@ -72,4 +70,4 @@ export const BlogListSection: React.FC<BlogListSectionProps> = ({ posts = ALL_BL
   );
 };
 
-export default BlogListSection; // Export mặc định
+export default BlogListSection;
