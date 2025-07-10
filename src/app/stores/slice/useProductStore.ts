@@ -452,3 +452,4 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
 
 // Export the store
 export default createProductSlice;
+export { mapApiProductToProduct };

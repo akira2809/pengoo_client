@@ -8,6 +8,7 @@ import { ProductPageLayout } from '@/app/(public)/product/component/ProductPageL
 import { useRouter } from 'next/navigation';
 import { Product } from '@/app/stores/type';
 
+
 /**
  * TODO: Chuyển đổi từ ID-based routing sang slug-based routing khi backend hỗ trợ
  * - Hiện tại đang sử dụng ID làm slug tạm thời

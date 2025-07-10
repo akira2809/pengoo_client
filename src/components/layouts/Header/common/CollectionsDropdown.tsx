@@ -148,6 +148,10 @@ export default function CollectionsDropdown({
                 href={`/collection/${col.id}`} // Sử dụng ID làm tham số có slug thì thay thành chữ slug
                 className="group flex items-center space-x-4 p-4 rounded-lg hover:bg-background-100 transition-colors"
               >
+                <div
+                  onClick={onClose} // Đóng dropdown khi click
+                  className="flex items-center space-x-4 p-4 rounded-lg hover:bg-background-100 transition-colors"
+                >
                 {col.image && ( 
                   <Image
                     src={col.image}
@@ -176,6 +180,7 @@ export default function CollectionsDropdown({
                   <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                   </svg>
+                </div>
                 </div>
               </Link>
             ))}

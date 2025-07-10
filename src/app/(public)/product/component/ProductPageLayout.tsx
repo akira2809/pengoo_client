@@ -298,10 +298,8 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
     // Filter by tags
     if (selectedTags.length > 0) {
       currentProducts = currentProducts.filter((product) => {
-        if (!product.tags || !Array.isArray(product.tags)) return false;
-
-        const productTagIds = product.tags.map((id) => String(id));
-        return selectedTags.every((tagId) => productTagIds.includes(tagId));
+        const productTagIds = product.tags?.map((tag) => String(tag.id)) || [];
+        return selectedTags.some((tagId) => productTagIds.includes(tagId));
       });
     }
 
