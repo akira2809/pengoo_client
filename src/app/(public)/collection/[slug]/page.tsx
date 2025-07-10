@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useStore } from '@/app/stores/store';
-// import { productService } from '@/app/api/services/productService';
+import { productService } from '@/app/api/services/productService';
 import { collectionService } from '@/app/api/services/collectionService';
 import { ProductPageLayout } from '@/app/(public)/product/component/ProductPageLayout';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/app/stores/type';
-
+import { tagService } from '@/app/api/services/tagService';
 
 /**
  * TODO: Chuyển đổi từ ID-based routing sang slug-based routing khi backend hỗ trợ
@@ -70,6 +70,7 @@ type ProductWithUI = Product & {
 
 export default function CollectionPage({ params }: CollectionPageProps) {
   const { slug } = params;
+  const [tags, setTags] = useState<{id: string, name: string, type: string}[]>([]);
   const router = useRouter();
   const { 
     products, 
@@ -164,6 +165,15 @@ useEffect(() => {
 
   loadCollection();
 
+  // Fetch categories
+  productService.getCategories().then(res => {
+    if (res?.data) setCategories(res.data);
+  });
+  // Fetch tags
+  tagService.getAllTags().then(res => {
+    if (res?.data) setTags(res.data);
+  });
+  
   return () => {
     isMounted = false;
   };
@@ -229,12 +239,16 @@ useEffect(() => {
         error={error} 
         setFilters={handleFiltersChange}
         categories={categories.map(c => ({
-          id: String(c.id),
-          name: c.name,
-          // @todo: Thay đổi thành c.slug khi có API slug
-          slug: String(c.slug), // Tạm thời sử dụng ID làm slug
-          productCount: c.productCount || 0
-        }))}
+    id: String(c.id),
+    name: c.name,
+    slug: String(c.slug),
+    productCount: c.productCount || 0
+  }))}
+  tags={tags.map(t => ({
+    id: String(t.id),
+    name: t.name,
+    type: t.type
+  }))}
         // @todo: Thêm các prop bổ sung khi cần thiết
       />
     </div>
