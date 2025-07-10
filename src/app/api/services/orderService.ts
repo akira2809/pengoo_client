@@ -65,7 +65,7 @@ export const orderService = {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Có lỗi xảy ra khi tạo đơn hàng');
       }
@@ -88,23 +88,23 @@ export const orderService = {
     return cartItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
-      price: typeof item.product_price === 'string' 
-        ? parseFloat(item.product_price) 
+      price: typeof item.product_price === 'string'
+        ? parseFloat(item.product_price)
         : item.product_price
     }));
   },
 
   // Helper to prepare order data for the API
   prepareOrderData(
-    formData: CheckoutFormData, 
-    cartItems: CartItem[], 
+    formData: CheckoutFormData,
+    cartItems: CartItem[],
     userId?: number
   ): CreateOrderRequest {
     const isPayOS = formData.paymentMethod === 'payos';
-    
+
     return {
       userId: userId || null,
-      delivery_id: formData.shippingMethod === 'localHCM' ? 1 : 5, // 1 for local, 2 for outside HCM
+      delivery_id: formData.delivery_id,
       payment_type: isPayOS ? 'payos' : 'cod',
       total_price: formData.total,
       shipping_address: `${formData.address}, ${formData.city}`,
