@@ -1,200 +1,116 @@
-"use client";
+// app/page.tsx
+// Đây là Server Component chính cho trang chủ của bạn
+import { Metadata } from 'next';
+import React from 'react';
+import HomePageLoader from '../components/page/Homepage/HomePageLoader'; // Import Client Component wrapper
 
-import React, { useEffect, useState, Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { productService } from '@/app/api/services/productService';
-import { ProductData } from '@/app/type/product';
-import { Skeleton } from '@/components/common/UI/Skeleton';
-import ScratchMinigamePopup from '@/components/common/scratch-minigame/ScratchMinigamePopup';
-
-
-// Tạo một component fallback mặc định
-const Fallback = ({ className = '' }: { className?: string }) => (
-  <div className={`bg-gray-100 animate-pulse ${className}`}></div>
-);
-
-// Dynamic imports
-const Banner = dynamic(
-  () => import('@/components/layouts/HomePage/Banner/Banner').then((mod) => mod.default),
-  { loading: () => <Fallback className="h-[500px] w-full" />, ssr: false }
-);
-
-const BannerHotspot = dynamic(
-  () => import('@/components/layouts/HomePage/Banner/Banner-hotspot').then((mod) => mod.default),
-  { loading: () => <Fallback className="h-[300px] w-full my-8" />, ssr: false }
-);
-
-const CollectionSection = dynamic(
-  () => import('@/components/layouts/HomePage/collection/CollectionSection').then((mod) => mod.default),
-  { loading: () => <Fallback className="h-[400px] w-full my-8" />, ssr: false }
-);
-
-const BenefitsSection = dynamic(
-  () => import('@/components/layouts/HomePage/BenefitsSection/BenefitsSection').then((mod) => mod.default),
-  { loading: () => <Fallback className="h-[300px] w-full my-8" />, ssr: false }
-);
-
-const HeadlineMarquee = dynamic(
-  () => import('@/components/layouts/HomePage/HeadlineMarquee').then((mod) => mod.default),
-  { loading: () => <Fallback className="h-[50px] w-full my-4" />, ssr: false }
-);
-
-const SmoothScrollHero = dynamic(
-  () => import('@/components/layouts/HomePage/HeroScrollZoom').then((mod) => mod.SmoothScrollHero),
-  { loading: () => <Fallback className="h-[600px] w-full my-8" />, ssr: false }
-);
-
-const AboutMaztermindSection = dynamic(
-  () => import('@/components/layouts/HomePage/AboutMaztermindSection').then((mod) => mod.AboutMaztermindSection),
-  { loading: () => <Fallback className="h-[500px] w-full my-8" />, ssr: false }
-);
-
-const VideoSection = dynamic(
-  () => import('@/components/layouts/HomePage/VideoSection').then((mod) => mod.VideoSection),
-  { loading: () => <Fallback className="h-[500px] w-full my-8" />, ssr: false }
-);
-
-const TestimonialCarousel = dynamic(
-  () => import('@/components/layouts/HomePage/TestimonialCarousel').then((mod) => mod.TestimonialCarousel),
-  { loading: () => <Fallback className="h-[300px] w-full my-8" />, ssr: false }
-);
-
-const BlogSection = dynamic(
-  () => import('@/components/common/BlogSection').then((mod) => mod.BlogSection),
-  { loading: () => <Fallback className="h-[400px] w-full my-8" />, ssr: false }
-);
-
-const DynamicProductCard = dynamic(
-  () => import('@/components/common/ProductCard').then((mod) => mod.ProductCard),
-  { loading: () => <Fallback className="h-[400px] w-full" />, ssr: false }
-);
-
-function HomePage() {
-  const [featuredProducts, setFeaturedProducts] = useState<ProductData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await productService.getProducts();
-        // If response is { data: Product[] }
-        // const products = response.data;
-        // If response is Product[]
-        const products = Array.isArray(response) ? response : response?.data;
-
-        if (products && Array.isArray(products)) {
-          setFeaturedProducts(products.slice(0, 4));
-        } else {
-          throw new Error('Invalid response format');
+// Định nghĩa metadata cho trang chủ
+// Đây là nơi bạn cần nhúng các từ khóa SEO của mình một cách chiến lược.
+// In your page.tsx
+export const metadata: Metadata = {
+    title: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè | Trải Nghiệm Giải Trí Đỉnh Cao',
+    description: 'PENGOO chuyên cung cấp các loại board game, trò chơi gia đình, và đồ chơi trí tuệ độc đáo, giúp gắn kết bạn bè và người thân.',
+    keywords: [
+      'PENGOO', 
+      'board game', 
+      'trò chơi board game', 
+      'board game gia đình', 
+      'board game bạn bè',
+      'đồ chơi trí tuệ',
+      // ... other keywords
+    ],
+    // Add Open Graph
+    openGraph: {
+      title: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè',
+      description: 'Khám phá bộ sưu tập board game đa dạng tại PENGOO - Nơi kết nối mọi người thông qua những trò chơi thú vị',
+      url: 'https://pengoo.vn',
+      siteName: 'PENGOO',
+      images: [
+        {
+          url: '/images/og-image.jpg', // Add your OG image
+          width: 1200,
+          height: 630,
+          alt: 'PENGOO Board Game',
+        },
+      ],
+      locale: 'vi_VN',
+      type: 'website',
+    },
+    // Add Twitter Card
+    twitter: {
+      card: 'summary_large_image',
+      title: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè',
+      description: 'Khám phá bộ sưu tập board game đa dạng tại PENGOO',
+      images: ['/images/twitter-card.jpg'], // Add your Twitter card image
+    },
+    // Add canonical URL
+    alternates: {
+      canonical: 'https://pengoo.vn',
+    },
+    // Add viewport (if not in layout)
+    viewport: {
+      width: 'device-width',
+      initialScale: 1,
+      maximumScale: 1,
+    },
+    // Add robots meta
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    // Add other metadata
+    authors: [{ name: 'PENGOO' }],
+    generator: 'Next.js',
+    applicationName: 'PENGOO Board Game',
+    themeColor: '#ffffff',
+    colorScheme: 'light',
+    // Add manifest
+    manifest: '/site.webmanifest',
+    // Add icons
+    icons: {
+      icon: '/favicon.ico',
+      shortcut: '/favicon-16x16.png',
+      apple: '/apple-touch-icon.png',
+    },
+    // Add other meta tags
+    other: {
+      'msapplication-TileColor': '#ffffff',
+    }
+  };
+  
+  // Add JSON-LD structured data
+  function addProductJsonLd() {
+    return {
+      __html: `{
+        "@context": "https://schema.org/",
+        "@type": "WebSite",
+        "name": "PENGOO Board Game",
+        "url": "https://pengoo.vn",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://pengoo.vn/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
         }
-      } catch (err) {
-        console.error('Error fetching featured products:', err);
-        setError('Không thể tải sản phẩm. Vui lòng thử lại sau.');
-      } finally {
-        setIsLoading(false);
-      }
+      }`
     };
-
-    fetchFeaturedProducts();
-  }, []);
-
-
-
-  return (
-    <>
-      <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse" />}>
-        <Banner />
-      </Suspense>
-
-      <section className="py-12 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-text-950">
-            Sản phẩm nổi bật 
-          </h2>
-          
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, index) => (
-                <div key={index} className="flex flex-col space-y-3">
-                  <Skeleton className="h-64 w-full rounded-lg" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-10">
-              <p className="text-red-500 mb-4">{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-              >
-                Thử lại
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {featuredProducts.map((product) => (
-                  <DynamicProductCard key={product.id} product={product} />
-                ))}
-              </div>
-              <div className="flex justify-center mt-10">
-                <Link
-                  href="/product"
-                  className="px-6 py-3 border border-black rounded-full text-sm sm:text-base font-medium hover:bg-black hover:text-white transition-colors duration-300"
-                >
-                  Xem tất cả sản phẩm
-                </Link>
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <BannerHotspot />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[400px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <CollectionSection />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <BenefitsSection />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[50px] w-full bg-gray-100 animate-pulse my-4" />}>
-        <HeadlineMarquee />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[600px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <SmoothScrollHero />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <AboutMaztermindSection />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <VideoSection />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <TestimonialCarousel />
-      </Suspense>
-      
-      <Suspense fallback={<div className="h-[400px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <BlogSection />
-      </Suspense>
-
-      {}
-      <ScratchMinigamePopup buttonImage="/images/greenssrb.png" />
-    </>
-  );
-}
-
-export default HomePage;
+  }
+  
+  export default function HomePage() {
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={addProductJsonLd()}
+          key="product-jsonld"
+        />
+        <HomePageLoader />
+      </>
+    );
+  }

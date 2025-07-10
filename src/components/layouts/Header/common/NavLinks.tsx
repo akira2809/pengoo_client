@@ -14,7 +14,7 @@ export default function NavLinks({
 }: NavLinksProps) {
   return (
     <>
-      <Link href="/product" className="hover:underline" onClick={onLinkClick}>
+      <Link href="/products" className="hover:underline" onClick={onLinkClick}>
         Products
       </Link>
 

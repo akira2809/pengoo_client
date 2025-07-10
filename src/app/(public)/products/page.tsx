@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { ProductPageLayout } from '@/app/(public)/product/component/ProductPageLayout';
+import { ProductPageLayout } from '@/app/(public)/products/component/ProductPageLayout';
 import { useStore } from '@/app/stores/store';
 import { productService } from '@/app/api/services/productService';
 

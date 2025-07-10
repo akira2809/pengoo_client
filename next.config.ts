@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
       'loremflickr.com',
       'assets.awwwards.com',
       'placehold.co',
+      'https://example.com/image.jpg',
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
