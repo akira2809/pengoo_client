@@ -33,7 +33,7 @@ export interface ProductData {
   image_url: string;
   discount: number;
   meta_title: string;
-  meta_description: string;
+  meta_description: string;  
   quantity_sold: number;
   category_ID: Category | number;
   tag_ID: string | number; // Assuming tag_ID can be a string or number

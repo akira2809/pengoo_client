@@ -232,7 +232,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
 
   return (
-    <Link href={`/product/${product.slug}`} className="block group" passHref>
+    <Link href={`/products/${product.slug}`} className="block group" passHref>
       <article
         ref={cardRef}
         className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"

@@ -1,61 +1,154 @@
+'use client';
+
 import React from 'react';
 import Image from 'next/image';
-import { FiArrowRight } from 'react-icons/fi'; // Giữ lại icon nếu bạn muốn, nhưng UI mẫu không có
+import { FiArrowRight } from 'react-icons/fi';
+import { fetchAllPosts } from '@/app/api/services/blogApi';
 
-// Định nghĩa kiểu dữ liệu cho một bài viết blog
-interface BlogPost {
+// Interface for blog post from API
+export interface ApiBlogPost {
+  id: number;
+  name: string;
+  canonical: string;
+  description: string;
+  content: string;
+  meta_description: string;
+  meta_keyword: string;
+  meta_title: string;
+  image: string;
+  order: number;
+  publish: boolean;
+  created_at: string;
+  updated_at: string;
+  catalogue?: {
+    id: number;
+    name: string;
+    canonical: string;
+  };
+}
+
+// Interface for blog post in the component
+export interface BlogPost {
   id: string;
   imageSrc: string;
   title: string;
-  excerpt: string; // Đoạn trích dẫn ngắn
+  excerpt: string;
   date: string;
-  link: string; // Đường dẫn đến bài viết chi tiết
+  link: string;
+  isFeatured?: boolean;
+  category?: {
+    name: string;
+    link: string;
+  };
 }
 
-// Dữ liệu mẫu (sử dụng lại dữ liệu ban đầu của bạn)
-const DUMMY_BLOG_POSTS: BlogPost[] = [
-  {
-    id: '1',
-    imageSrc: '/board-game-card-design_699907-1.webp', // Đặt ảnh bạn muốn làm ảnh chính vào public folder và đặt tên đúng
-    title: "Gợi Ý 5 Trò Chơi Board Games Hay Nhất Cho Hai Người Chơi",
-    excerpt: "Có bao giờ bạn cảm thấy thắc mắc về nguồn gốc của từ “boardgame”? Từ này được ghép từ chữ “board” (bàn hoặc bảng) và “game” (trò chơi), mang hàm ý chỉ những trò chơi thường được chơi ở trên bàn ho...",
-    date: "16 Thg 11, 2021", // Giữ nguyên ngày tháng từ UI mẫu
-    link: "#", // Thay bằng link thật của bài viết
-  },
-  {
-    id: '2',
-    imageSrc: '/blog-image-2.jpg', // Đảm bảo ảnh này nằm trong thư mục `public` của bạn
-    title: "HƯỚNG DẪN CÁCH CHƠI BẦU CUA TRĂM TRẬN TRĂM THẮNG",
-    excerpt: "Trò chơi bầu cua tôm cá là một trong trò chơi truyền thống giải trí phổ biến ở Việt Nam vào các dịp lễ, đặc biệt là Tết Nguyên Đán với cách chơi đơn giản giúp gắn kết thêm rộn ràng hơn...",
-    date: "15 Thg 1, 2024",
-    link: "/blog/huong-dan-bau-cua",
-  },
-  {
-    id: '3',
-    imageSrc: '/blog-image-3.jpg', // Đảm bảo ảnh này nằm trong thư mục `public` của bạn
-    title: "KHÁM PHÁ NIỀM VUI TẾT VỚI BỘ BẦU CUA Ý GIAO",
-    excerpt: "Ngày Tết là dịp để gia đình, bạn bè và người thân sum họp, chia sẻ niềm vui và ước nguyện cho năm mới. Ngoài những hoạt động truyền thống như cúng thừa, bản pháo hoa, xông nhà, lì xì... thì vị...",
-    date: "12 Thg 1, 2024",
-    link: "/blog/kham-pha-bau-cua-y-giao",
-  },
-];
+// Helper to check if image URL is valid
+function isValidImageUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+}
 
-// Định nghĩa props cho component BlogSection
+const PLACEHOLDER_IMAGE = '/placeholder.jpg';
+
+// Component props
 interface BlogSectionProps {
-  posts?: BlogPost[]; // Mảng các bài viết blog, có thể không truyền vào (sẽ dùng dummy data)
-  title?: string; // Tiêu đề của section, mặc định là "Blogs and News"
-  viewAllLink?: string; // Link cho nút "View all", mặc định là "/blog"
+  title?: string;
+  viewAllLink?: string;
+  posts?: ApiBlogPost[];
 }
 
 export const BlogSection: React.FC<BlogSectionProps> = ({
-  posts = DUMMY_BLOG_POSTS, // Sử dụng dummy data nếu không có posts nào được truyền vào
-  title = "Blogs and News", // Vẫn giữ tiêu đề chung cho section
-  viewAllLink = "/blog"
+  title = "Blogs and News",
+  viewAllLink = "/blogs",
+  posts: initialPosts = []
 }) => {
+  const [posts, setPosts] = React.useState<ApiBlogPost[]>(initialPosts);
+  const [isLoading, setIsLoading] = React.useState(!initialPosts.length);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchPosts = async () => {
+      if (initialPosts.length) return;
+      
+      try {
+        const data = await fetchAllPosts();
+        setPosts(data);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+        setError('Failed to load blog posts');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [initialPosts]);
+
+  // Transform API posts to component format
+  const formattedPosts = React.useMemo(() => {
+    return posts.map((post) => {
+      // Format date in Vietnamese locale
+      const formattedDate = new Date(post.created_at).toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Ho_Chi_Minh'
+      });
+      
+      // Handle category info if available
+      const category = post.catalogue ? {
+        name: post.catalogue.name,
+        link: `/categories/${post.catalogue.canonical}`
+      } : undefined;
+
+      return {
+        id: post.id.toString(),
+        imageSrc: isValidImageUrl(post.image) ? post.image : PLACEHOLDER_IMAGE,
+        title: post.name,
+        excerpt: post.description || post.meta_description || '',
+        date: formattedDate,
+        link: `/blogs/${post.canonical}`,
+        isFeatured: post.order === 1,
+        category: category
+      };
+    });
+  }, [posts]);
+
+  if (isLoading) {
+    return (
+      <section className="py-16 px-4 md:py-24">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="h-[500px] w-full bg-gray-100 animate-pulse rounded-lg"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-16 px-4 md:py-24">
+        <div className="max-w-screen-xl mx-auto text-center">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (formattedPosts.length === 0) {
+    return (
+      <section className="py-16 px-4 md:py-24">
+        <div className="max-w-screen-xl mx-auto text-center">
+          <p>No blog posts found.</p>
+        </div>
+      </section>
+    );
+  }
+
+
+
   return (
-    <section className=" py-16 px-4 md:py-24"> {/* Đổi nền section sang trắng */}
-      <div className="max-w-screen-xl mx-auto"> {/* Tăng max-width để chứa nhiều blog */}
-        {/* Header Section: Title and View All Button (Nếu bạn vẫn muốn giữ phần này) */}
+    <section className="py-16 px-4 md:py-24">
+      <div className="max-w-screen-xl mx-auto">
         <div className="flex justify-between items-center mb-12">
           <h2 className="text-4xl font-bold text-gray-800">
             {title}
@@ -68,38 +161,44 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
           </a>
         </div>
 
-        {/* Blog Posts Grid - Điều chỉnh lại grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post, index) => (
-            <a key={post.id} href={post.link} className="block group">
-              <div className=" rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-                {/* Image */}
+          {formattedPosts.map((post) => (
+            <a
+              key={post.id}
+              href={post.link}
+              className="block group"
+              aria-label={`Read more about ${post.title}`}
+            >
+              <div className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden h-full flex flex-col">
                 <div className="relative w-full h-60 overflow-hidden">
                   <Image
                     src={post.imageSrc}
                     alt={post.title}
-                    layout="fill"
-                    objectFit="cover"
-                    className="group-hover:scale-105 transition-transform duration-300"
-                    quality={75}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    priority={post.isFeatured}
                   />
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  {/* Date - Theo UI, ngày tháng nằm ngay dưới ảnh hoặc trên tiêu đề */}
-                  {/* Trong UI của bạn, ngày tháng nằm *dưới* đoạn trích dẫn, ta sẽ giữ lại cấu trúc ban đầu */}
-                  <p className="text-sm text-gray-500 mb-2">{post.date}</p>
-
-                  {/* Title - Điều chỉnh font và kích thước để giống UI */}
-                  <h3 className="text-2xl font-extrabold text-gray-900 mb-3 group-hover:text-background-800 transition-colors duration-200  leading-tight">
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex justify-between items-center mb-2">
+                    {post.category && (
+                      <span className="text-sm font-medium text-blue-600">
+                        {post.category.name}
+                      </span>
+                    )}
+                    <p className="text-sm text-gray-500">{post.date}</p>
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-gray-900 mb-3 group-hover:text-background-800 transition-colors duration-200 leading-tight">
                     {post.title}
                   </h3>
-
-                  {/* Excerpt - Điều chỉnh font, màu và line-height */}
-                  <p className="text-base text-gray-700 leading-relaxed line-clamp-3 ">
+                  <p className="text-base text-gray-700 leading-relaxed line-clamp-3 flex-1">
                     {post.excerpt}
                   </p>
+                  <span className="mt-4 inline-block text-blue-600 font-medium hover:text-blue-800 transition-colors">
+                    Read more →
+                  </span>
                 </div>
               </div>
             </a>

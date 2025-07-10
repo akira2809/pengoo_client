@@ -11,11 +11,11 @@ import React, {
   useCallback,
 } from "react";
 import { ProductData } from "@/app/type/product";
-import { ProductPageHeader } from "@/app/(public)/product/component/layouts/product/ProductPageHeader";
-import { ProductSidebarFilters } from "@/app/(public)/product/component/layouts/product/ProductSidebarFilters";
-import { ProductGrid } from "@/app/(public)/product/component/layouts/product/ProductGrid";
-import { ProductPagination } from "@/app/(public)/product/component/layouts/product/ProductPagination";
-import { MobileProductFiltersModal } from "@/app/(public)/product/component/layouts/product/MobileProductFiltersModal";
+import { ProductPageHeader } from "@/app/(public)/products/component/layouts/product/ProductPageHeader";
+import { ProductSidebarFilters } from "@/app/(public)/products/component/layouts/product/ProductSidebarFilters";
+import { ProductGrid } from "@/app/(public)/products/component/layouts/product/ProductGrid";
+import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
+import { MobileProductFiltersModal } from "@/app/(public)/products/component/layouts/product/MobileProductFiltersModal";
 import { IoFilter } from "react-icons/io5"; // Icon filter
 
 interface ProductPageLayoutProps {

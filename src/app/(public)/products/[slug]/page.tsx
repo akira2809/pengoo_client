@@ -98,6 +98,7 @@ const ProductDetailPage: React.FC<ProductPageProps> = ({
       />
       
       <ProductReviewsSection productId={product.id} />
+    
       <BlogSection />
     </div>
   );
