@@ -143,7 +143,8 @@ export default function CollectionsDropdown({
             </h3>
             {/* ✅ Cập nhật màu link */}
             <Link 
-              href="/collections" 
+              href="/collection" 
+              onClick={onClose}
               className="flex items-center text-sm font-semibold text-white/70 hover:text-white transition-colors group"
             >
               Xem tất cả
@@ -212,8 +213,14 @@ export default function CollectionsDropdown({
                 </div>
                 <h4 className="font-bold text-lg mb-2">Sản phẩm mới</h4>
                 <p className="text-sm text-white/90 mb-4">Những mẫu mã mới nhất</p>
-                <a href="/new-arrivals" className="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 transition-colors">Mua ngay <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg></a>
-              </div>
+                <Link
+                  href="/products?sort=newest"
+                  className="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 transition-colors"
+                  onClick={onClose}
+                >
+                  Mua ngay
+                  <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                </Link>              </div>
               
               {/* ✅ Cập nhật 2 thẻ còn lại cho phù hợp theme tối */}
               <div className="bg-white/5 p-6 rounded-xl transition-all duration-300 hover:bg-white/10 border border-white/10">
@@ -222,8 +229,16 @@ export default function CollectionsDropdown({
                 </div>
                 <h4 className="font-bold text-lg mb-2 text-white">Khuyến mãi</h4>
                 <p className="text-sm text-white/70 mb-4">Giảm giá lên đến 50%</p>
-                <a href="/sale" className="inline-flex items-center text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors">Xem ưu đãi <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg></a>
-              </div>
+                <Link
+                  href="/products?sort=discount"
+                  className="inline-flex items-center text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                  onClick={onClose}
+                >
+                  Xem ưu đãi
+                  <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </Link>              </div>
               
               <div className="bg-white/5 p-6 rounded-xl transition-all duration-300 hover:bg-white/10 border border-white/10">
                 <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center mb-4 text-violet-400">

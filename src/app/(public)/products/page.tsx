@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation'; 
 import { ProductPageLayout } from '@/app/(public)/products/component/ProductPageLayout';
 import { useStore } from '@/app/stores/store';
 import { productService } from '@/app/api/services/productService';
@@ -22,11 +23,20 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
 
+  const searchParams = useSearchParams(); // Lấy query param
+  const sort = searchParams.get('sort');
+
   // 🛠️ CHỈ fetch product MỘT LẦN
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        await fetchProducts(); // 👈 không truyền filters
+        if (sort === 'newest') {
+          await fetchProducts({ sort: 'createdAt_desc' }); // Truyền filter lấy sản phẩm mới
+        } else if (sort === 'discout') {
+        await fetchProducts({ discout: discout>0  }); // Lấy sản phẩm có discout > 0
+        } else {
+          await fetchProducts();
+        }
       } catch (err) {
         console.error('Failed to fetch products:', err);
       }
