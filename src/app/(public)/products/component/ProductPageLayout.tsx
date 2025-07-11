@@ -37,6 +37,12 @@ interface ProductPageLayoutProps {
     slug: string;
     productCount: number;
   }>;
+  collections: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    productCount: number;
+  }>;
   tags: Array<{
     id: string; 
     name: string;
@@ -61,7 +67,6 @@ const sortOptions = [
   { id: 4, name: "Giá: Thấp đến Cao", value: "price_asc" },
   { id: 5, name: "Giá: Cao đến Thấp", value: "price_desc" },
 ];
-
 export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   products,
   isLoading,
@@ -72,6 +77,7 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
 }) => {
   const [sortSelected, setSortSelected] = useState(sortOptions[0]);
   const [sortedProducts, setSortedProducts] = useState(products);
+  console.log(products)
   const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -292,10 +298,8 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
     // Filter by tags
     if (selectedTags.length > 0) {
       currentProducts = currentProducts.filter((product) => {
-        if (!product.tags || !Array.isArray(product.tags)) return false;
-
-        const productTagIds = product.tags.map((id) => String(id));
-        return selectedTags.every((tagId) => productTagIds.includes(tagId));
+        const productTagIds = product.tags?.map((tag) => String(tag.id)) || [];
+        return selectedTags.some((tagId) => productTagIds.includes(tagId));
       });
     }
 

@@ -22,4 +22,8 @@ export const collectionService = {
   async getCollectionById(id: string | number) {
     return apiClient.get<CollectionData>(API_CONFIG.ENDPOINTS.COLLECTIONS.BY_ID(id));
   },
+
+  async getCollectionBySlug(slug: string ) {
+    return apiClient.get<CollectionData>(API_CONFIG.ENDPOINTS.COLLECTIONS.BY_SLUG(slug));
+  },
 };

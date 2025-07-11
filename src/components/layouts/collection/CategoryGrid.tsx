@@ -4,12 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  image?: string;
-}
 interface Collection {
   id: string;
   name: string;
@@ -17,9 +11,6 @@ interface Collection {
   image?: string;
 }
 
-interface CategoryGridProps {
-  categories: Category[];
-}
 interface CollectionGridProps {
   collections: Collection[];
 }

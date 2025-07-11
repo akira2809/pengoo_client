@@ -1,13 +1,15 @@
 // components/Header/CollectionsDropdown.tsx
 import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
-import { productService } from "@/app/api/services/productService";
+// import { productService } from "@/app/api/services/productService";
+import { collectionService } from "@/app/api/services/collectionService";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ClassNames } from "@emotion/react";
 
-interface Category {
+
+interface Collection {
   id: string;
   name: string;
   slug: string;
@@ -25,7 +27,8 @@ export default function CollectionsDropdown({
   collectionsOpen,
   onClose,
 }: CollectionsDropdownProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
+  // const [categories, setCategories] = useState<Category[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,9 +37,9 @@ export default function CollectionsDropdown({
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await productService.getCategories();
+        const response = await collectionService.getCollections();
         if (response?.data) {
-          setCategories(response.data);
+          setCollections(response.data);
         }
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -146,21 +149,21 @@ export default function CollectionsDropdown({
               Xem tất cả
               <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
             </Link>
-          </div>
-  
+          </div> 
           <div ref={collectionsItemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {categories.map((category) => (
+            {collections.map((col) => (
               <Link
-                key={category.id}
-                href={`/collection/${category.slug}`}
+                key={col.id}
+                href={`/collection/${col.slug}`} // ✅ Sử dụng ID thay vì slug
+                onClick={onClose}
                 // ✅ Cập nhật màu sắc cho từng mục
                 className="group flex items-center space-x-4 p-5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/10"
               >
                 <div className="relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/10">
-                  {category.image ? (
+                  {col.image ? (
                     <Image
-                      src={category.image}
-                      alt={category.name}
+                      src={col.image}
+                      alt={col.name}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -175,17 +178,17 @@ export default function CollectionsDropdown({
                 <div className="flex-1 min-w-0">
                   {/* ✅ Cập nhật màu chữ danh mục */}
                   <h4 className="font-semibold text-white/90 group-hover:text-white transition-colors truncate">
-                    {category.name}
+                    {col.name}
                   </h4>
-                  {category.description && (
+                  {col.description && (
                     <p className="text-sm text-white/60 mt-1 line-clamp-2">
-                      {category.description}
+                      {col.description}
                     </p>
                   )}
-                  {category.productCount !== undefined && (
+                  {col.productCount !== undefined && (
                     // ✅ Cập nhật màu tag đếm sản phẩm
                     <span className="inline-block mt-2 px-2.5 py-0.5 text-xs font-medium bg-sky-500/20 text-sky-300 rounded-full">
-                      {category.productCount} sản phẩm
+                      {col.productCount} sản phẩm
                     </span>
                   )}
                 </div>
