@@ -110,8 +110,10 @@ function HomePage() {
 
       <section className="py-12 sm:py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-text-950">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-text-900 flex items-center justify-center gap-2">
+            <span className="text-red-500 text-3xl">🔥</span> 
             Sản phẩm nổi bật 
+            <span className="text-red-500 text-3xl">🔥</span>
           </h2>
           
           {isLoading ? (
@@ -143,7 +145,7 @@ function HomePage() {
               </div>
               <div className="flex justify-center mt-10">
                 <Link
-                  href="/product"
+                  href="/products"
                   className="px-6 py-3 border border-black rounded-full text-sm sm:text-base font-medium hover:bg-black hover:text-white transition-colors duration-300"
                 >
                   Xem tất cả sản phẩm

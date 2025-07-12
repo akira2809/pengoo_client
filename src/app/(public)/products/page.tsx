@@ -32,8 +32,8 @@ export default function ProductsPage() {
       try {
         if (sort === 'newest') {
           await fetchProducts({ sort: 'createdAt_desc' }); // Truyền filter lấy sản phẩm mới
-        } else if (sort === 'discout') {
-        await fetchProducts({ discout: discout>0  }); // Lấy sản phẩm có discout > 0
+        } else if (sort === 'discount') {
+        await fetchProducts({ discount: 1 }); // Lấy sản phẩm có discout > 0
         } else {
           await fetchProducts();
         }

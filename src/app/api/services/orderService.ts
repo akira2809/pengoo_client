@@ -1,55 +1,7 @@
 // Define CartItem interface locally since it's not exported from cartStore
-interface CartItem {
-  id: number;
-  product_name: string;
-  product_price: number | string;
-  quantity: number;
-  discount?: number;
-  image_url?: string;
-}
-
-// Define form data interface for checkout
-interface CheckoutFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  apartment: string;
-  note?: string;
-  paymentMethod: 'cod' | 'payos';
-  shippingMethod: 'localHCM' | 'outsideHCM';
-  total: number;
-  couponCode?: string;
-}
-
-export interface OrderItemDetail {
-  productId: number;
-  quantity: number;
-  price: number;
-}
-
-export interface CreateOrderRequest {
-  userId?: number | null;
-  delivery_id: number;
-  payment_type: 'cod' | 'payos';
-  total_price: number;
-  shipping_address: string;
-  payment_status: 'pending' | 'paid' | 'failed';
-  productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  couponCode?: string;
-  details: OrderItemDetail[];
-}
-
-export interface CreateOrderResponse {
-  success: boolean;
-  order_id: number;
-  order_code: string;
-  payment_url?: string;
-  message?: string;
-  error?: string;
-}
+import { CreateOrderRequest, CreateOrderResponse, CheckoutFormData, CartItem, OrderItemDetail } from '@/app/type/order';
+import { apiClient } from '../apiClient';
+import { API_CONFIG } from '../apiConfig';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -113,5 +65,19 @@ export const orderService = {
       couponCode: formData.couponCode,
       details: this.mapCartItemsToOrderItems(cartItems)
     };
-  }
+  },
+
+  // Xóa đơn hàng
+  async deleteOrder(id: string) {
+    return apiClient.delete<CartItem[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
+  },
+  // Lấy tất cả đơn hàng
+  async getAllOrders() {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BASE);
+  },
+
+  //Lấy đơn hàng theo ID
+  async getOrderById(id: string) {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
+  },
 };
