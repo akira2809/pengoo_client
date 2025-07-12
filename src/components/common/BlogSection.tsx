@@ -67,22 +67,45 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    // Only fetch if we don't have initial posts and we're not already loading
+    if (initialPosts.length) {
+      setPosts(initialPosts);
+      setIsLoading(false);
+      return;
+    }
+
+    // Add a flag to handle component unmounting
+    let isMounted = true;
+    
     const fetchPosts = async () => {
-      if (initialPosts.length) return;
-      
       try {
         const data = await fetchAllPosts();
-        setPosts(data);
+        if (isMounted) {
+          setPosts(data);
+        }
       } catch (err) {
         console.error('Error fetching posts:', err);
-        setError('Failed to load blog posts');
+        if (isMounted) {
+          setError('Không thể tải bài viết. Vui lòng thử lại sau.');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchPosts();
-  }, [initialPosts]);
+    // Only fetch if we don't have any posts yet
+    if (posts.length === 0) {
+      setIsLoading(true);
+      fetchPosts();
+    }
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, [initialPosts, posts.length]); // Add posts.length to dependency array
 
   // Transform API posts to component format
   const formattedPosts = React.useMemo(() => {

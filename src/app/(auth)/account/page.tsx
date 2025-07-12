@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 // Ensure User interface is available (can be imported from useAuthStore if defined there)
 interface User {
@@ -208,7 +209,7 @@ export default function AccountPage() {
               <div className="relative flex-shrink-0">
                 <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
                   {formData.avatar_url ? ( // Use formData for avatar when editing
-                    <img
+                    <Image
                       src={formData.avatar_url}
                       alt="Ảnh đại diện"
                       className="w-full h-full object-cover"
