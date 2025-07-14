@@ -1,40 +1,16 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { JSX, useState } from "react";
 import clsx from "clsx";
 import { ChevronDown } from "lucide-react";
+import Image from "next/image";
 
-const tabs = [
-  {
-    title: "Thông Tin Sản Phẩm",
-    content: (
-      <div>
-        <p>- 100 lá bài</p>
-        <p>- 1 hộp bài</p>
-      </div>
-    ),
-  },
-  {
-    title: "Hướng Dẫn Sử Dụng",
-    content: (
-      <div>
-        <p>- Mở bài, chia đều cho người chơi</p>
-        <p>- Làm theo hướng dẫn in kèm sản phẩm</p>
-      </div>
-    ),
-  },
-  {
-    title: "Chính Sách",
-    content: (
-      <div>
-        <p>- Đổi trả trong 7 ngày nếu sản phẩm lỗi do NSX</p>
-        <p>- Hỗ trợ bảo hành chất lượng in ấn</p>
-      </div>
-    ),
-  },
-];
+export type TabSection = {
+  title: string;
+  content: string | JSX.Element;
+  images?: string[];
+};
 
-export default function ProductTabs() {
+export default function ProductTabs({ tabs = [] }: { tabs: TabSection[] }) {
   const [activeTab, setActiveTab] = useState(0);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -63,12 +39,24 @@ export default function ProductTabs() {
           </button>
         ))}
       </div>
-
       {/* Desktop content */}
       <div className="hidden md:block mt-8 text-gray-800 text-sm sm:text-base text-center">
-        {tabs[activeTab].content}
+        {tabs[activeTab]?.content}
+        {tabs[activeTab]?.images && tabs[activeTab].images.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            {tabs[activeTab].images.map((img, i) => (
+              <Image
+                key={i}
+                src={img}
+                alt={`Tab ${activeTab + 1} Img ${i + 1}`}
+                width={64}
+                height={64}
+                className="w-16 h-16 object-cover rounded border"
+              />
+            ))}
+          </div>
+        )}
       </div>
-
       {/* Accordion for mobile */}
       <div className="md:hidden space-y-4">
         {tabs.map((tab, index) => (
@@ -88,6 +76,20 @@ export default function ProductTabs() {
             {expandedIndex === index && (
               <div className="pb-4 text-gray-700 text-sm">
                 {tab.content}
+                {tab.images && tab.images.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-4 mt-4">
+                    {tab.images.map((img, i) => (
+                      <Image
+                        key={i}
+                        src={img}
+                        alt={`Tab ${index + 1} Img ${i + 1}`}
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 object-cover rounded border"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

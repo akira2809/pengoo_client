@@ -13,8 +13,9 @@ function isValidImageUrl(url: string | undefined): boolean {
 const PLACEHOLDER_IMAGE = '/placeholder.jpg'; // Ảnh placeholder mặc định
 
 // --- SEO: Dynamic Metadata Generation ---
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await fetchPostBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await fetchPostBySlug(slug);
 
   // Nếu bài viết không tồn tại, trả về metadata mặc định hoặc ném lỗi 404
   if (!post) {
@@ -82,8 +83,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // --- Component Trang Chi Tiết Bài Viết ---
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = await fetchPostBySlug(params.slug);
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await fetchPostBySlug(slug);
 
   if (!post) {
     notFound(); // Next.js sẽ hiển thị trang 404
@@ -98,8 +100,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     title: post.name,
     excerpt: post.description,
     date: post.created_at?.slice(0, 10),
-    link: postUrl, // Sử dụng canonical cho link nội bộ
-    content: [post.content], // Giả sử content là một mảng
+    link: postUrl,
+    content: [post.content],
+    textColor: post.textColor || "#0f172a",
+    bgColor: post.bgColor || "#fff",
+    fontFamily: post.fontFamily || "sans-serif",
+    fontSize: post.fontSize || "text-lg",
   };
 
   return (

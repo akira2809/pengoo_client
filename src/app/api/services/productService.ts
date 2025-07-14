@@ -13,34 +13,26 @@ interface GetProductsParams {
 
 export const productService = {
   // Get all products
-  async getProducts() {
-    return apiClient.get<ProductData[]>(API_CONFIG.ENDPOINTS.PRODUCTS.BASE);
-  },
-  // Get a single product by ID
-  async getProductById(id: string) {
-    return apiClient.get<ProductData>(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id));
+  async getProducts(params?: GetProductsParams) {
+    return apiClient.get<ProductData[]>(API_CONFIG.ENDPOINTS.PRODUCTS.BASE, params);
   },
 
-  // Get a single product by slug
+  // Get a single product by ID (includes cmsContent)
+  async getProductById(id: string | number) {
+    return apiClient.get<ProductData>(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(String(id)));
+  },
+
+  // Get a single product by slug (includes cmsContent)
   async getProductBySlug(slug: string) {
     try {
-      // First try to get the product using the exact slug match
+      // Query by slug (returns array, but should only match one)
       const response = await apiClient.get<ProductData[]>(`${API_CONFIG.ENDPOINTS.PRODUCTS.BASE}?slug=${encodeURIComponent(slug)}`);
-      
-      if (response?.data && response.data.length > 0 && response.data[0].slug === slug) {
-        return { data: response.data[0] };
+      if (response?.data && response.data.length > 0) {
+        // Always fetch by ID to ensure full product (with CMS content and relations)
+        const productId = response.data[0].id;
+        const productDetail = await apiClient.get<ProductData>(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(String(productId)));
+        return { data: productDetail.data };
       }
-      
-      // Fallback: If direct slug query doesn't work, fetch all and filter with exact match
-      const allProducts = await apiClient.get<ProductData[]>(API_CONFIG.ENDPOINTS.PRODUCTS.BASE);
-      
-      if (allProducts?.data) {
-        const product = allProducts.data.find(p => p.slug === slug);
-        if (product) {
-          return { data: product };
-        }
-      }
-      
       throw new Error(`Không tìm thấy sản phẩm với slug: ${slug}`);
     } catch (error) {
       console.error('Error fetching product by slug:', error);
@@ -74,8 +66,6 @@ export const productService = {
     }>(API_CONFIG.ENDPOINTS.PRODUCTS.BY_CATEGORY(category), params);
   },
 
-
-
   // Get all product categories
   async getCategories() {
     return apiClient.get<Array<{
@@ -93,20 +83,21 @@ export const productService = {
       type: string;
     }>>(API_CONFIG.ENDPOINTS.PRODUCTS.TAGS);
   },
-
 };
 
 // Example usage:
 /*
-// Get all products
-const { data: products } = await productService.getProducts({ page: 1, limit: 10 });
+{
+  // Get all products
+  const { data: products } = await productService.getProducts({ page: 1, limit: 10 });
 
-// Get a single product by slug
-const { data: product } = await productService.getProductBySlug('game-of-drunks');
+  // Get a single product by slug
+  const { data: product } = await productService.getProductBySlug('game-of-drunks');
 
-// Search products
-const { data: searchResults } = await productService.searchProducts('drunk', { limit: 5 });
+  // Search products
+  const { data: searchResults } = await productService.searchProducts('drunk', { limit: 5 });
 
-// Get products by category
-const { data: categoryProducts } = await productService.getProductsByCategory('board_games');
+  // Get products by category
+  const { data: categoryProducts } = await productService.getProductsByCategory('board_games');
+}
 */
