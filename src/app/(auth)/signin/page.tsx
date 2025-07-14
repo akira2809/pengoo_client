@@ -365,7 +365,7 @@ export default function SignInPage() {
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
           <div className="relative w-full h-full">
             <Image 
-              src="/dorroo1.jpg" 
+              src="/signin.jpg" 
               alt="Sign In" 
               fill
               className="object-cover"

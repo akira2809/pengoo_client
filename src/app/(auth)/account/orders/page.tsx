@@ -28,18 +28,18 @@ export default function OrdersPage() {
     fetchOrders();
   }, [user?.id]);
 
-  const handleCancelOrder = async (orderId: number) => {
-    const confirmCancel = confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');
-    if (!confirmCancel) return;
+  // const handleCancelOrder = async (orderId: number) => {
+  //   const confirmCancel = confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');
+  //   if (!confirmCancel) return;
 
-    try {
-      await orderService.deleteOrder(order.id);
-      alert('Đã hủy đơn hàng thành công');
-      fetchOrders(); // cập nhật lại danh sách
-    } catch (err) {
-      alert('Không thể hủy đơn hàng');
-    }
-  };
+  //   try {
+  //     await orderService.deleteOrder(order.id);
+  //     alert('Đã hủy đơn hàng thành công');
+  //     fetchOrders(); // cập nhật lại danh sách
+  //   } catch (err) {
+  //     alert('Không thể hủy đơn hàng');
+  //   }
+  // };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -116,7 +116,7 @@ export default function OrdersPage() {
                   <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
                     Xem chi tiết
                   </button>
-                  {(order.productStatus === 'pending' || order.productStatus === 'processing') && (
+                  {(order.productStatus === 'pending') && (
                     <button
                       className="px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50"
                       onClick={() => handleCancelOrder(order.order_id)}

@@ -1,11 +1,4 @@
-interface CartItem {
-  id: number;
-  product_name: string;
-  product_price: number | string;
-  quantity: number;
-  discount?: number;
-  image_url?: string; 
-}
+
 
 // Define form data interface for checkout
 interface CheckoutFormData {
@@ -28,6 +21,7 @@ export interface OrderItemDetail {
   productId: number;
   quantity: number;
   price: number;
+  orderId: number;
 }
 
 export interface CreateOrderRequest {
@@ -40,10 +34,9 @@ export interface CreateOrderRequest {
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   couponCode?: string;
   details: OrderItemDetail[];
-  order_date?: string;
-  order_id: number;
-  order_code: string;
-  total_price: number;
+//   order_date?: string;
+//   order_id: number;
+//   order_code: string;
 }
 
 export interface CreateOrderResponse {
@@ -53,4 +46,10 @@ export interface CreateOrderResponse {
   payment_url?: string;
   message?: string;
   error?: string;
+  details: OrderItemDetail[];
+  order_date?: string;
+  order_id: number;
+  order_code: string;
+  total_price: number;
+  productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 }

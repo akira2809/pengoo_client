@@ -125,7 +125,7 @@ export default function MainNavbar({
       
       <div 
         className={`
-          bg-background-900 text-text-50 px-4 py-4 flex justify-between items-center md:px-12
+          bg-background-900 text-text-50 px-4 py-5 flex justify-between items-center md:px-12
           transition-all duration-300 ease-in-out
           ${isScrolled 
             ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95' 

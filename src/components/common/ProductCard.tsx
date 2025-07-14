@@ -184,10 +184,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     addItem({
       id: Number(product.id),
       product_name: product.product_name,
-      product_price: Number(product.discount ? product.product_price - (product.product_price * (product.discount / 100)) : product.product_price),
+      product_price: product.product_price,
+      // product_price: Number(product.discount ? product.product_price - (product.product_price * (product.discount / 100)) : product.product_price),
       quantity: Number(1),
       image_url: mainImage,
       discount: Number(product.discount) || 0,
@@ -325,7 +327,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           >
             {product.product_name}
           </h2>
-          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.meta_description}</p>
+          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.description}</p>
           <div className="mt-2">
             {hasDiscount ? (
               // Display when there's a discount

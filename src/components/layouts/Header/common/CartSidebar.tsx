@@ -258,7 +258,7 @@ function CartSidebarContent({
         {cartItems.length > 0 && (
           <div className="border-t bg-background-nav p-4">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-semibold text-text-nav">
+              <span className="text-2xl font-semibold text-text-nav">
                 Total:
               </span>
               <span className="text-xl font-bold text-primary">
