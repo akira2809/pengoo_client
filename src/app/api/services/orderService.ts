@@ -3,6 +3,7 @@ import { CreateOrderRequest, CreateOrderResponse, CheckoutFormData, CartItem, Or
 import { apiClient } from '../apiClient';
 import { API_CONFIG } from '../apiConfig';
 
+
 const API_BASE_URL = 'http://localhost:3000';
 
 export const orderService = {

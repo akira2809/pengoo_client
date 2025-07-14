@@ -18,35 +18,32 @@ interface ImageItem {
 }
 
 const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) => {
-  const [mainImage, setMainImage] = useState<string>(product.image_url || '');
+  const initialMainImage =
+    product.images && product.images.length > 0
+      ? product.images[0].url
+      : '';
+
+  const [mainImage, setMainImage] = useState<string>(initialMainImage);
   const [thumbnails, setThumbnails] = useState<ImageItem[]>([]);
 
   useEffect(() => {
     if (!Array.isArray(product.images) || product.images.length === 0) {
-      setMainImage(product.image_url || '');
+      setMainImage('');
       setThumbnails([]);
       return;
     }
 
-    // Find the main image (with name 'main' or use the first image as fallback)
     const mainImg = product.images.find(img => img.name === 'main') || product.images[0];
-    const initialMainImage = mainImg?.url || product.image_url || '';
+    const initialMainImage = mainImg?.url || '';
     setMainImage(initialMainImage);
 
-    // Process all images including the main one for thumbnails
     const uniqueImages = new Map();
     const processedImages = [];
-    
-    // Include all unique images in thumbnails
     for (const img of product.images) {
-      if (!img?.url) continue; // Skip if no URL
-      
-      // Create a unique key based on the image name and first part of filename
+      if (!img?.url) continue;
       const urlParts = img.url.split('/');
       const fileName = urlParts[urlParts.length - 1].split('.')[0];
-      const imageKey = img.name || fileName.split('_')[0]; // Use image name or first part of filename
-      
-      // Only add if we haven't seen an image with this key before
+      const imageKey = img.name || fileName.split('_')[0];
       if (!uniqueImages.has(imageKey)) {
         uniqueImages.set(imageKey, true);
         processedImages.push({
@@ -58,10 +55,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
         });
       }
     }
-    
-    // Sort images by their order (ord) if specified
     processedImages.sort((a, b) => (a.ord || 0) - (b.ord || 0));
-    
     setThumbnails(processedImages);
   }, [product]);
 
@@ -69,7 +63,6 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
     setMainImage(imageUrl);
   };
 
-  // Use the already sorted thumbnails and ensure main image is first
   const sortedThumbnails = [...thumbnails].sort((a, b) => {
     if (a.isMain) return -1;
     if (b.isMain) return 1;
@@ -77,19 +70,20 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
   });
 
   return (
-    <div className="flex flex-col-reverse md:flex-row gap-4 w-full">
+    <div className="flex flex-col-reverse md:flex-row gap-6 w-full">
       {/* Thumbnails */}
       {(sortedThumbnails.length > 0) && (
         <div className="flex md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 md:pr-3">
           {sortedThumbnails.map((image, index) => (
             <button
               key={index}
-              className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 relative rounded overflow-hidden transition-all ${
-                mainImage === image.url 
-                  ? 'ring-2 ring-[#4B3C2D] ring-offset-1' 
-                  : 'hover:ring-1 hover:ring-gray-300'
-              } ${image.isMain ? 'border-2 border-[#4B3C2D]' : ''}`}
+              className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 relative rounded-lg overflow-hidden transition-all
+                ${mainImage === image.url 
+                  ? 'ring-2 ring-blue-500 ring-offset-2' 
+                  : 'hover:ring-2 hover:ring-blue-300'}
+                ${image.isMain ? 'border-2 border-blue-500' : 'border border-gray-200'}`}
               onClick={() => handleThumbnailClick(image.url)}
+              aria-label={`Chọn ảnh ${index + 1}`}
             >
               <Image 
                 src={image.url} 
@@ -104,8 +98,8 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
       )}
 
       {/* Main Image */}
-      <div className="relative w-full aspect-square bg-gray-50 rounded-lg overflow-hidden">
-        {mainImage && (
+      <div className="relative w-full aspect-square bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200 shadow">
+        {mainImage ? (
           <Image 
             src={mainImage} 
             alt={product.product_name || 'Product main image'} 
@@ -114,9 +108,11 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
             className="object-contain p-4"
             priority
           />
+        ) : (
+          <div className="flex items-center justify-center w-full h-full text-gray-400">Không có ảnh</div>
         )}
         <button 
-          className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
+          className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-blue-50 transition-colors border border-gray-200"
           aria-label="Xem ảnh lớn"
         >
           <svg 

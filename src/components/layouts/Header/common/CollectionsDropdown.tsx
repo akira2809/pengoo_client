@@ -156,7 +156,7 @@ export default function CollectionsDropdown({
             {collections.slice(0, 3).map((col) => (
               <Link
                 key={col.id}
-                href={`/collection/${col.slug}`} // ✅ Sử dụng ID thay vì slug
+                href={`/collections/${col.slug}`} // ✅ Sử dụng ID thay vì slug
                 onClick={onClose}
                 // ✅ Cập nhật màu sắc cho từng mục
                 className="group flex items-center space-x-4 p-5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/10"

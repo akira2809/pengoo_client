@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     template: '%s | PENGOO Board Game', // Tạo template cho tiêu đề động
     default: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè | Trải Nghiệm Giải Trí Đỉnh Cao', // Tiêu đề mặc định cho trang chủ
   },
+  icons: {
+    icon: '../../public/pengoo_icon.jpg',
+    apple: '../../public/pengoo_icon.jpg',
+  },
   description: 'PENGOO chuyên cung cấp các loại board game, trò chơi gia đình và đồ chơi trí tuệ độc đáo. Khám phá ngay để có những khoảnh khắc giải trí và gắn kết tuyệt vời!',
   applicationName: 'PENGOO',
   creator: 'Tên nhà phát triển hoặc công ty của bạn', // Thay thế

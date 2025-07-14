@@ -71,7 +71,8 @@ type ProductWithUI = Product & {
 };
 
 export default function CollectionPage({ params }: CollectionPageProps) {
-  const { slug } = params;
+  const { slug } = React.use(params); // <-- Unwrap params with React.use()
+
   const [tags, setTags] = useState<{id: string, name: string, type: string}[]>([]);
   const router = useRouter();
   const { 

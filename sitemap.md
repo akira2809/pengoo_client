@@ -1,41 +1,87 @@
+# Pengoo Client Sitemap
+
+## App Directory Structure
+```
 src/
 ├── app/
-│   ├── (auth)/                    # Các route yêu cầu xác thực
-│   │   ├── account/              # Quản lý tài khoản
-│   │   ├── forgot-password/      # Quên mật khẩu
-│   │   ├── reset-password/       # Đặt lại mật khẩu
-│   │   ├── signin/               # Đăng nhập
-│   │   ├── signup/               # Đăng ký
-│   │   └── layout.tsx           # Layout cho các trang auth
+│   ├── (auth)/                         # Authentication routes
+│   │   ├── account/                   # User account management
+│   │   ├── forgot-password/           # Password recovery
+│   │   ├── mfa-verification/          # Multi-factor authentication
+│   │   ├── reset-password/            # Password reset
+│   │   ├── signin/                    # Sign in
+│   │   ├── signup/                    # Sign up
+│   │   └── components/                # Auth components
 │   │
-│   ├── (public)/                 # Các route công khai
-│   │   ├── about/                # Giới thiệu
-│   │   ├── blogs/                # Trang blog
-│   │   ├── cart/                 # Giỏ hàng
-│   │   ├── collection/           # Bộ sưu tập sản phẩm
-│   │   └── product/              # Chi tiết sản phẩm
+│   ├── (public)/                      # Public routes
+│   │   ├── about/                     # About us
+│   │   ├── blogs/                     # Blog posts
+│   │   ├── cart/                      # Shopping cart
+│   │   ├── checkout/                  # Checkout process
+│   │   ├── collection/                # Product collections
+│   │   ├── commitment/                # Company commitments
+│   │   ├── contact/                   # Contact information
+│   │   ├── order/                     # Order management
+│   │   ├── partner/                   # Partnership information
+│   │   ├── products/                  # Product listings
+│   │   ├── promotionPolicy/           # Promotion policies
+│   │   ├── returnPolicy/              # Return policies
+│   │   ├── shippingPolicy/            # Shipping information
+│   │   └── termsOfServicePolicy/      # Terms of service
 │   │
-│   ├── api/                     # API routes
-│   ├── stores/                  # Quản lý state (có thể dùng Zustand/Redux)
-│   └── ...
+│   ├── api/                           # API routes
+│   │   ├── auth/                      # Authentication API
+│   │   ├── chat/                      # Chat functionality
+│   │   ├── data/                      # General data API
+│   │   ├── minigame/                  # Mini-game API
+│   │   ├── orders/                    # Order management API
+│   │   └── products/                  # Product API
+│   │
+│   ├── stores/                        # State management
+│   │   └── slice/                     # Redux slices
+│   │
+│   ├── hooks/                         # Custom hooks
+│   ├── type/                          # TypeScript type definitions
+│   └── utils/                         # Utility functions
 │
 ├── components/
-│   ├── common/                  # Các component dùng chung
-│   │   ├── BlogSection.tsx      # Section hiển thị blog
-│   │   ├── FilterDropdown.tsx   # Dropdown lọc
-│   │   ├── MobileFilterModal.tsx # Modal lọc trên mobile
-│   │   ├── ProductCard.tsx      # Card sản phẩm
-│   │   └── UI/                  # Các component UI cơ bản
+│   ├── account/                      # Account related components
 │   │
-│   └── layouts/                 # Các layout chính
-│       ├── About/               # Layout trang about
-│       ├── Auth/                # Layout xác thực
-│       ├── Blog/                # Layout blog
-│       ├── Cart/                # Layout giỏ hàng
-│       ├── Footer/              # Footer
-│       ├── Header/              # Header
-│       ├── HomePage/            # Layout trang chủ
-│       └── ProductDetail/       # Layout chi tiết sản phẩm
+│   ├── common/                       # Shared components
+│   │   ├── UI/                      # Basic UI components
+│   │   └── scratch-minigame/        # Mini-game components
+│   │
+│   ├── features/                     # Feature components
+│   │   └── Product/                 # Product related components
+│   │
+│   └── layouts/                      # Page layouts
+│       ├── About/                   # About page layout
+│       ├── Auth/                    # Authentication layout
+│       ├── Blog/                    # Blog layout
+│       ├── Cart/                    # Shopping cart layout
+│       ├── Checkout/                # Checkout layout
+│       ├── Contact/                 # Contact page layout
+│       ├── Footer/                  # Footer component
+│       ├── Header/                  # Header component
+│       ├── HomePage/                # Homepage layout
+│       ├── Login&Signup/            # Login/Signup forms
+│       ├── Policy/                  # Policy pages layout
+│       ├── Popup/                   # Popup components
+│       ├── ProductDetail/           # Product detail layout
+│       └── collection/              # Collection page layout
 │
-└── lib/
-    └── utils.ts                 # Các hàm tiện ích
+└── public/                           # Static files
+
+## Key Features
+- **User Authentication**: Complete auth flow with MFA support
+- **E-commerce**: Product browsing, cart, and checkout
+- **Blog System**: Content management for articles
+- **Policies**: Comprehensive policy pages
+- **Mini-games**: Interactive elements for engagement
+- **Responsive Design**: Mobile-first approach
+
+## API Structure
+- RESTful endpoints for data operations
+- Authentication and authorization
+- Real-time chat functionality
+- Product and order management

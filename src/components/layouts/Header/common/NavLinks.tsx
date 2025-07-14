@@ -30,7 +30,7 @@ export default function NavLinks({
         ) : (
           // Mobile: click chuyển sang trang collections
           <Link
-            href="/collection"
+            href="/collections"
             className="hover:underline block"
             onClick={onLinkClick}
           >
