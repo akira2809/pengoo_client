@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 
 declare global {
   interface Window {
@@ -8,10 +9,27 @@ declare global {
   }
 }
 
+const DEFAULT_CHAT_URL = 'https://103226109.flown8n.com/webhook/5667457e-00d0-4964-91d4-281758f82897/chat';
+
 export default function Chatbot() {
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Load the N8N Chat UI script
+  const { isAuthenticated, user } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Function to initialize the chat
+  const initChat = useCallback(() => {
+    if (typeof window === 'undefined' || !isAuthenticated) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Clean up any existing chat instance
+      if (window.Chatbot?.destroy) {
+        window.Chatbot.destroy();
+      }
+
+      // Create a new script element
       const script = document.createElement('script');
       script.type = 'module';
       script.defer = true;
@@ -19,13 +37,15 @@ export default function Chatbot() {
         import Chatbot from "https://cdn.n8nchatui.com/v1/embed.js";
         window.Chatbot = Chatbot;
         Chatbot.init({
-          "n8nChatUrl": "https://103226109.flown8n.com/webhook/5667457e-00d0-4964-91d4-281758f82897/chat",
+          "n8nChatUrl": "${DEFAULT_CHAT_URL}",
           "metadata": {
             "timestamp": new Date().toISOString(),
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "userId": "${user?.id || 'anonymous'}",
+            "username": "${user?.username || 'anonymous'}",
+            "email": "${user?.email || ''}"
           },
           "onBeforeSend": (message) => {
-            // Validate message is not empty and contains meaningful content
             const trimmedMessage = message.trim();
             if (!trimmedMessage || trimmedMessage.length < 2) {
               return {
@@ -37,7 +57,6 @@ export default function Chatbot() {
           },
           "onError": (error) => {
             console.error('Chat Error:', error);
-            // Handle specific Supabase Vector Store error
             if (error?.includes('Supabase_Vector_Store') || error?.includes('input')) {
               return {
                 showToUser: true,
@@ -67,7 +86,7 @@ export default function Chatbot() {
             },
             "tooltip": {
               "showTooltip": true,
-              "tooltipMessage": "Chào bạn tôi là trợ lí AI! Tôi có thể giúp gì cho bạn?",
+              "tooltipMessage": "Chào ${user?.full_name || 'bạn'}! Tôi là trợ lí AI! Tôi có thể giúp gì cho bạn?",
               "tooltipBackgroundColor": "#4f46e5",
               "tooltipTextColor": "#ffffff",
               "tooltipFontSize": 14
@@ -77,9 +96,9 @@ export default function Chatbot() {
               "avatarBorderRadius": 25,
               "messageBorderRadius": 6,
               "showTitle": true,
-              "title": "Trợ lý ảo",
-              "titleAvatarSrc": "https://www.svgrepo.com/show/339963/chat-bot.svg",
-              "welcomeMessage": "Xin chào! Tôi có thể giúp gì cho bạn hôm nay?",
+              "title": "Xin chào ${user?.full_name || ''}",
+              "titleAvatarSrc": "${user?.avatar_url || 'https://www.svgrepo.com/show/339963/chat-bot.svg'}",
+              "welcomeMessage": "Xin chào ${user?.full_name || 'bạn'}! Tôi có thể giúp gì cho bạn hôm nay?",
               "errorMessage": "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
               "backgroundColor": "#ffffff",
               "height": 500,
@@ -102,7 +121,7 @@ export default function Chatbot() {
                 "backgroundColor": "#4f46e5",
                 "textColor": "#ffffff",
                 "showAvatar": true,
-                "avatarSrc": "https://www.svgrepo.com/show/532363/user-alt-1.svg"
+                "avatarSrc": "${user?.avatar_url || 'https://www.svgrepo.com/show/532363/user-alt-1.svg'}"
               },
               "textInput": {
                 "placeholder": "Nhập câu hỏi của bạn...",
@@ -137,17 +156,70 @@ export default function Chatbot() {
           }
         });
       `;
-      document.body.appendChild(script);
 
+      script.onload = () => {
+        setIsLoading(false);
+      };
+
+      script.onerror = (err) => {
+        console.error('Failed to load chat script:', err);
+        setError('Không thể tải trò chuyện. Vui lòng thử lại sau.');
+        setIsLoading(false);
+      };
+
+      document.body.appendChild(script);
       return () => {
-        // Cleanup
         document.body.removeChild(script);
-        if (window.Chatbot && window.Chatbot.destroy) {
+        if (window.Chatbot?.destroy) {
           window.Chatbot.destroy();
         }
       };
+    } catch (err) {
+      console.error('Error initializing chat:', err);
+      setError('Có lỗi xảy ra khi khởi tạo trò chuyện.');
+      setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated, user]);
 
-  return null; // The chat button is rendered by the N8N Chat UI script
+  // Initialize chat when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      initChat();
+    } else {
+      // Clean up chat if user logs out
+      if (window.Chatbot?.destroy) {
+        window.Chatbot.destroy();
+      }
+    }
+  }, [isAuthenticated, initChat]);
+
+  // Don't render anything if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-full flex items-center">
+          <span className="text-sm">{error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // The chat button is rendered by the N8N Chat UI script
+  return null;
 }

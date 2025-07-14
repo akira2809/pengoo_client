@@ -22,6 +22,7 @@ interface CheckoutFormData {
   shippingMethod: 'localHCM' | 'outsideHCM';
   total: number;
   couponCode?: string;
+  delivery_id: number;
 }
 
 export interface OrderItemDetail {
