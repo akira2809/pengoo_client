@@ -7,6 +7,7 @@ import { wishlistService } from '@/app/api/services/wishlistService';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { useCartStore } from '@/app/stores/slice/cartStore';
 import toast from 'react-hot-toast';
+import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
 
 type WishlistItem = {
   id: number;
@@ -29,6 +30,8 @@ export default function WishlistPage() {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
   const addItem = useCartStore(state => state.addItem);
 
   useEffect(() => {
@@ -42,12 +45,12 @@ export default function WishlistPage() {
             product: item.product ? {
               ...item.product,
               product_price: Number(item.product.product_price),
-              image: item.product.images?.[0]?.url || '', // Sửa dòng này
+              image: item.product.images?.[0]?.url || '',
             } : {
               id: item.product_id ?? item.id,
               product_name: item.product_name,
               product_price: Number(item.product_price),
-              image: item.images?.[0]?.url || '', // Sửa dòng này
+              image: item.images?.[0]?.url || '',
               quantity_stock: item.quantity_stock,
               rating: item.rating,
               reviewCount: item.reviewCount,
@@ -73,18 +76,10 @@ export default function WishlistPage() {
     };
   };
 
-  
-   // Helper function to validate and normalize image URL
   const getValidImageUrl = (url: string | undefined | null): string | null => {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
-      return null;
-    }
-    // If it's already a full URL or starts with /, return as is
-    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) {
-      return url;
-    }
-    // Otherwise, assume it's a relative path
-    return `/${url.replace(/^\//, '')}`; // Ensure single leading slash
+    if (!url || typeof url !== 'string' || url.trim() === '') return null;
+    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) return url;
+    return `/${url.replace(/^\//, '')}`;
   };
 
   const formatPrice = (price: number) =>
@@ -122,7 +117,7 @@ export default function WishlistPage() {
     setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
     setSelectedItems([]);
   };
-  
+
   const removeAllItems = async () => {
     if (!user?.id || wishlist.length === 0) return;
     if (!confirm('Bạn có chắc muốn xoá tất cả sản phẩm trong danh sách yêu thích?')) return;
@@ -155,7 +150,6 @@ export default function WishlistPage() {
     addItem({
       id: product.id,
       product_name: product.product_name,
-      // product_price: finalPrice,
       product_price: product.product_price,
       quantity: 1,
       image_url: product.image || '',
@@ -177,32 +171,24 @@ export default function WishlistPage() {
     });
   };
 
-  if (!user?.id) {
-    return <div className="text-center py-16 text-red-600">Bạn chưa đăng nhập.</div>;
-  }
-
-  if (loading) {
-    return <div className="text-center py-16 text-gray-600">Đang tải...</div>;
-  }
-
+  if (!user?.id) return <div className="text-center py-16 text-red-600">Bạn chưa đăng nhập.</div>;
+  if (loading) return <div className="text-center py-16 text-gray-600">Đang tải...</div>;
   if (wishlist.length === 0) {
     return (
       <div className="text-center py-16">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Danh sách yêu thích trống
-        </h3>
-        <p className="text-gray-500 mb-6">
-          Bạn chưa có sản phẩm nào trong danh sách yêu thích.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
-        >
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Danh sách yêu thích trống</h3>
+        <p className="text-gray-500 mb-6">Bạn chưa có sản phẩm nào trong danh sách yêu thích.</p>
+        <Link href="/" className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700">
           Tiếp tục mua sắm
         </Link>
       </div>
     );
   }
+
+  const paginatedWishlist = wishlist.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -219,24 +205,16 @@ export default function WishlistPage() {
             onChange={selectAllItems}
             className="h-4 w-4 text-primary-600 border-gray-300 rounded"
           />
-          <label className="ml-2 text-sm text-gray-700">
-            Chọn tất cả ({selectedItems.length})
-          </label>
+          <label className="ml-2 text-sm text-gray-700">Chọn tất cả ({selectedItems.length})</label>
         </div>
         <div className="flex gap-2">
           {selectedItems.length > 0 && (
-            <button
-              onClick={removeSelectedItems}
-              className="text-sm text-red-600 hover:text-red-800 flex items-center"
-            >
+            <button onClick={removeSelectedItems} className="text-sm text-red-600 hover:text-red-800 flex items-center">
               Xoá đã chọn
             </button>
           )}
           {wishlist.length > 0 && (
-            <button
-              onClick={removeAllItems}
-              className="text-sm text-red-600 hover:text-red-800 flex items-center"
-            >
+            <button onClick={removeAllItems} className="text-sm text-red-600 hover:text-red-800 flex items-center">
               Xoá tất cả
             </button>
           )}
@@ -244,15 +222,12 @@ export default function WishlistPage() {
       </div>
 
       <div className="space-y-6 border-t border-gray-200">
-        {wishlist.map(({ id, product }) => {
+        {paginatedWishlist.map(({ id, product }) => {
           const { finalPrice, discountPercentage } = calculateFinalPrice(product.product_price, product.discount);
           const savedAmount = product.product_price - finalPrice;
 
           return (
-            <div
-              key={id}
-              className="flex flex-col md:flex-row items-start md:items-center py-6 border-b border-gray-200"
-            >
+            <div key={id} className="flex flex-col md:flex-row items-start md:items-center py-6 border-b border-gray-200">
               <div className="flex w-full items-start">
                 <input
                   type="checkbox"
@@ -261,31 +236,19 @@ export default function WishlistPage() {
                   className="h-4 w-4 mt-6 text-primary-600 border-gray-300 rounded"
                 />
                 <div className="ml-4 w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
-                  {product.image ? (
-                    <Image
-                      src={getValidImageUrl(product.image) || "https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image"}
-                      alt={product.product_name}
-                      width={96}
-                      height={96}
-                      className="object-cover w-full h-full"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.onerror = null;
-                        target.src = "https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image";
-                      }}
-                    />
-
-                  ) : (
-                    <Image
-                      src="https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image"
-                      alt="No image"
-                      width={96}
-                      height={96}
-                      className="object-cover w-full h-full"
-                    />
-                  )}
+                  <Image
+                    src={getValidImageUrl(product.image) || 'https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image'}
+                    alt={product.product_name}
+                    width={96}
+                    height={96}
+                    className="object-cover w-full h-full"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image';
+                    }}
+                  />
                 </div>
-
                 <div className="ml-4 flex-1">
                   <div className="flex flex-col md:flex-row md:justify-between">
                     <div>
@@ -293,35 +256,23 @@ export default function WishlistPage() {
                         {product.product_name}
                       </h3>
                       <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.meta_description}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        ({product.reviewCount || 0} đánh giá)
-                      </p>
+                      <p className="text-sm text-gray-500 mt-1">({product.reviewCount || 0} đánh giá)</p>
                     </div>
-
                     <div className="text-right mt-2 md:mt-0">
                       {discountPercentage > 0 ? (
                         <div className="space-y-1">
-                          <div className="text-red-500 font-semibold text-base">
-                            {formatPrice(finalPrice)}
-                          </div>
-                          <div className="text-gray-400 text-sm line-through">
-                            {formatPrice(product.product_price)}
-                          </div>
-                          <div className="text-xs text-green-600">
-                            Tiết kiệm: {formatPrice(savedAmount)}
-                          </div>
+                          <div className="text-red-500 font-semibold text-base">{formatPrice(finalPrice)}</div>
+                          <div className="text-gray-400 text-sm line-through">{formatPrice(product.product_price)}</div>
+                          <div className="text-xs text-green-600">Tiết kiệm: {formatPrice(savedAmount)}</div>
                         </div>
                       ) : (
-                        <div className="text-gray-800 font-semibold text-base">
-                          {formatPrice(product.product_price)}
-                        </div>
+                        <div className="text-gray-800 font-semibold text-base">{formatPrice(product.product_price)}</div>
                       )}
                       <div className={`text-sm mt-1 ${product.quantity_stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {product.quantity_stock > 0 ? 'Còn hàng' : 'Hết hàng'}
                       </div>
                     </div>
                   </div>
-
                   <div className="mt-4 flex justify-end gap-4 w-full">
                     <button
                       onClick={(e) => handleAddToCart(e, product)}
@@ -343,6 +294,13 @@ export default function WishlistPage() {
           );
         })}
       </div>
+
+      <ProductPagination
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={wishlist.length}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

@@ -5,11 +5,15 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { orderService } from '@/app/api/services/orderService';
 import { CreateOrderResponse } from '@/app/type/order';
+import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
 
 export default function OrdersPage() {
   const { user } = useAuthStore();
   const [orders, setOrders] = useState<CreateOrderResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const ITEMS_PER_PAGE = 4;
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchOrders = async () => {
     if (!user?.id) return;
@@ -28,18 +32,23 @@ export default function OrdersPage() {
     fetchOrders();
   }, [user?.id]);
 
-  // const handleCancelOrder = async (orderId: number) => {
-  //   const confirmCancel = confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');
-  //   if (!confirmCancel) return;
+  const paginatedOrders = orders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
-  //   try {
-  //     await orderService.deleteOrder(order.id);
-  //     alert('Đã hủy đơn hàng thành công');
-  //     fetchOrders(); // cập nhật lại danh sách
-  //   } catch (err) {
-  //     alert('Không thể hủy đơn hàng');
-  //   }
-  // };
+  const handleCancelOrder = async (orderId: number) => {
+    const confirmCancel = confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');
+    if (!confirmCancel) return;
+
+    try {
+      await orderService.deleteOrder(orderId);
+      alert('Đã hủy đơn hàng thành công');
+      fetchOrders();
+    } catch (err) {
+      alert('Không thể hủy đơn hàng');
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -52,83 +61,92 @@ export default function OrdersPage() {
           <p className="text-gray-500">Bạn chưa có đơn hàng nào</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div key={order.order_code} className="border rounded-lg p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-medium">Mã đơn hàng: {order.order_code}</h3>
-                  <p className="text-sm text-gray-500">
-                    Ngày đặt: {order.order_date ? new Date(order.order_date).toLocaleDateString('vi-VN') : 'Không rõ'}
-                  </p>
+        <>
+          <div className="space-y-6">
+            {paginatedOrders.map((order) => (
+              <div key={order.order_code} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-medium">Mã đơn hàng: {order.order_code}</h3>
+                    <p className="text-sm text-gray-500">
+                      Ngày đặt: {order.order_date ? new Date(order.order_date).toLocaleDateString('vi-VN') : 'Không rõ'}
+                    </p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm ${
+                    order.productStatus === 'delivered'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {order.productStatus === 'delivered' ? 'Đã giao hàng' : 'Đang xử lý'}
+                  </span>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  order.productStatus === 'delivered'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {order.productStatus === 'delivered' ? 'Đã giao hàng' : 'Đang xử lý'}
-                </span>
-              </div>
 
-              {order.details && order.details.length > 0 && (
-                <div className="space-y-4">
-                  {order.details.map((item: any, index: number) => {
-                    const product = item.product || {};
-                    const imageUrl = product.images?.[0]?.url || '/placeholder-product.jpg';
+                {order.details && order.details.length > 0 && (
+                  <div className="space-y-4">
+                    {order.details.map((item: any, index: number) => {
+                      const product = item.product || {};
+                      const imageUrl = product.images?.[0]?.url || '/placeholder-product.jpg';
 
-                    return (
-                      <div key={index} className="flex items-center space-x-4">
-                        <div className="relative w-16 h-16 rounded overflow-hidden bg-gray-100">
-                          <Image
-                            src={imageUrl}
-                            alt={product.product_name || 'Sản phẩm'}
-                            fill
-                            className="object-cover"
-                          />
+                      return (
+                        <div key={index} className="flex items-center space-x-4">
+                          <div className="relative w-16 h-16 rounded overflow-hidden bg-gray-100">
+                            <Image
+                              src={imageUrl}
+                              alt={product.product_name || 'Sản phẩm'}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium">{product.product_name}</h4>
+                            <p className="text-sm text-gray-500">Số lượng: {item.quantity}</p>
+                            <p className="text-sm">
+                              {item.price.toLocaleString('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND',
+                              })}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{product.product_name}</h4>
-                          <p className="text-sm text-gray-500">Số lượng: {item.quantity}</p>
-                          <p className="text-sm">
-                            {item.price.toLocaleString('vi-VN', {
-                              style: 'currency',
-                              currency: 'VND',
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
 
-              <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                <div className="font-medium">
-                  Tổng tiền:{' '}
-                  {order.total_price.toLocaleString('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND',
-                  })}
-                </div>
+                <div className="mt-4 pt-4 border-t flex justify-between items-center">
+                  <div className="font-medium">
+                    Tổng tiền:{' '}
+                    {order.total_price.toLocaleString('vi-VN', {
+                      style: 'currency',
+                      currency: 'VND',
+                    })}
+                  </div>
 
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
-                    Xem chi tiết
-                  </button>
-                  {(order.productStatus === 'pending') && (
-                    <button
-                      className="px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50"
-                      onClick={() => handleCancelOrder(order.order_id)}
-                    >
-                      Hủy đơn
+                  <div className="flex gap-2">
+                    <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
+                      Xem chi tiết
                     </button>
-                  )}
+                    {(order.productStatus === 'pending') && (
+                      <button
+                        className="px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50"
+                        onClick={() => handleCancelOrder(order.order_id)}
+                      >
+                        Hủy đơn
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          <ProductPagination
+            currentPage={currentPage}
+            itemsPerPage={ITEMS_PER_PAGE}
+            totalItems={orders.length}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
     </div>
   );

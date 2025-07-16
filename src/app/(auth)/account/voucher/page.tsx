@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
-import { useStore } from '@/app/stores/store'; // ✅ Dùng trực tiếp useStore thay vì useCouponStore
+import { useStore } from '@/app/stores/store';
+import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
 
 export default function CouponsPage() {
   const { user } = useAuthStore();
 
-  // ✅ Sử dụng selector riêng lẻ để tránh render loop
   const myVouchers = useStore((state) => state.myVouchers);
   const fetchMyVouchers = useStore((state) => state.fetchMyVouchers);
   const verifyVoucher = useStore((state) => state.verifyVoucher);
@@ -17,25 +17,28 @@ export default function CouponsPage() {
   const [inputCode, setInputCode] = useState('');
   const [checking, setChecking] = useState(false);
 
+  const ITEMS_PER_PAGE = 5;
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (user) fetchMyVouchers();
   }, [user?.id]);
 
   const handleCheckCoupon = async () => {
-  if (!inputCode.trim()) return;
+    if (!inputCode.trim()) return;
+    setChecking(true);
+    const isValid = await verifyVoucher(inputCode.trim());
+    setChecking(false);
+    if (isValid) {
+      setInputCode('');
+      fetchMyVouchers();
+    }
+  };
 
-  setChecking(true);
-  const isValid = await verifyVoucher(inputCode.trim());
-  setChecking(false);
-
-  if (isValid) {
-    setInputCode('');
-    fetchMyVouchers();
-  }
-};
-
-
+  const paginatedVouchers = myVouchers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -73,19 +76,28 @@ export default function CouponsPage() {
         ) : myVouchers.length === 0 ? (
           <p className="text-gray-500">Bạn chưa có mã nào.</p>
         ) : (
-          <ul className="space-y-3">
-            {myVouchers.map((uc) => (
-              <li key={uc.id} className="border rounded-md p-4 bg-gray-50">
-                <p className="font-medium">{uc.coupon.code}</p>
-                <p className="text-gray-600">
-                  {uc.coupon.description || 'Không có mô tả'}
-                </p>
-                <p className="text-sm text-gray-400">
-                  Giảm {uc.coupon.discountPercent}% • Cần {uc.coupon.milestonePoints} điểm • Đã đổi: {uc.redeemed ? '✔️' : '❌'}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="space-y-3">
+              {paginatedVouchers.map((uc) => (
+                <li key={uc.id} className="border rounded-md p-4 bg-gray-50">
+                  <p className="font-medium">{uc.coupon.code}</p>
+                  <p className="text-gray-600">
+                    {uc.coupon.description || 'Không có mô tả'}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Giảm {uc.coupon.discountPercent}% • Cần {uc.coupon.milestonePoints} điểm • Đã đổi: {uc.redeemed ? '✔️' : '❌'}
+                  </p>
+                </li>
+              ))}
+            </ul>
+
+            <ProductPagination
+              currentPage={currentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={myVouchers.length}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
       </div>
     </div>

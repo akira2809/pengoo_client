@@ -10,6 +10,8 @@ import Image from 'next/image';
 import { useSearchStore } from '@/app/stores/slice/searchStore';
 import type { Product } from '@/app/stores/type';
 import { Skeleton } from '@/components/common/UI/Skeleton';
+import Link from 'next/link';
+
 
 interface SearchSidebarProps {
   isOpen: boolean;
@@ -166,7 +168,7 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
 
   // Xử lý click vào kết quả tìm kiếm
   const handleResultClick = (product: Product) => {
-    router.push(`/product/${product.slug}`);
+    router.push(`/products/${product.slug}`);
     onClose();
   };
 

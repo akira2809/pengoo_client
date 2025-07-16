@@ -45,7 +45,7 @@ export const ProductPagination: React.FC<ProductPaginationProps> = ({
                   <span className="px-2 flex items-center">...</span>
                   <button
                     onClick={() => onPageChange(page)}
-                    className={`px-4 py-2 border-t border-b ${currentPage === page ? 'bg-amber-800 text-white' : 'bg-white'}`}
+                    className={`px-4 py-2 border-t border-b ${currentPage === page ? 'bg-background-800 text-white' : 'bg-white'}`}
                   >
                     {page}
                   </button>
@@ -56,7 +56,7 @@ export const ProductPagination: React.FC<ProductPaginationProps> = ({
               <button
                 key={`bot-${page}`}
                 onClick={() => onPageChange(page)}
-                className={`px-4 py-2 border-t border-b ${currentPage === page ? 'bg-amber-800 text-white' : 'bg-white'}`}
+                className={`px-4 py-2 border-t border-b ${currentPage === page ? 'bg-background-800 text-white' : 'bg-white'}`}
               >
                 {page}
               </button>
