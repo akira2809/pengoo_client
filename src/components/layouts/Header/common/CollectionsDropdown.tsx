@@ -241,7 +241,7 @@ export default function CollectionsDropdown({
                 <h4 className="font-bold text-lg mb-2 text-white">Bộ sưu tập mới ra</h4>
                 <p className="text-sm text-white/70 mb-4">Xu hướng thời trang mới</p>
                 <Link
-                  href="/collection?sort=newest"
+                  href="/collections?sort=newest"
                   className="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 transition-colors"
                   onClick={onClose}
                 >

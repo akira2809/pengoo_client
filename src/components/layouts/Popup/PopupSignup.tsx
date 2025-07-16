@@ -80,7 +80,7 @@ export default function PopupSignup({ isOpen, onClose }: PopUpProps) {
           {/* Ảnh bên phải */}
           <div className="hidden md:block relative min-h-[400px]">
             <Image
-              src="/images/popup.jpg"
+              src="/anh4.webp"
               alt="Popup"
               fill
               className="object-cover"

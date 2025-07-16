@@ -141,9 +141,9 @@ export default function OrdersPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
+                    {/* <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
                       Xem chi tiết
-                    </button>
+                    </button> */}
                     {order.productStatus === 'pending' && (
                       <button
                         className="px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50"
