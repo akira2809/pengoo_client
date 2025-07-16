@@ -12,7 +12,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<CreateOrderResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const ITEMS_PER_PAGE = 4;
+  const ITEMS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
 
   const fetchOrders = async () => {
@@ -37,12 +37,34 @@ export default function OrdersPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Chờ xác nhận';
+      case 'processing': return 'Đang xử lý';
+      case 'shipped': return 'Đang giao hàng';
+      case 'delivered': return 'Đã giao hàng';
+      case 'cancelled': return 'Đã hủy đơn';
+      default: return 'Không rõ';
+    }
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'shipped': return 'bg-blue-100 text-blue-800';
+      case 'processing': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-200 text-gray-500';
+    }
+  };
+
   const handleCancelOrder = async (orderId: number) => {
     const confirmCancel = confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');
     if (!confirmCancel) return;
 
     try {
-      await orderService.deleteOrder(orderId);
+      await orderService.cancelOrder(orderId);
       alert('Đã hủy đơn hàng thành công');
       fetchOrders();
     } catch (err) {
@@ -72,16 +94,12 @@ export default function OrdersPage() {
                       Ngày đặt: {order.order_date ? new Date(order.order_date).toLocaleDateString('vi-VN') : 'Không rõ'}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    order.productStatus === 'delivered'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {order.productStatus === 'delivered' ? 'Đã giao hàng' : 'Đang xử lý'}
+                  <span className={`px-3 py-1 rounded-full text-sm ${getStatusStyle(order.productStatus)}`}>
+                    {getStatusText(order.productStatus)}
                   </span>
                 </div>
 
-                {order.details && order.details.length > 0 && (
+                {order.details?.length > 0 && (
                   <div className="space-y-4">
                     {order.details.map((item: any, index: number) => {
                       const product = item.product || {};
@@ -126,10 +144,10 @@ export default function OrdersPage() {
                     <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
                       Xem chi tiết
                     </button>
-                    {(order.productStatus === 'pending') && (
+                    {order.productStatus === 'pending' && (
                       <button
                         className="px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50"
-                        onClick={() => handleCancelOrder(order.order_id)}
+                        onClick={() => handleCancelOrder(order.id)}
                       >
                         Hủy đơn
                       </button>

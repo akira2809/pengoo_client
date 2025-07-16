@@ -1,4 +1,10 @@
-
+interface CartItem {
+  id: number;
+  productId: mumber;
+  quantity: number;
+  price:number;
+  product_price:number;
+}
 
 // Define form data interface for checkout
 interface CheckoutFormData {

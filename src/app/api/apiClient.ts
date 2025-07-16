@@ -187,6 +187,38 @@ private getAuthHeader(): Record<string, string> {
     }
   }
 
+
+  public async patch<T>(
+  endpoint: string,
+  data: any = {},
+  customHeaders: Record<string, string> = {}
+): Promise<ApiResponse<T>> {
+  const url = `${this.baseUrl}${endpoint}`;
+  const headers = {
+    ...this.defaultHeaders,
+    ...this.getAuthHeader(),
+    ...customHeaders
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+      mode: 'cors',
+    });
+    return this.handleResponse<T>(response);
+  } catch (error) {
+    console.error('PATCH request failed:', error);
+    throw {
+      success: false,
+      error: API_CONFIG.ERROR_MESSAGES.NETWORK_ERROR,
+      statusCode: 0
+    };
+  }
+}
+
+
   // Add other HTTP methods as needed (PATCH, etc.)
 }
 
