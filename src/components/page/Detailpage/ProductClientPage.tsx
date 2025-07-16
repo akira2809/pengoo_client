@@ -39,6 +39,11 @@ const BlogSection = dynamic(
   { loading: () => <div className="w-full h-[400px] w-full my-8 bg-gray-100 animate-pulse"></div>, ssr: false }
 );
 
+const ProductsYouMayLike = dynamic(
+  () => import('@/components/layouts/ProductDetail/ProductsYouMayLike').then(mod => mod.default),
+  { ssr: false }
+);
+
 interface ProductClientPageProps {
   initialProduct: ProductData | null;
   initialError: string | null;
@@ -206,6 +211,13 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
       />
 
       <ProductReviewsSection productId={product.id} />
+      {/* Move ProductsYouMayLike here, under reviews */}
+      <ProductsYouMayLike
+        currentProductId={product.id}
+        categoryId={typeof product.category_ID === "object" ? product.category_ID.id : undefined}
+        tagIds={Array.isArray(product.tags) ? product.tags.map(tag => tag.id) : undefined}
+      />
+      {/* Blog and posts section below */}
       <BlogSection />
     </div>
   );
