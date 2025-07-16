@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation'; 
 import { ProductPageLayout } from '@/app/(public)/products/component/ProductPageLayout';
 import { useStore } from '@/app/stores/store';
 import { productService } from '@/app/api/services/productService';
@@ -22,11 +23,14 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
 
-  // 🛠️ CHỈ fetch product MỘT LẦN
+  const searchParams = useSearchParams();
+  const sort = searchParams.get('sort');
+
+  // Chỉ fetch dữ liệu 1 lần và lọc hiển thị theo sort
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        await fetchProducts(); // 👈 không truyền filters
+        await fetchProducts(); // fetch và lưu vào store
       } catch (err) {
         console.error('Failed to fetch products:', err);
       }
@@ -42,18 +46,18 @@ export default function ProductsPage() {
     };
 
     const loadTags = async () => {
-    try {
-      const response = await productService.getTags();
-      setTags(response.data);
-    } catch (err) {
-      console.error('Failed to fetch tags:', err);
-    }
-  };
+      try {
+        const response = await productService.getTags();
+        setTags(response.data);
+      } catch (err) {
+        console.error('Failed to fetch tags:', err);
+      }
+    };
 
     loadProducts();
     loadCategories();
     loadTags();
-  }, []); // 👈 KHÔNG phụ thuộc filters nữa
+  }, [sort]);  // 👈 KHÔNG phụ thuộc filters nữa
 
   if (isLoading) {
     return (
@@ -85,13 +89,27 @@ export default function ProductsPage() {
     );
   }
 
-  const formattedProducts = products.map(product => ({
-    ...product,
-    id: typeof product.id === 'string' ? Number(product.id) : product.id,
-    category_ID: typeof product.category_ID === 'string' ? Number(product.category_ID) : product.category_ID,
-    publisher_ID: typeof product.publisher_ID === 'string' ? Number(product.publisher_ID) : product.publisher_ID,
-    status: String(product.status || ''),
-  }));
+  // Định dạng lại dữ liệu sản phẩm và lọc theo `sort`
+  const formattedProducts = products
+    .map(product => ({
+      ...product,
+      id: typeof product.id === 'string' ? Number(product.id) : product.id,
+      category_ID: typeof product.category_ID === 'string' ? Number(product.category_ID) : product.category_ID,
+      publisher_ID: typeof product.publisher_ID === 'string' ? Number(product.publisher_ID) : product.publisher_ID,
+      status: String(product.status || ''),
+      discount: Number(product.discount) || 0,
+      createdAt: product.createdAt || '',
+    }))
+    .filter(product => {
+      if (sort === 'discount') return product.discount > 0;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === 'newest') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      return 0;
+    });
 
   return (
     <ProductPageLayout 

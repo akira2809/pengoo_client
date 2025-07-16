@@ -1,84 +1,91 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { collectionService } from '@/app/api/services/collectionService';
 import CategoryGrid from '@/components/layouts/collection/CategoryGrid';
 import { BlogSection } from '@/components/common/BlogSection';
 
-
-interface RawCategory {
-  id?: string | number;
+interface RawCollection {
+  id: string | number;
   name?: string;
   slug?: string;
-  image_url: string;
+  image_url?: string;
+  createdAt?: string;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  image?: string;
-}
 interface Collection {
   id: string;
   name: string;
   slug: string;
-  image?: string;
+  image: string;
+  createdAt?: string;
 }
 
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const searchParams = useSearchParams();
+  const sort = searchParams.get('sort'); // ví dụ: sort=newest
+
   useEffect(() => {
     let isMounted = true;
 
-    const loadCategories = async () => {
+    const loadCollections = async () => {
       try {
+        setLoading(true);
+
         const response = await collectionService.getCollections();
-        console.log('Categories API response:', response);
+        const data: RawCollection[] = response?.data || [];
 
-        if (isMounted && response?.data && Array.isArray(response.data)) {
-          // Chuyển đổi dữ liệu từ API sang đúng định dạng Category
-          const formatted = response.data.map((cat: RawCategory): Category => ({
-            id: String(cat.id || ''),
-            name: cat.name || 'Không tên',
-            slug: cat.slug || String(cat.id || ''),
-            image: cat.image_url || '/placeholder.png',
-          }));
+        let formatted = data.map((item) => ({
+          id: String(item.id),
+          name: item.name || 'Không tên',
+          slug: item.slug || '',
+          image: item.image_url || '/placeholder.png',
+          createdAt: item.createdAt || '',
+        }));
 
-          setCollections(formatted);
-        } else {
-          console.warn('Dữ liệu danh mục không hợp lệ');
+        // ✅ Nếu sort=newest thì sắp xếp theo createdAt giảm dần
+        if (sort === 'newest') {
+          formatted = formatted.sort((a, b) => {
+            const dateA = new Date(a.createdAt || '').getTime();
+            const dateB = new Date(b.createdAt || '').getTime();
+            return dateB - dateA;
+          });
         }
-      } catch (err) {
-        console.error('Lỗi khi tải danh mục:', err);
+
+        if (isMounted) {
+          setCollections(formatted);
+        }
+      } catch (error) {
+        console.error('Lỗi tải collections:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadCategories();
-
+    loadCollections();
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [sort]);
 
   return (
     <main>
-    <div className="px-6 py-10 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Danh mục Collections</h1>
+      <div className="px-6 py-10 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6">Danh mục Collections</h1>
 
-      {loading ? (
-        <div className="text-gray-500">Đang tải danh mục...</div>
-      ) : collections.length > 0 ? (
-        <CategoryGrid collections={collections} />
-      ) : (
-        <div className="text-gray-500">Không có danh mục nào để hiển thị.</div>
-      )}
-    </div>
-    <BlogSection />
+        {loading ? (
+          <div className="text-gray-500">Đang tải danh mục...</div>
+        ) : collections.length > 0 ? (
+          <CategoryGrid collections={collections} />
+        ) : (
+          <div className="text-gray-500">Không có danh mục nào để hiển thị.</div>
+        )}
+      </div>
+      <BlogSection />
     </main>
   );
 }

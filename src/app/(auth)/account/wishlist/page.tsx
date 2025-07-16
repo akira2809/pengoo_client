@@ -39,11 +39,15 @@ export default function WishlistPage() {
         setWishlist(
           (res.data ?? []).map((item: any) => ({
             id: item.id,
-            product: item.product ? item.product : {
+            product: item.product ? {
+              ...item.product,
+              product_price: Number(item.product.product_price),
+              image: item.product.images?.[0]?.url || '', // Sửa dòng này
+            } : {
               id: item.product_id ?? item.id,
               product_name: item.product_name,
-              product_price: item.product_price,
-              image: item.image,
+              product_price: Number(item.product_price),
+              image: item.images?.[0]?.url || '', // Sửa dòng này
               quantity_stock: item.quantity_stock,
               rating: item.rating,
               reviewCount: item.reviewCount,
@@ -69,6 +73,7 @@ export default function WishlistPage() {
     };
   };
 
+  
    // Helper function to validate and normalize image URL
   const getValidImageUrl = (url: string | undefined | null): string | null => {
     if (!url || typeof url !== 'string' || url.trim() === '') {
@@ -118,6 +123,18 @@ export default function WishlistPage() {
     setSelectedItems([]);
   };
   
+  const removeAllItems = async () => {
+    if (!user?.id || wishlist.length === 0) return;
+    if (!confirm('Bạn có chắc muốn xoá tất cả sản phẩm trong danh sách yêu thích?')) return;
+
+    await Promise.all(
+      wishlist.map(item =>
+        wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id))
+      )
+    );
+    setWishlist([]);
+    setSelectedItems([]);
+  };
 
   const handleRemove = async (productId: number) => {
     if (!user?.id) return;
@@ -138,12 +155,13 @@ export default function WishlistPage() {
     addItem({
       id: product.id,
       product_name: product.product_name,
-      product_price: finalPrice,
+      // product_price: finalPrice,
+      product_price: product.product_price,
       quantity: 1,
       image_url: product.image || '',
       slug: product.slug || '',
       description: product.meta_description || '',
-      discount: 0
+      discount: product.discount || 0
     });
 
     toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
@@ -205,14 +223,24 @@ export default function WishlistPage() {
             Chọn tất cả ({selectedItems.length})
           </label>
         </div>
-        {selectedItems.length > 0 && (
-          <button
-            onClick={removeSelectedItems}
-            className="text-sm text-red-600 hover:text-red-800 flex items-center"
-          >
-            Xoá đã chọn
-          </button>
-        )}
+        <div className="flex gap-2">
+          {selectedItems.length > 0 && (
+            <button
+              onClick={removeSelectedItems}
+              className="text-sm text-red-600 hover:text-red-800 flex items-center"
+            >
+              Xoá đã chọn
+            </button>
+          )}
+          {wishlist.length > 0 && (
+            <button
+              onClick={removeAllItems}
+              className="text-sm text-red-600 hover:text-red-800 flex items-center"
+            >
+              Xoá tất cả
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-6 border-t border-gray-200">

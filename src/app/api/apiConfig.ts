@@ -29,7 +29,10 @@ export const API_CONFIG = {
     ORDERS: {
       BASE: '/orders',
       BY_ID: (id: string) => `/orders/${id}`,
-      USER_ORDERS: '/orders/user'
+      USER_ORDERS: '/orders/user',
+      UPDATE_STATUS: (id: number) => `/orders/${id}/status`,
+      PAYOS_SUCCESS: '/orders/payos/order-success',
+      PAYOS_CANCEL: '/orders/payos/order-cancel',
     },
     
     // User endpoints

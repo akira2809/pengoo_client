@@ -117,14 +117,16 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen flex flex-col md:flex-row bg-white">
         <div className="w-full md:w-1/2 h-64 md:h-screen relative">
           <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+            <div className="relative w-full h-full">
             <Image 
-              src="/doro.webp" 
+              src="/signin.jpg" 
               alt="Password Reset Success" 
               className="object-cover w-full h-full" 
               width={500} 
               height={500} 
               layout="responsive" 
             />
+            </div>
           </div>
         </div>
 
@@ -167,7 +169,7 @@ export default function ResetPasswordPage() {
       <div className="w-full md:w-1/2 h-64 md:h-screen relative">
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
           <Image 
-            src="/doro.webp" 
+            src="/signin.jpg" 
             alt="Reset Password" 
             className="object-cover w-full h-full" 
             width={500} 

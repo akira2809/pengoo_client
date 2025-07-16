@@ -16,6 +16,7 @@ interface Collection {
   description?: string;
   image?: string;
   productCount?: number;
+  image_url?: string;
 }
 
 interface CollectionsDropdownProps {
@@ -143,7 +144,8 @@ export default function CollectionsDropdown({
             </h3>
             {/* ✅ Cập nhật màu link */}
             <Link 
-              href="/collections" 
+              href="/collection" 
+              onClick={onClose}
               className="flex items-center text-sm font-semibold text-white/70 hover:text-white transition-colors group"
             >
               Xem tất cả
@@ -151,7 +153,7 @@ export default function CollectionsDropdown({
             </Link>
           </div> 
           <div ref={collectionsItemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {collections.map((col) => (
+            {collections.slice(0, 3).map((col) => (
               <Link
                 key={col.id}
                 href={`/collections/${col.slug}`} // ✅ Sử dụng ID thay vì slug
@@ -160,20 +162,12 @@ export default function CollectionsDropdown({
                 className="group flex items-center space-x-4 p-5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/10"
               >
                 <div className="relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/10">
-                  {col.image ? (
                     <Image
-                      src={col.image}
+                      src={col.image_url || '/placeholder.png'} // ✅ Sử dụng ảnh mặc định nếu không có ảnh
                       alt={col.name}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white/50">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16m-7 6h7"></path>
-                      </svg>
-                    </div>
-                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   {/* ✅ Cập nhật màu chữ danh mục */}
@@ -212,7 +206,14 @@ export default function CollectionsDropdown({
                 </div>
                 <h4 className="font-bold text-lg mb-2">Sản phẩm mới</h4>
                 <p className="text-sm text-white/90 mb-4">Những mẫu mã mới nhất</p>
-                <a href="/new-arrivals" className="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 transition-colors">Mua ngay <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg></a>
+                <Link
+                  href="/products?sort=newest"
+                  className="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 transition-colors"
+                  onClick={onClose}
+                >
+                  Mua ngay
+                  <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                </Link>              
               </div>
               
               {/* ✅ Cập nhật 2 thẻ còn lại cho phù hợp theme tối */}
@@ -222,16 +223,31 @@ export default function CollectionsDropdown({
                 </div>
                 <h4 className="font-bold text-lg mb-2 text-white">Khuyến mãi</h4>
                 <p className="text-sm text-white/70 mb-4">Giảm giá lên đến 50%</p>
-                <a href="/sale" className="inline-flex items-center text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors">Xem ưu đãi <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg></a>
+                <Link
+                  href="/products?sort=discount"
+                  className="inline-flex items-center text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                  onClick={onClose}
+                >
+                  Xem ưu đãi
+                  <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </Link>              
               </div>
-              
               <div className="bg-white/5 p-6 rounded-xl transition-all duration-300 hover:bg-white/10 border border-white/10">
                 <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center mb-4 text-violet-400">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.486M7 17h.01"></path></svg>
                 </div>
-                <h4 className="font-bold text-lg mb-2 text-white">Bộ sưu tập</h4>
+                <h4 className="font-bold text-lg mb-2 text-white">Bộ sưu tập mới ra</h4>
                 <p className="text-sm text-white/70 mb-4">Xu hướng thời trang mới</p>
-                <Link href="/collection" className="inline-flex items-center text-sm font-semibold text-violet-400 hover:text-violet-300 transition-colors">Khám phá<svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg></Link>
+                <Link
+                  href="/collection?sort=newest"
+                  className="inline-flex items-center text-sm font-semibold text-white hover:text-white/80 transition-colors"
+                  onClick={onClose}
+                >
+                  Khám phá ngay
+                  <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                </Link>  
               </div>
             </div>
           </div>
