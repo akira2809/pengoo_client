@@ -81,4 +81,7 @@ export const orderService = {
   async getOrderById(id: string) {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
   },
+  async getDeliveryMethod() {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
+  },
 };
