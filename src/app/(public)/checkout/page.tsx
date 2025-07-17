@@ -44,6 +44,7 @@ const CheckoutPage: React.FC = () => {
   const [isCartReady, setIsCartReady] = useState(false);
   const [listVouchers, setListVouchers] = useState([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [delivery, setDelivery] = useState([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -82,6 +83,15 @@ const CheckoutPage: React.FC = () => {
   useEffect(() => {
     if (user?.id) {
       fetchMyVouchers();
+      const fetchData = async () => {
+        await fetchMyVouchers(); // gọi API lấy voucher
+        const deliveryMethod = await orderService.getDeliveryMethod();
+        setDelivery(deliveryMethod.data);
+        console.log(deliveryMethod)
+      };
+
+      fetchData();
+
     }
   }, [user?.id, fetchMyVouchers]);
 
@@ -171,6 +181,7 @@ const CheckoutPage: React.FC = () => {
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
+    console.log(formData)
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
@@ -178,6 +189,7 @@ const CheckoutPage: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    console.log(formData)
     setErrors(prev => ({ ...prev, [name]: undefined })); // Clear error on change
   };
   const handleShowCouponList = async () => {
@@ -453,7 +465,7 @@ const CheckoutPage: React.FC = () => {
               {/* Shipping Method */}
               <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">Phương thức vận chuyển</h2>
               <div className="space-y-3 mb-6">
-                <RadioButton
+                {/* <RadioButton
                   id="localHCM"
                   name="delivery_id"
                   value="1"
@@ -474,7 +486,24 @@ const CheckoutPage: React.FC = () => {
                   price={40000}
                   formatPrice={formatCurrency}
                 // icon={<CashIcon />}
-                />
+                /> */}
+                {
+                  delivery.map((item) => {
+                    console.log(item)
+                    return (
+                      <RadioButton key={item.id}
+                        // id="localHCM"
+                        name="delivery_id"
+                        value={item.id}
+                        checked={Number(formData.delivery_id) === Number(item.id)}
+                        onChange={handleInputChange}
+                        label={item.name}
+                        price={Number(item.fee)}
+                        formatPrice={formatCurrency}
+                      // icon={<TruckIcon />}
+                      />)
+                  })
+                }
               </div>
 
               {/* Payment Method */}
