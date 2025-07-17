@@ -67,11 +67,13 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
 
   useEffect(() => {
     let isMounted = true;
+
+    // Always reset state when slug changes
+    setLoading(true);
+    setError(null);
+    setProduct(null);
+
     const fetchProduct = async () => {
-      if (initialProduct || initialError) {
-        setLoading(false);
-        return;
-      }
       if (!slug) {
         setError('Không tìm thấy sản phẩm');
         setLoading(false);
@@ -88,9 +90,10 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
         if (isMounted) setLoading(false);
       }
     };
+
     fetchProduct();
     return () => { isMounted = false; };
-  }, [slug, initialProduct, initialError]);
+  }, [slug]);
 
   if (loading) {
     return (

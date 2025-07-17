@@ -25,13 +25,10 @@ export const productService = {
   // Get a single product by slug (includes cmsContent)
   async getProductBySlug(slug: string) {
     try {
-      // Query by slug (returns array, but should only match one)
-      const response = await apiClient.get<ProductData[]>(`${API_CONFIG.ENDPOINTS.PRODUCTS.BASE}?slug=${encodeURIComponent(slug)}`);
-      if (response?.data && response.data.length > 0) {
-        // Always fetch by ID to ensure full product (with CMS content and relations)
-        const productId = response.data[0].id;
-        const productDetail = await apiClient.get<ProductData>(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(String(productId)));
-        return { data: productDetail.data };
+      // Directly call the backend slug endpoint
+      const response = await apiClient.get<ProductData>(`/products/slug/${encodeURIComponent(slug)}`);
+      if (response?.data) {
+        return { data: response.data };
       }
       throw new Error(`Không tìm thấy sản phẩm với slug: ${slug}`);
     } catch (error) {
