@@ -39,6 +39,11 @@ const BlogSection = dynamic(
   { loading: () => <div className="w-full h-[400px] w-full my-8 bg-gray-100 animate-pulse"></div>, ssr: false }
 );
 
+const ProductsYouMayLike = dynamic(
+  () => import('@/components/layouts/ProductDetail/ProductsYouMayLike').then(mod => mod.default),
+  { ssr: false }
+);
+
 interface ProductClientPageProps {
   initialProduct: ProductData | null;
   initialError: string | null;
@@ -62,11 +67,13 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
 
   useEffect(() => {
     let isMounted = true;
+
+    // Always reset state when slug changes
+    setLoading(true);
+    setError(null);
+    setProduct(null);
+
     const fetchProduct = async () => {
-      if (initialProduct || initialError) {
-        setLoading(false);
-        return;
-      }
       if (!slug) {
         setError('Không tìm thấy sản phẩm');
         setLoading(false);
@@ -83,9 +90,10 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
         if (isMounted) setLoading(false);
       }
     };
+
     fetchProduct();
     return () => { isMounted = false; };
-  }, [slug, initialProduct, initialError]);
+  }, [slug]);
 
   if (loading) {
     return (
@@ -206,6 +214,13 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
       />
 
       <ProductReviewsSection productId={product.id} />
+      {/* Move ProductsYouMayLike here, under reviews */}
+      <ProductsYouMayLike
+        currentProductId={product.id}
+        categoryId={typeof product.category_ID === "object" ? product.category_ID.id : undefined}
+        tagIds={Array.isArray(product.tags) ? product.tags.map(tag => tag.id) : undefined}
+      />
+      {/* Blog and posts section below */}
       <BlogSection />
     </div>
   );

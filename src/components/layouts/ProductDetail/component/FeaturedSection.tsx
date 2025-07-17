@@ -1,46 +1,53 @@
 import React from "react";
 import TwoColumnContentBlock from "./TwoColumnContentBlock";
 
-export interface FeatureSection {
-  title: string;
-  description: string;
-  imageSrc: string;
-  imageAlt?: string;
-  textBgColor?: string;
-  isImageRight?: boolean;
-}
-
 interface FeaturedSectionProps {
-  mainIntro: {
+  mainIntro?: {
     title: string;
     description: string;
   };
-  sections: FeatureSection[];
+  sections: {
+    title: string;
+    description: string;
+    imageSrc: string;
+    imageAlt?: string;
+    textBgColor?: string;
+    isImageRight?: boolean;
+  }[];
 }
 
 const FeaturedSection: React.FC<FeaturedSectionProps> = ({
   mainIntro,
-  sections
-}) => (
-  <section className="w-full">
-    <div className="w-full py-12 px-4">
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">{mainIntro.title}</h2>
-        <p className="text-gray-700 text-lg">{mainIntro.description}</p>
+  sections = []
+}) => {
+  return (
+    <section className="max-w-7xl mx-auto px-0 sm:px-0 lg:px-0 py-8">
+      {mainIntro && (
+        <div className="mb-10 text-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-blue-700 mb-2">
+            {mainIntro.title}
+          </h2>
+          <p className="text-lg text-gray-600">{mainIntro.description}</p>
+        </div>
+      )}
+      <div className="flex flex-col w-full">
+        {sections.map((block, idx) => (
+          <TwoColumnContentBlock
+            key={idx}
+            title={block.title}
+            description={block.description}
+            imageSrc={block.imageSrc}
+            imageAlt={block.imageAlt}
+            textBgColor={block.textBgColor}
+            // Alternate sides for checkered pattern
+            isImageRight={idx % 2 !== 0}
+            noRowGap
+            fullWidth
+          />
+        ))}
       </div>
-    </div>
-    {sections.map((section, index) => (
-      <TwoColumnContentBlock
-        key={index}
-        title={section.title}
-        description={section.description}
-        imageSrc={section.imageSrc}
-        imageAlt={section.imageAlt}
-        textBgColor={section.textBgColor}
-        isImageRight={section.isImageRight}
-      />
-    ))}
-  </section>
-);
+    </section>
+  );
+};
 
 export default FeaturedSection;

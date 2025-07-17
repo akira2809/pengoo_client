@@ -89,11 +89,15 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
 
   // Fetch ticket count
   const fetchTickets = async () => {
+    setLoading(true);
     try {
-      const res = await apiClient.post<ScratchResult>("/minigame/play-scratch", {});
-      if (res.data?.tickets !== undefined) setTickets(res.data.tickets);
+      // FIX: Use the correct endpoint
+      const res = await apiClient.get<{ tickets: number }>("/minigame/ticket-count");
+      setTickets(res.data?.tickets ?? 0);
     } catch {
       setTickets(0);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -248,9 +252,9 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   };
 
   // Show ticket count on open
-  useState(() => {
+  useEffect(() => {
     fetchTickets();
-  });
+  }, []);
 
   // Use displayedUserPoints for display
   const userPoints = displayedUserPoints;
@@ -320,7 +324,11 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
               isAuthenticated={isAuthenticated}
               earnLoading={earnLoading}
               earnMsg={earnMsg}
-              onEarn={earnTicket}
+              onEarn={(type, earned) => {
+                // Optionally update ticket count immediately
+                if (typeof earned === "number") setTickets((prev) => (prev ?? 0) + earned);
+                fetchTickets(); // Always refresh from backend for accuracy
+              }}
               claimLoading={claimLoading}
               claimMsg={claimMsg}
               onClaim={claimDailyTicket}

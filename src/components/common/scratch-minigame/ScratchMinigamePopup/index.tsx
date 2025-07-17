@@ -8,12 +8,18 @@ export default function ScratchMinigamePopup({
   buttonImage?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [modalKey, setModalKey] = useState(0);
+
+  const handleOpen = () => {
+    setModalKey((k) => k + 1); // force remount
+    setOpen(true);
+  };
 
   return (
     <>
       {/* Floating Button */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         className="fixed bottom-40 right-8 z-[100] bg-gradient-to-br from-yellow-400 to-yellow-300 hover:from-yellow-500 hover:to-yellow-400 text-black rounded-full shadow-2xl border-4 border-yellow-200 p-6 flex items-center justify-center transition-all animate-bounce ring-4 ring-yellow-300/40"
         aria-label="Open Scratch Minigame"
       >
@@ -43,7 +49,7 @@ export default function ScratchMinigamePopup({
           </svg>
         )}
       </button>
-      {open && <ScratchMinigameModal onClose={() => setOpen(false)} />}
+      {open && <ScratchMinigameModal key={modalKey} onClose={() => setOpen(false)} />}
     </>
   );
 }

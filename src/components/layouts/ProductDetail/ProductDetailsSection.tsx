@@ -59,7 +59,8 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       quantity: quantity,
       image_url: image_url,
       slug: slug,
-      description: description
+      description: description,
+      discount: 0
     });
     toast.success(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng!`, {
       duration: 3000,

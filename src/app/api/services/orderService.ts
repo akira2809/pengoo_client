@@ -82,7 +82,7 @@ export const orderService = {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
   },
 
-  // ✅ Huỷ đơn hàng
+  // Huỷ đơn hàng
   async cancelOrder(orderId: number): Promise<void> {
     try {
       await apiClient.patch(API_CONFIG.ENDPOINTS.ORDERS.UPDATE_STATUS(orderId), {
@@ -92,5 +92,10 @@ export const orderService = {
       console.error('Cancel order failed:', error);
       throw error;
     }
+  },
+
+  async getDeliveryMethod() {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
+
   },
 };

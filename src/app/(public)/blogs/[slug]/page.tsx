@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // Giả sử domain gốc của bạn
   const baseUrl = 'https://pengoo.vn'; // THAY THẾ BẰNG DOMAIN THỰC TẾ CỦA BẠN!
   const fullImageUrl = imageUrl.startsWith('/') ? `${baseUrl}${imageUrl}` : imageUrl;
-  const postUrl = `${baseUrl}/blogs/${post.canonical || params.slug}`; // Sử dụng canonical nếu có, hoặc slug
+  const postUrl = `${baseUrl}/blogs/${post.canonical || (await params).slug}`; // Sử dụng canonical nếu có, hoặc slug
 
   return {
     title: `${post.name} | Blog PENGOO`, // Tiêu đề bài viết
