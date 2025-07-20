@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { wishlistService } from '@/app/api/services/wishlistService';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { useCartStore } from '@/app/stores/slice/cartStore';
-import toast from 'react-hot-toast';
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
+import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
+import { confirmRemoveAll, confirmRemoveSelected } from '@/components/common/UI/confirmDialog';
 
 type WishlistItem = {
   id: number;
@@ -101,10 +102,13 @@ export default function WishlistPage() {
     );
   };
 
+
   const removeSelectedItems = async () => {
     if (!user?.id || selectedItems.length === 0) return;
-    if (!confirm('Bạn có chắc muốn xoá các sản phẩm đã chọn?')) return;
+    const confirmed = await confirmRemoveSelected();
+      if (!confirmed) return;
 
+    try{
     await Promise.all(
       selectedItems.map(wishlistId => {
         const item = wishlist.find(i => i.id === wishlistId);
@@ -116,12 +120,19 @@ export default function WishlistPage() {
     );
     setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
     setSelectedItems([]);
-  };
+    showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
+  } catch (error) {
+    showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
+  }
+};
 
-  const removeAllItems = async () => {
-    if (!user?.id || wishlist.length === 0) return;
-    if (!confirm('Bạn có chắc muốn xoá tất cả sản phẩm trong danh sách yêu thích?')) return;
+ const removeAllItems = async () => {
+  if (!user?.id || wishlist.length === 0) return;
 
+  const confirmed = await confirmRemoveAll();
+  if (!confirmed) return;
+
+  try {
     await Promise.all(
       wishlist.map(item =>
         wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id))
@@ -129,7 +140,11 @@ export default function WishlistPage() {
     );
     setWishlist([]);
     setSelectedItems([]);
-  };
+    showSuccessToast('Đã xoá toàn bộ sản phẩm khỏi danh sách yêu thích!');
+  } catch (error) {
+    showErrorToast('Có lỗi xảy ra khi xoá danh sách yêu thích.');
+  }
+};
 
   const handleRemove = async (productId: number) => {
     if (!user?.id) return;
@@ -158,17 +173,7 @@ export default function WishlistPage() {
       discount: product.discount || 0
     });
 
-    toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
-      duration: 2000,
-      position: "top-center",
-      style: {
-        background: "#4CAF50",
-        color: "#fff",
-        padding: "12px 20px",
-        borderRadius: "8px",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-      },
-    });
+    showSuccessToast(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
   };
 
   if (!user?.id) return <div className="text-center py-16 text-red-600">Bạn chưa đăng nhập.</div>;

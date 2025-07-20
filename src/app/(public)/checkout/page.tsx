@@ -8,7 +8,7 @@ import { orderService } from '@/app/api/services/orderService';
 import InputField from '../../(public)/checkout/component/InputField';
 import RadioButton from '../../(public)/checkout/component/RadioButton';
 import Image from 'next/image';
-import { toast } from 'react-hot-toast';
+import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
 import { useStore } from '@/app/stores/store';
 
 //  
@@ -87,11 +87,9 @@ const CheckoutPage: React.FC = () => {
         await fetchMyVouchers(); // gọi API lấy voucher
         const deliveryMethod = await orderService.getDeliveryMethod();
         setDelivery(deliveryMethod.data);
-        console.log(deliveryMethod)
+        console.log('haha', deliveryMethod)
       };
-
       fetchData();
-
     }
   }, [user?.id, fetchMyVouchers]);
 
@@ -135,7 +133,7 @@ const CheckoutPage: React.FC = () => {
     const checkAuthAndCart = async () => {
       // Check if cart is empty using getTotalItems to ensure we have the latest count
       if (getTotalItems() === 0) {
-        toast.error('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
+        showErrorToast('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
         router.push('/');
         return;
       }
@@ -218,21 +216,20 @@ const CheckoutPage: React.FC = () => {
     const code = formData.couponCode?.trim().toUpperCase();
 
     if (!code) {
-      toast.error('Vui lòng nhập mã giảm giá.');
+      showErrorToast('Vui lòng nhập mã giảm giá.');
       return;
     }
     const data = await applyVoucher(code, subtotal);
-    console.log('Coupon data:', data);
+    // console.log('Coupon data:', data);
     if (!data) {
-      toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn.');
+      showErrorToast(`Mã khuyến mãi không hợp lệ hoặc đã hết hạn.`);
       setDiscountAmount(0);
       setIsCouponApplied(false)
-      toast.error('Mã giảm giá không hợp lệ.');
       return;
     } else {
       setDiscountAmount(data.discount);
       setIsCouponApplied(true);
-      toast.success('Áp dụng mã giảm giá thành công!');
+      showSuccessToast(`Áp dụng mã khuyến mãi ${data.coupon.code} thành công!`);
     }
     // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
     // if (code === 'SAVE10') {
@@ -268,7 +265,7 @@ const CheckoutPage: React.FC = () => {
 
     // Validate cart has items
     if (cartItems.length === 0) {
-      toast.error('Giỏ hàng của bạn đang trống');
+      showErrorToast('Giỏ hàng của bạn đang trống.');
       return;
     }
 
@@ -634,7 +631,7 @@ const CheckoutPage: React.FC = () => {
                   className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3"
                 />
                 {showCouponList && listVouchers.length > 0 && (
-                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full mt-1 shadow-lg max-h-60 overflow-auto divide-y divide-gray-100">
+                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
                     {listVouchers.map((uc) => (
                       <li
                         key={uc.id}

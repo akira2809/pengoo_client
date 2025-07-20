@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { useStore } from '@/app/stores/store';
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
+import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
 
 export default function CouponsPage() {
   const { user } = useAuthStore();
@@ -30,8 +31,11 @@ export default function CouponsPage() {
     const isValid = await verifyVoucher(inputCode.trim());
     setChecking(false);
     if (isValid) {
+      showSuccessToast('Áp dụng mã khuyến mãi thành công!');
       setInputCode('');
       fetchMyVouchers();
+    } else {
+      showErrorToast('Mã khuyến mãi không hợp lệ hoặc đã hết hạn.');
     }
   };
 

@@ -144,7 +144,7 @@ export default function CollectionsDropdown({
             </h3>
             {/* ✅ Cập nhật màu link */}
             <Link 
-              href="/collection" 
+              href="/collections" 
               onClick={onClose}
               className="flex items-center text-sm font-semibold text-white/70 hover:text-white transition-colors group"
             >

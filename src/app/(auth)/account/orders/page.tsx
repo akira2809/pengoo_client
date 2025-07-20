@@ -6,6 +6,9 @@ import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { orderService } from '@/app/api/services/orderService';
 import { CreateOrderResponse } from '@/app/type/order';
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
+import { confirmCancelOrder } from '@/components/common/UI/confirmDialog';
+import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
+
 
 export default function OrdersPage() {
   const { user } = useAuthStore();
@@ -59,18 +62,19 @@ export default function OrdersPage() {
     }
   };
 
-  const handleCancelOrder = async (orderId: number) => {
-    const confirmCancel = confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');
-    if (!confirmCancel) return;
+const handleCancelOrder = async (orderId: number) => {
+  const confirmed = await confirmCancelOrder();
+  if (!confirmed) return;
 
-    try {
-      await orderService.cancelOrder(orderId);
-      alert('Đã hủy đơn hàng thành công');
-      fetchOrders();
-    } catch (err) {
-      alert('Không thể hủy đơn hàng');
-    }
-  };
+  try {
+    await orderService.cancelOrder(orderId);
+    showSuccessToast('Đơn hàng đã được hủy thành công!');
+    fetchOrders();
+  } catch (err) {
+    showErrorToast('Hủy đơn hàng thất bại. Vui lòng thử lại!');
+  }
+};
+
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
