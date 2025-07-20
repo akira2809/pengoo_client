@@ -22,7 +22,7 @@ export default function CouponsPage() {
 
   useEffect(() => {
     if (user) fetchMyVouchers();
-  }, [user?.id]);
+  }, [user, fetchMyVouchers]);
 
   const handleCheckCoupon = async () => {
     if (!inputCode.trim()) return;

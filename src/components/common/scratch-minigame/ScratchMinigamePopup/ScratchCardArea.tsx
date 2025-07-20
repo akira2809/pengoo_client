@@ -4,6 +4,29 @@ import ScratchCanvas from "../ScratchCanvas";
 import ScratchGrid from "../ScratchGrid";
 import ScratchRewardPanel from "./ScratchRewardPanel";
 
+interface ScratchCardAreaProps {
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  scratching: boolean;
+  setScratching: (scratching: boolean) => void;
+  scratched: boolean;
+  scratchedPercent: number;
+  loading: boolean;
+  error: Error | null;
+  result: {
+    grid?: string[][];
+    winLines?: Array<{type: 'row' | 'col' | 'diag'; index: number}>;
+    reward?: {
+      type: string;
+      value: number;
+      description: string;
+    };
+  } | null;
+  handleScratch: (e: React.MouseEvent | React.TouchEvent) => void;
+  setScratched: (scratched: boolean) => void;
+  onPlayAgain: () => void;
+  tickets: number;
+}
+
 export default function ScratchCardArea({
   canvasRef,
   scratching,
@@ -15,13 +38,20 @@ export default function ScratchCardArea({
   result,
   handleScratch,
   setScratched,
-  useTicketToPlay,
+  onPlayAgain,
   tickets,
-}: any) {
-  const { width, height } = useWindowSize();
+}: ScratchCardAreaProps) {
+  const { width = 0, height = 0 } = useWindowSize();
 
   // Determine if the user won (has at least one winLine)
   const isWin = scratched && result?.winLines && result.winLines.length > 0;
+
+  // Handle play again button click
+  const handlePlayAgain = () => {
+    setScratching(false);
+    setScratched(false);
+    onPlayAgain();
+  };
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -72,13 +102,12 @@ export default function ScratchCardArea({
       <div className="mt-6 text-center w-full">
         {scratched && !loading && !error ? (
           <button
-            className="bg-gradient-to-br from-yellow-400 to-yellow-300 hover:from-yellow-500 hover:to-yellow-400 text-black px-7 py-3 rounded-full shadow-xl font-bold text-lg transition border-2 border-yellow-200"
-            onClick={() => {
-              setScratching(false);
-              setScratched(false);
-              useTicketToPlay();
-            }}
-            disabled={loading || !tickets || tickets < 1}
+            onClick={handlePlayAgain}
+            disabled={loading || tickets <= 0}
+            className={`px-6 py-2 rounded-full font-bold text-white transition-all ${loading || tickets <= 0
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg transform hover:scale-105"
+              }`}
           >
             🎲 Chơi lại
           </button>

@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (event: string, eventName: string, params: Record<string, unknown>) => void;
   }
 }
 
@@ -44,8 +44,8 @@ export default function OrderCancelPage() {
         setCancellationReason(reason);
 
         // Track order cancellation in analytics
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'order_cancelled', {
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'order_cancelled', {
             transaction_id: orderCode,
             transaction_status: status || 'cancelled',
             transaction_cancelled: isCancelled,

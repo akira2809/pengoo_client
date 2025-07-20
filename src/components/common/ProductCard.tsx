@@ -94,7 +94,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       try {
         const wishlistRes = await wishlistService.getWishlistByUserId(Number(user.id));
         const wishlistArr = wishlistRes.data || [];
-        const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: any) => item.product_id === product.id);
+        const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: Pick<ProductData, 'id'>) => item.id === product.id);
         setIsWishlisted(exists);
       } catch (error) {
         console.error("Lỗi khi kiểm tra wishlist:", error);
@@ -230,10 +230,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         toast.success(`Đã xóa "${product.product_name}" khỏi danh sách yêu thích`);
         setIsWishlisted(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Only show error if not a duplicate add
       if (!isWishlisted) {
-        toast.error(error.message || "Lỗi xử lý yêu thích.");
+        const errorMessage = error instanceof Error ? error.message : "Lỗi xử lý yêu thích.";
+        toast.error(errorMessage);
       }
     }
   };

@@ -14,7 +14,16 @@ export default async function BlogsPage() {
   try {
     const posts = await fetchAllPosts();
 
-    const mappedPosts: BlogPost[] = posts.map((post: any) => ({
+    const mappedPosts: BlogPost[] = posts.map((post: {
+      id: number;
+      image?: string;
+      name?: string;
+      description?: string;
+      created_at?: string;
+      slug?: string;
+      canonical?: string;
+      order?: number;
+    }) => ({
       id: post.id.toString(),
       imageSrc: isValidImageUrl(post.image) ? post.image : PLACEHOLDER_IMAGE,
       title: post.name || 'No title',

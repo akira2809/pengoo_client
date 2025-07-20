@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
       } else {
         setError(result.message || 'Đặt lại mật khẩu thất bại. Vui lòng thử lại.');
       }
-    } catch (err: any) { // Catch lỗi mạng hoặc lỗi không xác định
+    } catch (err: unknown) { // Catch lỗi mạng hoặc lỗi không xác định
       console.error('Lỗi khi gửi yêu cầu đặt lại mật khẩu:', err);
       setError('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
     } finally {

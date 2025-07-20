@@ -4,10 +4,7 @@ import { gsap } from "gsap";
 // import { productService } from "@/app/api/services/productService";
 import { collectionService } from "@/app/api/services/collectionService";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ClassNames } from "@emotion/react";
-
 
 interface Collection {
   id: string;

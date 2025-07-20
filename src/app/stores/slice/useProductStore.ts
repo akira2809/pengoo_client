@@ -214,26 +214,51 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       // The response.data should be an array of products
       const productsData = Array.isArray(response.data) ? response.data : [];
       
+      // Define interfaces for the API response
+      interface ApiImage {
+        id?: number | string;
+        url?: string;
+        [key: string]: unknown;
+      }
+
+      interface ApiFeature {
+        id?: number | string;
+        title?: string;
+        content?: string;
+        image?: string;
+        [key: string]: unknown;
+      }
+
+      interface ApiProductResponse extends Omit<ApiProduct, 'images' | 'features'> {
+        images?: (ApiImage | string)[];
+        features?: ApiFeature[];
+        [key: string]: unknown;
+      }
+
       // Map the response data to match the ApiProduct interface
-      const apiProducts: ApiProduct[] = productsData.map((item: any) => ({
-        ...item,
-        // Ensure images is an array of {id, url} objects
-        images: Array.isArray(item.images) 
-          ? item.images.map((img: any, index: number) => ({
-              id: typeof img === 'object' ? img.id : index + 1,
-              url: typeof img === 'object' ? img.url : String(img)
+      const apiProducts: ApiProduct[] = productsData.map((item: ApiProductResponse) => {
+        const images = Array.isArray(item.images) 
+          ? item.images.map((img, index) => ({
+              id: typeof img === 'object' && img !== null && 'id' in img ? Number(img.id) : index + 1,
+              url: typeof img === 'object' && img !== null && 'url' in img ? String(img.url) : String(img)
             }))
-          : [],
-        // Ensure features is an array of feature objects
-        features: Array.isArray(item.features)
-          ? item.features.map((f: any) => ({
-              id: f.id || 0,
+          : [];
+
+        const features = Array.isArray(item.features)
+          ? item.features.map((f) => ({
+              id: f.id ? Number(f.id) : 0,
               title: f.title || '',
               content: f.content || '',
               image: f.image || ''
             }))
-          : []
-      }));
+          : [];
+
+        return {
+          ...item,
+          images,
+          features
+        } as unknown as ApiProduct; // Type assertion needed due to complex nested types
+      });
 
       const products = apiProducts.map(mapApiProductToProduct);
       
@@ -359,7 +384,9 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       const response = await productService.searchProducts(query);
       if (!response?.data) return [];
 
-      const searchResults = response.data.map(mapApiProductToProduct);
+      // Ensure response.data is an array before mapping
+      const searchData = Array.isArray(response.data) ? response.data : [response.data];
+      const searchResults = searchData.map(item => mapApiProductToProduct(item as ApiProduct));
       
       set(state => ({
         products: [...state.products, ...searchResults.filter(newProduct =>
@@ -382,7 +409,9 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       const response = await productService.getProductsByCategory(categoryId);
       if (!response?.data) return [];
       
-      const categorizedProducts = response.data.map(mapApiProductToProduct);
+      // Ensure response.data is an array before mapping
+      const categoryData = Array.isArray(response.data) ? response.data : [response.data];
+      const categorizedProducts = categoryData.map(item => mapApiProductToProduct(item as ApiProduct));
       
       set(state => ({
         products: [...state.products, ...categorizedProducts.filter(newProduct =>
@@ -407,41 +436,91 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       // First try to get featured products from the API
       const response = await productService.getFeaturedProducts(limit);
       
-      if (response?.data?.length > 0) {
-        // Map the response data to match the ApiProduct interface
-        const apiProducts: ApiProduct[] = response.data.map(item => ({
-          ...item,
-          // Ensure images is an array of {id, url} objects
-          images: Array.isArray(item.images) 
-            ? item.images.map((img, index) => ({
-                id: typeof img === 'object' ? img.id : index + 1,
-                url: typeof img === 'object' ? img.url : String(img)
-              }))
-            : [],
-          // Ensure features is an array of feature objects
-          features: Array.isArray(item.features)
-            ? item.features.map(f => ({
+      if (response?.data) {
+        // Define interfaces for the response data
+        interface ImageData {
+          id?: number | string;
+          url?: string;
+        }
+
+        interface FeatureData {
+          id?: number | string;
+          title?: string;
+          content?: string;
+          image?: string;
+        }
+
+        type ProductResponse = Partial<ApiProduct> & {
+          images?: Array<ImageData | string>;
+          features?: FeatureData[];
+        };
+
+        // Handle both array and object responses
+        const responseData = (Array.isArray(response.data) 
+          ? response.data 
+          : [response.data]) as ProductResponse[];
+        
+        if (responseData.length > 0) {
+          // Map the response data to match the ApiProduct interface
+          const apiProducts = responseData.map((item) => {
+            const product: Partial<ApiProduct> = { ...item };
+            
+            // Ensure images is an array of {id, url} objects
+            if (Array.isArray(item.images)) {
+              product.images = item.images.map((img, index) => {
+                if (typeof img === 'string') {
+                  return { id: index + 1, url: img };
+                }
+                return {
+                  id: img.id || index + 1,
+                  url: img.url || ''
+                };
+              });
+            } else {
+              product.images = [];
+            }
+            
+            // Ensure features is an array of feature objects
+            if (Array.isArray(item.features)) {
+              product.features = item.features.map((f) => ({
                 id: f.id || 0,
                 title: f.title || '',
                 content: f.content || '',
                 image: f.image || ''
-              }))
-            : []
-        }));
-        
-        const products = apiProducts.map(mapApiProductToProduct);
-        set({ 
-          featuredProducts: products,
-          isLoading: false 
-        });
-        return;
+              }));
+            } else {
+              product.features = [];
+            }
+            
+            return product as ApiProduct;
+          });
+          
+          const products = apiProducts.map(mapApiProductToProduct);
+          set({ 
+            featuredProducts: products,
+            isLoading: false 
+          });
+          return;
+        }
       }
       
       // Fallback: Get the first N products if no featured products are available
-      await get().fetchProducts();
-      const { products } = get();
+      const state = (set as unknown as { getState: () => ProductState }).getState?.();
+      if (state?.fetchProducts) {
+        await state.fetchProducts();
+        const updatedState = (set as unknown as { getState: () => ProductState }).getState?.();
+        if (updatedState?.products) {
+          set({
+            featuredProducts: updatedState.products.slice(0, limit),
+            isLoading: false
+          });
+          return;
+        }
+      }
+      
+      // If all else fails, set empty featured products
       set({
-        featuredProducts: products.slice(0, limit),
+        featuredProducts: [],
         isLoading: false
       });
     } catch (error) {

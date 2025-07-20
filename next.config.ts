@@ -3,6 +3,7 @@ import withBundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  
   compress: true,
   reactStrictMode: true,
   images: {
@@ -18,6 +19,7 @@ const nextConfig: NextConfig = {
       // 'https://example.com/image.jpg', // BỎ DÒNG NÀY ĐI
     ],
     dangerouslyAllowSVG: true,
+    
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:"
   },
@@ -26,6 +28,7 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
     // turbopack: true, // NẾU BẠN MUỐN THỬ VÔ HIỆU HÓA TURBOPACK ĐỂ LOẠI BỎ CẢNH BÁO `params`
   },
+  
 };
 
 const withBundleAnalyzerConfig = withBundleAnalyzer({

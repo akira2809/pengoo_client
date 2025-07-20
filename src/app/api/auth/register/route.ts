@@ -39,16 +39,20 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    
     console.error('Registration error details:', {
-      error: error.message,
-      stack: error.stack,
-      name: error.name
+      error: errorMessage,
+      stack: errorStack,
+      name: errorName
     });
     return NextResponse.json(
       { 
         message: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       },
       { status: 500 }
     );

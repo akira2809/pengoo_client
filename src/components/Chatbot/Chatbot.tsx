@@ -3,9 +3,57 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 
+interface ChatbotConfig {
+  n8nChatUrl: string;
+  metadata: {
+    timestamp: string;
+    version: string;
+    userId: string;
+    username: string;
+    email: string;
+  };
+  onBeforeSend: (message: string) => { shouldSend: boolean; errorMessage?: string };
+  onError: (error: Error | string | { message?: string; [key: string]: unknown }) => { showToUser: boolean; message: string } | void;
+  theme: {
+    button: {
+      backgroundColor: string;
+      right: number;
+      bottom: number;
+      size: number;
+      iconColor: string;
+      customIconSrc: string;
+      customIconSize: number;
+      customIconBorderRadius: number;
+      autoWindowOpen: {
+        autoOpen: boolean;
+        openDelay: number;
+      };
+      borderRadius: string;
+    };
+    tooltip: {
+      showTooltip: boolean;
+      tooltipMessage: string;
+      tooltipBackgroundColor: string;
+      tooltipTextColor: string;
+      tooltipFontSize: number;
+    };
+    chatWindow: {
+      borderRadiusStyle: string;
+      avatarBorderRadius: number;
+      messageBorderRadius: number;
+      showTitle: boolean;
+      title: string;
+      titleAvatarSrc: string;
+    };
+  };
+}
+
 declare global {
   interface Window {
-    Chatbot: any;
+    Chatbot: {
+      init: (config: ChatbotConfig) => void;
+      destroy: () => void;
+    };
   }
 }
 

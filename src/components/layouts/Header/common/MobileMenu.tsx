@@ -4,7 +4,6 @@ import { gsap } from "gsap";
 import CloseIcon from "@mui/icons-material/Close";
 import LanguageIcon from "@mui/icons-material/Language";
 import NavLinks from './NavLinks';
-import Image from "next/image";
 
 interface MobileMenuProps {
   menuOpen: boolean;

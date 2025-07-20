@@ -7,9 +7,28 @@ import { orderService } from '@/app/api/services/orderService';
 import { CreateOrderResponse } from '@/app/type/order';
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
 
+// Define a type for order details
+interface OrderDetail {
+  product?: {
+    product_name?: string;
+    images?: Array<{ url: string }>;
+  };
+  quantity: number;
+  price: number;
+}
+
+// Extended order type with user information
+interface OrderWithUser extends CreateOrderResponse {
+  user?: {
+    id: number | string;
+  };
+  details?: OrderDetail[];
+  id: number;
+}
+
 export default function OrdersPage() {
   const { user } = useAuthStore();
-  const [orders, setOrders] = useState<CreateOrderResponse[]>([]);
+  const [orders, setOrders] = useState<OrderWithUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const ITEMS_PER_PAGE = 3;
@@ -19,17 +38,23 @@ export default function OrdersPage() {
     if (!user?.id) return;
     try {
       const response = await orderService.getAllOrders();
-      const userOrders = response.data.filter((order: any) => order.user?.id === user.id);
-      setOrders(userOrders);
-    } catch (err) {
-      console.error('Lỗi khi lấy đơn hàng:', err);
+      if (response?.data) {
+        const userOrders = response.data
+          .filter((order) => order.user?.id === user.id)
+          .map(order => order as unknown as OrderWithUser);
+        setOrders(userOrders);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy đơn hàng:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Using useEffect with fetchOrders dependency requires useCallback
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const paginatedOrders = orders.slice(
@@ -67,7 +92,7 @@ export default function OrdersPage() {
       await orderService.cancelOrder(orderId);
       alert('Đã hủy đơn hàng thành công');
       fetchOrders();
-    } catch (err) {
+    } catch {
       alert('Không thể hủy đơn hàng');
     }
   };
@@ -101,7 +126,7 @@ export default function OrdersPage() {
 
                 {order.details?.length > 0 && (
                   <div className="space-y-4">
-                    {order.details.map((item: any, index: number) => {
+                    {order.details.map((item: OrderDetail, index: number) => {
                       const product = item.product || {};
                       const imageUrl = product.images?.[0]?.url || '/placeholder-product.jpg';
 

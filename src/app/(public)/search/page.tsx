@@ -48,10 +48,7 @@ export default function SearchPage() {
   // Sử dụng searchStore để lưu lịch sử tìm kiếm và tìm kiếm sản phẩm
   const {
     addToRecentSearches,
-    searchProducts: storeSearchProducts,
     setSearchQuery,
-    isLoading: storeIsLoading,
-    error: storeError,
   } = useSearchStore();
 
   // Cập nhật URL khi filters thay đổi
@@ -184,11 +181,8 @@ export default function SearchPage() {
           const response = await productService.getProducts(apiParams);
 
           if (response && response.data) {
-            const results = Array.isArray(response.data)
-              ? response.data
-              : response.data.items || [];
-
-            setProducts(results);
+            // The API returns an array of products directly
+            setProducts(Array.isArray(response.data) ? response.data : []);
           } else {
             setProducts([]);
           }

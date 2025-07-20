@@ -3,7 +3,6 @@ import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
-import { toast } from 'react-hot-toast';
 
 export default function OrderSuccessPage() {
   const searchParams = useSearchParams();

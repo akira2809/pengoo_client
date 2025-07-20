@@ -1,8 +1,19 @@
 // src/app/(public)/product/[slug]/page.tsx
 // Đây là Server Component chính cho trang chi tiết sản phẩm
 import { Metadata } from 'next';
-import { productService } from '@/app/api/services/productService'; // Đảm bảo đường dẫn đúng
-import { ProductData } from '@/app/type/product'; // Đảm bảo đường dẫn đúng
+import { productService } from '@/app/api/services/productService';
+import { ProductData } from '@/app/type/product';
+
+// Define types that are used in the product data
+interface CategoryType {
+  id: number;
+  name: string;
+}
+
+interface PublisherType {
+  id: number;
+  name: string;
+}
 
 // Import ProductLoader Client Component wrapper
 import ProductLoader from './ProductLoader';
@@ -16,7 +27,41 @@ async function getProductBySlug(slug: string): Promise<{ product: ProductData | 
   try {
     const response = await productService.getProductBySlug(slug);
     if (response?.data) {
-      return { product: response.data, error: null };
+      // Map the response to match ProductData type
+      const productData: ProductData = {
+        ...response.data,
+        // Ensure all required fields are present with proper types
+        id: response.data.id || 0,
+        product_name: response.data.product_name || '',
+        description: response.data.description || '',
+        product_price: response.data.product_price || 0,
+        slug: response.data.slug || slug,
+        status: response.data.status || 'active',
+        image_url: response.data.image_url || response.data.images?.[0]?.url || '',
+        discount: response.data.discount || 0,
+        meta_title: response.data.meta_title || '',
+        meta_description: response.data.meta_description || '',
+        quantity_sold: response.data.quantity_sold || 0,
+        category_ID: typeof response.data.category_ID === 'object' ? 
+          (response.data.category_ID as CategoryType)?.id || 0 : 
+          (response.data.category_ID as number) || 0,
+        tag_ID: typeof response.data.tag_ID === 'string' ? 
+          parseInt(response.data.tag_ID, 10) || 0 : 
+          (response.data.tag_ID as number) || 0,
+        publisher_ID: typeof response.data.publisher_ID === 'object' ? 
+          (response.data.publisher_ID as PublisherType)?.id || 0 : 
+          (response.data.publisher_ID as number) || 0,
+        tags: response.data.tags || [],
+        images: response.data.images || [],
+        features: response.data.features || [],
+        created_at: response.data.created_at || new Date().toISOString(),
+        updated_at: response.data.updated_at || new Date().toISOString(),
+        quantity_stock: response.data.quantity_stock || 0,
+        warranty: response.data.warranty || '',
+        shipping_info: response.data.shipping_info || '',
+        cmsContent: response.data.cmsContent
+      };
+      return { product: productData, error: null };
     }
     return { product: null, error: 'Không tìm thấy sản phẩm' };
   } catch (err) {
@@ -57,14 +102,19 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const productName = product.product_name || 'Sản phẩm Board Game';
   const productDescription = product.description || `Khám phá ${productName} - một trò chơi board game tuyệt vời từ PENGOO.`;
   const productImageUrl = product.images?.[0]?.url || '/placeholder-product.jpg';
-  const productPrice = product.product_price || 0;
-  const productRating = product.average_rating || 4.5;
-  const reviewCount = product.review_count || 10;
-  const productAvailability = product.quantity_stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+  
+  // Handle category name safely
+  const getCategoryName = (categoryId: number | CategoryType | undefined): string => {
+    if (!categoryId) return 'board game';
+    if (typeof categoryId === 'object' && 'name' in categoryId) {
+      return categoryId.name;
+    }
+    return 'board game';
+  };
   
   const productKeywords = [
     productName.toLowerCase(), 
-    product.category_ID?.name.toLowerCase() || 'board game', 
+    getCategoryName(product.category_ID).toLowerCase(),
     'PENGOO', 
     'trò chơi', 
     'board game', 
@@ -122,8 +172,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       name: product.product_name || 'Sản phẩm Board Game',
       image: product.images?.[0]?.url || '/placeholder-product.jpg',
       description: product.description || `Khám phá ${product.product_name || 'Sản phẩm Board Game'} - một trò chơi board game tuyệt vời từ PENGOO.`,
-      sku: product.sku,
-      mpn: product.mpn,
+      // Remove sku and mpn as they don't exist in ProductData
       brand: {
           '@type': 'Brand',
           name: 'PENGOO',
@@ -134,17 +183,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
           priceCurrency: 'VND',
           price: product.product_price || 0,
           itemCondition: 'https://schema.org/NewCondition',
-          availability: product.quantity_stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          availability: (product.quantity_stock || 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
           seller: {
               '@type': 'Organization',
               name: 'PENGOO',
           },
       },
-      aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: product.average_rating || 4.5,
-          reviewCount: product.review_count || 10,
-      },
+      // Remove aggregateRating as the properties don't exist in ProductData
   } : null;
 
   return (

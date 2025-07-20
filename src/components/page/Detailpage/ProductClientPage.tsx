@@ -177,7 +177,11 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
             shippingInfo={cms?.shippingInfo || product.shipping_info || 'Vận chuyển toàn quốc'}
             image_url={product.images?.[0]?.url || ''}
             slug={product.slug || String(product.id)}
-            tags={product.tags as any}
+            tags={Array.isArray(product.tags) ? product.tags.map((tag, index) => ({
+              id: index,
+              name: String(tag),
+              type: 'tag'
+            })) : []}
             category={typeof product.category_ID === 'object' ? product.category_ID : undefined}
           />
         </div>

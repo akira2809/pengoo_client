@@ -95,7 +95,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post }) => {
         >
           <ReactMarkdown
             components={{
-              img: ({ node, ...props }) => (
+              img: ({ ...props }) => (
                 <span className="block my-8 rounded-xl overflow-hidden shadow">
                   <Image
                     src={props.src || ''}
