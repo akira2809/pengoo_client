@@ -1,11 +1,11 @@
 // app/layout.tsx
 import "./globals.css";
-import Header from "../components/layouts/Header/Header";
 import Footer from "../components/layouts/Footer/Footer"; // Đảm bảo đã import Footer
 import { Roboto } from "next/font/google";
 import Chatbot from '@/components/Chatbot/Chatbot';
 import { Metadata, Viewport } from "next"; // Import Viewport type từ next
 import { Toaster } from 'react-hot-toast';
+import HeaderWrapper from "@/components/layouts/Header/HeaderWrapper";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -72,6 +72,11 @@ export const viewport: Viewport = {
   colorScheme: 'light', // Hoặc 'light dark' nếu bạn hỗ trợ cả hai
 };
 
+const No_Header_Paths = [
+  '/checkout'
+];
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -80,7 +85,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={`${roboto.className} antialiased bg-background-50 text-gray-900`}>
-        <Header />
+        <HeaderWrapper noHeaderPaths={No_Header_Paths} />
         <main className="relative">
           <Toaster 
             position="top-center"

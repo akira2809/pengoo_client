@@ -87,7 +87,7 @@ function HomePage() {
         const products = Array.isArray(response) ? response : response?.data;
 
         if (products && Array.isArray(products)) {
-          setFeaturedProducts(products.slice(0, 4));
+          setFeaturedProducts(products.slice(0, 8));
         } else {
           throw new Error('Invalid response format');
         }

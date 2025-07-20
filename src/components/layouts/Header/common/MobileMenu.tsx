@@ -63,11 +63,11 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
   return (
     <div
       ref={mobileMenuRef}
-      className="fixed inset-0 bg-background-900 z-[99999] flex flex-col text-text-50 h-screen"
+      className="fixed inset-0 bg-background-900 z-[99999] flex flex-col text-text-50 h-screen md:w-[80%] lg:w-[400px]"
       style={{ display: menuOpen ? "flex" : "none" }}
     >
       {/* Header với nút close */}
-      <div className="flex justify-start items-center py-3 mb-4 flex-shrink-0 px-4">
+      <div className="flex justify-start items-center py-3 mb-4 flex-shrink-0 px-4 md:px-6">
         <button
           onClick={onClose}
           className="z-30 p-2"
@@ -78,7 +78,7 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
       </div>
 
       {/* Menu items */}
-      <div ref={menuItemsRef} className="flex-shrink-0 px-4">
+      <div ref={menuItemsRef} className="flex-shrink-0 px-4 md:px-6">
         <nav className="flex flex-col space-y-4 text-lg font-semibold mb-8">
           <NavLinks onLinkClick={onClose} />
         </nav>
@@ -94,7 +94,7 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
       </div>
 
       {/* Logo container - chiếm hết khoảng trống còn lại */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 md:p-6">
         <svg className="w-full h-full" viewBox="0 0 1366 768" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <style>{`.cls-1{fill:#fff;}.cls-1,.cls-2,.cls-3,.cls-4,.cls-5{stroke:#4d4d4d;stroke-miterlimit:10;stroke-width:2px;}.cls-2{fill:#7eacb5;}.cls-3{fill:#eba60f;}.cls-4{fill:#eba712;}`}</style>

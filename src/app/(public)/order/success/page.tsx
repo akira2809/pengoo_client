@@ -28,8 +28,7 @@ export default function OrderSuccessPage() {
           </div>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Đặt hàng thành công!</h1>
           <p className="mt-2 text-gray-600">
-            Cảm ơn bạn đã đặt hàng. Mã đơn hàng của bạn là: 
-            <span className="font-medium text-gray-900">#{orderId || 'N/A'}</span>
+            Cảm ơn bạn đã đặt hàng
           </p>
           <p className="mt-2 text-gray-600">
             Chúng tôi đã gửi email xác nhận đơn hàng đến địa chỉ email của bạn.
