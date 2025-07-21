@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ProductPageLayout } from "../products/component/ProductPageLayout";
 import { productService } from "@/app/api/services/productService";
@@ -8,7 +8,7 @@ import { ProductData } from "@/app/type/product";
 import { useSearchStore } from "@/app/stores/slice/searchStore";
 import { API_CONFIG } from "@/app/api/apiConfig";
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -46,10 +46,7 @@ export default function SearchPage() {
   });
 
   // Sử dụng searchStore để lưu lịch sử tìm kiếm và tìm kiếm sản phẩm
-  const {
-    addToRecentSearches,
-    setSearchQuery,
-  } = useSearchStore();
+  const { addToRecentSearches, setSearchQuery } = useSearchStore();
 
   // Cập nhật URL khi filters thay đổi
   const updateUrlWithFilters = useCallback(
@@ -303,5 +300,18 @@ export default function SearchPage() {
         tags={tags}
       />
     </>
+  );
+}
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          Đang tải...
+        </div>
+      }
+    >
+      <SearchContent />
+    </Suspense>
   );
 }

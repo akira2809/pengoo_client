@@ -2,9 +2,9 @@
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id');
 
@@ -64,5 +64,13 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Đang tải...</div>}>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

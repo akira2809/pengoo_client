@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { orderService } from '@/app/api/services/orderService';
 import { CreateOrderResponse } from '@/app/type/order';
@@ -26,7 +26,7 @@ interface OrderWithUser extends CreateOrderResponse {
   id: number;
 }
 
-export default function OrdersPage() {
+function OrdersContent() {
   const { user } = useAuthStore();
   const [orders, setOrders] = useState<OrderWithUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -192,5 +192,13 @@ export default function OrdersPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-12">Đang tải...</div>}>
+      <OrdersContent />
+    </Suspense>
   );
 }
