@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/app/stores/store';
 import { productService } from '@/app/api/services/productService';
@@ -76,7 +76,7 @@ const createDefaultProduct = (): Product => {
   };
 };
 
-export default function ProductsPage() {
+function ProductsContent() {
   const { 
     products, 
     isLoading, 
@@ -347,5 +347,17 @@ export default function ProductsPage() {
       tags={tags}
       collections={collections}
     />
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        Đang tải sản phẩm...
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

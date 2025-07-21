@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 
-function OrderSuccessContent() {
+function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id');
 
@@ -67,10 +67,18 @@ function OrderSuccessContent() {
   );
 }
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Đang tải...</div>}>
-      <OrderSuccessContent />
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse">Đang tải thông tin đơn hàng...</div>
+      </div>
+    }>
+      <OrderSuccessContentInner />
     </Suspense>
   );
+}
+
+export default function OrderSuccessPage() {
+  return <OrderSuccessContent />;
 }

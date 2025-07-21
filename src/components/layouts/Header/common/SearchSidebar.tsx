@@ -1,7 +1,7 @@
 // components/Header/SearchSidebar.tsx
 "use client";
 
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useCallback, useState, Suspense } from "react";
 import { gsap } from "gsap";
 import { useRouter, useSearchParams } from "next/navigation";
 import CloseIcon from "@mui/icons-material/Close";
@@ -18,7 +18,8 @@ interface SearchSidebarProps {
   onClose: () => void;
 }
 
-export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
+// Inner component that uses useSearchParams
+function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<
@@ -522,6 +523,24 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
+  return (
+    <div
+      className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      }`}
+    >
+      <Suspense fallback={
+        <div className="h-full w-full bg-white flex items-center justify-center">
+          <div className="animate-pulse">Đang tải tìm kiếm...</div>
+        </div>
+      }>
+        <SearchSidebarContent onClose={onClose} isOpen={isOpen} />
+      </Suspense>
     </div>
   );
 }
