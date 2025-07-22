@@ -8,21 +8,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Deploy using ssh
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: 22
-        script: |
-          cd /root/services/pengoo_client
-          git fetch origin
-          git checkout production
-          git pull 
-          docker build -t pengoo_client .
-          docker stop pengoo_client-container || true
-          docker rm pengoo_client-container || true
-          docker run -d --name pengoo_client-container -p 4000:3000 pengoo_client
+      - name: Deploy using SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: 22
+          script: |
+            cd /root/services/pengoo_client
+            git fetch origin
+            git checkout production
+            git pull
 
-          
+            # Cleanup
+            docker stop pengoo_client-container || true
+            docker rm pengoo_client-container || true
+            docker rmi pengoo_client || true
+            docker system prune -af --volumes || true
+
+            # Build + run
+            docker build -t pengoo_client .
+            docker run -d --restart=always --name pengoo_client-container -p 4000:3000 pengoo_client
