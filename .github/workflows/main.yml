@@ -16,12 +16,13 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: 22
         script: |
-          cd /services/pengoo_client
+          cd /root/services/pengoo_client
           git fetch origin
           git checkout production
           git pull 
           docker build -t pengoo_client .
           docker stop pengoo_client-container || true
-          docker rm pengoo_client-container || true 
+          docker rm pengoo_client-container || true
+          docker run -d --name pengoo_client-container -p 4000:3000 pengoo_client
 
           
