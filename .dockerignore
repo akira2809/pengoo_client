@@ -4,3 +4,6 @@ node_modules
 .vscode
 *.log
 .env
+Dockerfile
+.dockerignore
+README.md
