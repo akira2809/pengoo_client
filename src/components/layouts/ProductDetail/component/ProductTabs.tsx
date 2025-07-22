@@ -8,6 +8,7 @@ export type TabSection = {
   title: string;
   content: string | JSX.Element;
   images?: string[];
+  
 };
 
 export default function ProductTabs({ tabs = [] }: { tabs: TabSection[] }) {
