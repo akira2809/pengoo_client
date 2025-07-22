@@ -272,7 +272,7 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Cập nhật mật khẩu người dùng
        */
-      updatePassword: async (currentPassword: string, newPassword: string) => {
+      updatePassword: async (_currentPassword: string, newPassword: string) => {
         const { token } = get();
         if (!token) {
           return { success: false, message: 'Người dùng chưa đăng nhập.' };
@@ -280,7 +280,7 @@ export const useAuthStore = create<AuthState>()(
 
         set({ isLoading: true, error: null });
         try {
-          const result = await authService.updatePassword(currentPassword, newPassword, token);
+          const result = await authService.updatePassword(newPassword, token); // ✅ chỉ truyền 2 tham số
           set({ isLoading: false });
           return { success: true, message: result.message || 'Cập nhật mật khẩu thành công.' };
         } catch (error: unknown) {
@@ -290,6 +290,7 @@ export const useAuthStore = create<AuthState>()(
           return { success: false, message: errorMessage };
         }
       },
+
 
       /**
        * Xác minh một token đã cho.

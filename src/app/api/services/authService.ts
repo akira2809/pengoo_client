@@ -214,27 +214,25 @@ export const authService = {
   /**
    * Cập nhật mật khẩu người dùng
    */
-  updatePassword: async (currentPassword: string, newPassword: string, token: string): Promise<{ success: boolean; message: string }> => {
-    const response = await fetch(`${AUTH_API_BASE_URL}/change-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
+  updatePassword: async (currentPassword: string, newPassword: string, token: string) => {
+  const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
 
-    const data = await response.json();
+  const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Đổi mật khẩu thất bại');
-    }
+  if (!response.ok) {
+    throw new Error(data.message || 'Đổi mật khẩu thất bại');
+  }
 
-    return {
-      success: true,
-      message: data.message || 'Đổi mật khẩu thành công',
-    };
-  },
+  return data;
+}
+
 
   /**
  * Người dùng nhập mã khuyến mãi để đổi voucher (dựa trên điểm)
