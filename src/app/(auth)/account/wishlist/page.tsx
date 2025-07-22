@@ -41,7 +41,31 @@ export default function WishlistPage() {
       try {
         const res = await wishlistService.getWishlist(Number(user.id));
         setWishlist(
-          (res.data ?? []).map((item: any) => ({
+          (res.data ?? []).map((item: {
+            id: number;
+            product_id?: number;
+            product_name?: string;
+            product_price?: number;
+            images?: Array<{ url: string }>;
+            quantity_stock?: number;
+            rating?: number;
+            reviewCount?: number;
+            slug?: string;
+            meta_description?: string;
+            discount?: number;
+            product?: {
+              id: number;
+              product_name: string;
+              product_price: number;
+              images?: Array<{ url: string }>;
+              quantity_stock: number;
+              rating: number;
+              reviewCount: number;
+              slug?: string;
+              meta_description?: string;
+              discount?: number;
+            };
+          }) => ({
             id: item.id,
             product: item.product ? {
               ...item.product,
@@ -49,12 +73,12 @@ export default function WishlistPage() {
               image: item.product.images?.[0]?.url || '',
             } : {
               id: item.product_id ?? item.id,
-              product_name: item.product_name,
-              product_price: Number(item.product_price),
+              product_name: item.product_name || '',
+              product_price: Number(item.product_price || 0),
               image: item.images?.[0]?.url || '',
-              quantity_stock: item.quantity_stock,
-              rating: item.rating,
-              reviewCount: item.reviewCount,
+              quantity_stock: item.quantity_stock || 0,
+              rating: item.rating || 0,
+              reviewCount: item.reviewCount || 0,
               slug: item.slug,
               meta_description: item.meta_description,
               discount: item.discount,
@@ -159,8 +183,6 @@ export default function WishlistPage() {
   const handleAddToCart = (e: MouseEvent, product: WishlistItem['product']) => {
     e.preventDefault();
     e.stopPropagation();
-
-    const { finalPrice } = calculateFinalPrice(product.product_price, product.discount);
 
     addItem({
       id: product.id,

@@ -1,19 +1,42 @@
 import { NextResponse } from 'next/server';
-import { PayOS } from '@payos/node';
+import PayOS from '@payos/node';
+
+interface CreateOrderRequest {
+  customer_email: string;
+  customer_name: string;
+  customer_phone: string;
+  shipping_address: string;
+  shipping_city: string;
+  shipping_district?: string;
+  shipping_ward?: string;
+  shipping_note?: string;
+  payment_method: 'cod' | 'onepay';
+  shipping_method: 'localHCM' | 'outsideHCM';
+  items: Array<{
+    product_id: number;
+    quantity: number;
+    price: number;
+    discount?: number;
+  }>;
+  total_amount: number;
+  shipping_fee: number;
+  discount_amount?: number;
+  note?: string;
+}
 
 // This is your API route handler for /api/orders
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
-    const orderData = await request.json();
+    const orderData = await request.json() as Partial<CreateOrderRequest>;
     
     // Validate required fields
-    const requiredFields = [
+    const requiredFields: Array<keyof CreateOrderRequest> = [
       'customer_email', 'customer_name', 'customer_phone',
       'shipping_address', 'shipping_city', 'payment_method',
       'shipping_method', 'items'
     ];
     
-    const missingFields = requiredFields.filter(field => !orderData[field]);
+    const missingFields = requiredFields.filter(field => !orderData[field as keyof typeof orderData]);
     if (missingFields.length > 0 || !orderData.items?.length) {
       return NextResponse.json(
         { success: false, error: 'Thiếu thông tin bắt buộc' }, 
@@ -27,7 +50,7 @@ export async function POST(request: Request) {
     // Handle payment if payment method is payos
     let paymentUrl = '';
     
-    if (orderData.payment_method === 'payos') {
+    if (orderData.payment_method === 'onepay') {
       const payos = new PayOS(
         process.env.PAYOS_CLIENT_ID!,
         process.env.PAYOS_API_KEY!,
@@ -35,30 +58,34 @@ export async function POST(request: Request) {
       );
 
       // Prepare payment data
+      if (typeof orderData.total_amount === 'undefined') {
+        throw new Error('Total amount is required');
+      }
+
+      const items = [
+        ...orderData.items.map(item => ({
+          name: `Sản phẩm ${item.product_id}`,
+          quantity: item.quantity,
+          price: Math.round(item.price * (1 - (item.discount || 0) / 100))
+        }))
+      ];
+
+      // Add shipping fee as a separate line item
+      if (orderData.shipping_fee && orderData.shipping_fee > 0) {
+        items.push({
+          name: 'Phí vận chuyển',
+          quantity: 1,
+          price: Math.round(orderData.shipping_fee)
+        });
+      }
+
       const paymentData = {
-        orderCode: parseInt(orderCode),
-        amount: orderData.total_amount,
+        orderCode: parseInt(orderCode, 10),
+        amount: Math.round(orderData.total_amount),
         description: `Thanh toán đơn hàng #${orderCode}`,
-        items: [
-          ...orderData.items.map((item: { 
-            product_name: string; 
-            quantity: number; 
-            product_price: number; 
-            discount?: number 
-          }) => ({
-            name: item.product_name,
-            quantity: item.quantity,
-            price: item.product_price * (1 - (item.discount || 0) / 100)
-          })),
-          {
-            name: 'Phí vận chuyển',
-            quantity: 1,
-            price: orderData.shipping_fee || 0
-          }
-        ],
-        cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?cancel=true`,
-        returnUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?order_id=${orderCode}`,
-        signature: ''
+        items,
+        cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/checkout?cancel=true`,
+        returnUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/order/success?order_id=${orderCode}`,
       };
 
       // Create payment link
@@ -89,25 +116,3 @@ export async function POST(request: Request) {
     );
   }
 }
-type CreateOrderRequest = {
-  customer_email: string;
-  customer_name: string;
-  customer_phone: string;
-  shipping_address: string;
-  shipping_city: string;
-  shipping_district?: string;
-  shipping_ward?: string;
-  shipping_note?: string;
-  payment_method: 'cod' | 'onepay';
-  shipping_method: 'localHCM' | 'outsideHCM';
-  items: Array<{
-    product_id: number;
-    quantity: number;
-    price: number;
-    discount?: number;
-  }>;
-  total_amount: number;
-  shipping_fee: number;
-  discount_amount?: number;
-  note?: string;
-};

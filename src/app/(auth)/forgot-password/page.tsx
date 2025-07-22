@@ -41,9 +41,8 @@ export default function ForgotPasswordPage() {
         // Display error message from the store's response
         setError(result.message || 'Something went wrong. Please try again.');
       }
-    } catch (_error: any) {
+    } catch {
       // Catch any unexpected errors during the process
-      console.error("Forgot password submission error:", _error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false); // Reset loading state

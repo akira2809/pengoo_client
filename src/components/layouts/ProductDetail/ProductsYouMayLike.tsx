@@ -30,7 +30,7 @@ export default function ProductsYouMayLike({ currentProductId, categoryId, tagId
           const tagRes = await productService.getProducts({ limit: 12, page: 1 });
           const tagFiltered = tagRes.data?.filter((p: ProductData) =>
             p.id !== currentProductId &&
-            p.tags?.some((tag: any) => tagIds.includes(tag.id))
+            p.tags?.some(tag => tagIds.includes(Number(tag)))
           ) || [];
           // Merge and deduplicate
           const ids = new Set(fetched.map(p => p.id));

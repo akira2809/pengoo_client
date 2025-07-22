@@ -15,14 +15,22 @@ const TICKET_EARNING_OPTIONS: {
   { type: "social", label: "Chia sẻ mạng xã hội", tickets: 2, color: "pink" },
 ];
 
+interface Product {
+  slug: string;
+  [key: string]: unknown;
+}
+
+interface Post {
+  canonical: string;
+  [key: string]: unknown;
+}
+
 export default function TicketEarningActions({
   isAuthenticated,
-  earnLoading,
   earnMsg,
   onEarn,
 }: {
   isAuthenticated: boolean;
-  earnLoading: TicketEarningType | null;
   earnMsg: Record<TicketEarningType, string>;
   onEarn: (type: TicketEarningType, tickets?: number) => void;
 }) {
@@ -38,18 +46,20 @@ export default function TicketEarningActions({
   const getRandomDetailHref = async (type: TicketEarningType) => {
     if (type === "product") {
       // Fetch all products, pick a random one
-      const res = await apiClient.get<any[]>("/products?limit=100");
-      if (res.data && res.data.length > 0) {
-        const random = res.data[Math.floor(Math.random() * res.data.length)];
+      const res = await apiClient.get<{ data: Product[] }>("/products?limit=100");
+      const products = res.data?.data || [];
+      if (products.length > 0) {
+        const random = products[Math.floor(Math.random() * products.length)];
         return `/products/${random.slug}`;
       }
       return "/products";
     }
     if (type === "post") {
       // Fetch all posts, pick a random one
-      const res = await apiClient.get<any[]>("/posts");
-      if (res.data && res.data.length > 0) {
-        const random = res.data[Math.floor(Math.random() * res.data.length)];
+      const res = await apiClient.get<{ data: Post[] }>("/posts");
+      const posts = res.data?.data || [];
+      if (posts.length > 0) {
+        const random = posts[Math.floor(Math.random() * posts.length)];
         return `/blogs/${random.canonical}`;
       }
       return "/blogs";
@@ -97,12 +107,15 @@ export default function TicketEarningActions({
           router.push(href);
         }, 500);
       }
-    } catch (err: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Có lỗi xảy ra, vui lòng thử lại.";
       setMessages((prev) => ({
         ...prev,
-        [type]: err?.message || "Có lỗi xảy ra, vui lòng thử lại.",
+        [type]: errorMessage,
       }));
-      toast.error(err?.message || "Có lỗi xảy ra, vui lòng thử lại.");
+      toast.error(errorMessage);
     } finally {
       setLoading(null);
     }

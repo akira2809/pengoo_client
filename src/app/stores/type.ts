@@ -10,7 +10,7 @@ export interface Product {
   product_price: number;
   slug: string;
   status: number; // 0: Unavailable, 1: Available
-  createdAt: Date;
+  createdAt?: Date; // Made optional to handle cases where it might not be provided
   
   // Pricing
   discount: number;

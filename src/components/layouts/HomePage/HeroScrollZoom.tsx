@@ -1,13 +1,10 @@
 import {
   motion,
-  // useMotionTemplate, // Không dùng đến, có thể xóa
   useScroll,
   useTransform,
 } from "framer-motion";
-import { SiSpacex } from "react-icons/si"; // Bạn có thể xóa nếu không dùng
-import { FiArrowRight } from "react-icons/fi"; // Bạn có thể xóa nếu không dùng
 import { useRef } from "react";
-import Image from "next/image"; // Import Image từ Next.js
+import Image from "next/image";
 
 // Dữ liệu text cho phần hero
 const HERO_TEXT = {
@@ -29,25 +26,6 @@ export const SmoothScrollHero = () => {
       {/* Đây là nơi bạn sẽ thêm các section nội dung khác của mình */}
       
     </div>
-  );
-};
-
-// Bạn có thể giữ hoặc xóa Nav nếu không phù hợp với thiết kế
-const Nav = () => {
-  return (
-    <nav className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-3 text-white">
-      <SiSpacex className="text-3xl mix-blend-difference" />
-      <button
-        onClick={() => {
-          document.getElementById("launch-schedule")?.scrollIntoView({
-            behavior: "smooth",
-          });
-        }}
-        className="flex items-center gap-1 text-xs text-zinc-400"
-      >
-        LIÊN HỆ <FiArrowRight /> {/* Đổi text */}
-      </button>
-    </nav>
   );
 };
 

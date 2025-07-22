@@ -1,11 +1,11 @@
 // src/app/(auth)/account/change-password/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 
-export default function ChangePasswordPage() {
+function ChangePasswordContent() {
   const router = useRouter();
   const { updatePassword, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
@@ -157,5 +157,17 @@ export default function ChangePasswordPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function ChangePasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse">Đang tải trang đổi mật khẩu...</div>
+      </div>
+    }>
+      <ChangePasswordContent />
+    </Suspense>
   );
 }

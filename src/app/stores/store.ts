@@ -41,7 +41,7 @@ export const useStore = create<StoreState>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  login: async (credentials: { email: string; password: string }) => {
+  login: async () => {
     try {
       set({ isLoading: true });
       // Implement login logic here
@@ -54,7 +54,7 @@ export const useStore = create<StoreState>((set, get) => ({
       throw error;
     }
   },
-  register: async (userData: { name: string; email: string; password: string }) => {
+  register: async () => {
     try {
       set({ isLoading: true });
       // Implement registration logic here

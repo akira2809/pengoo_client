@@ -126,7 +126,7 @@ export interface PaginatedResponse<T> {
 }
 
 // Helper function to build query string
-export const buildQueryString = (params: Record<string, any>): string => {
+export const buildQueryString = (params: Record<string, string | number | boolean | (string | number | boolean)[] | null | undefined>): string => {
   const queryParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {

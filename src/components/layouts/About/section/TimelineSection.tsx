@@ -1,7 +1,7 @@
 // components/TimelineSection.tsx
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -28,9 +28,7 @@ const TimelineSection: React.FC<TimelineSectionProps> = ({ timelineData }) => {
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const progressRef = useRef<HTMLDivElement>(null);
-  // activeImageIndex không cần thiết để quản lý state trực tiếp, GSAP sẽ xử lý
-  // const [activeImageIndex, setActiveImageIndex] = useState(0); 
-  const imageContainerRef = useRef<HTMLDivElement>(null);
+  // activeImageIndex is not needed as GSAP handles the state
 
   const HEADER_HEIGHT = 64; // Điều chỉnh chiều cao header của bạn
 

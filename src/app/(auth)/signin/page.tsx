@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, facebookProvider } from "@/app/api/firebaseClient";

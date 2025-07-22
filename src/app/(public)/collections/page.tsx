@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { collectionService } from '@/app/api/services/collectionService';
 import CategoryGrid from '@/components/layouts/collection/CategoryGrid';
@@ -22,7 +22,7 @@ interface Collection {
   createdAt?: string;
 }
 
-export default function CollectionsPage() {
+function CollectionsContent() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -87,5 +87,17 @@ export default function CollectionsPage() {
       </div>
       <BlogSection />
     </main>
+  );
+}
+
+export default function CollectionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        Đang tải bộ sưu tập...
+      </div>
+    }>
+      <CollectionsContent />
+    </Suspense>
   );
 }

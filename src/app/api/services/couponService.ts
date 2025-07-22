@@ -46,9 +46,16 @@ export const couponService = {
 
   // Validate a coupon for a specific user and order
   async validateCoupon(data: ValidateCouponPayload) {
+    const payload: Record<string, unknown> = {
+      code: data.code,
+      orderValue: data.orderValue,
+      userId: data.userId,
+      productIds: data.productIds
+    };
+    
     return apiClient.post<ValidateCouponResponse>(
       `${API_CONFIG.ENDPOINTS.COUPONS.BASE}/validate`,
-      data
+      payload
     );
   },
 
@@ -97,11 +104,14 @@ export const couponService = {
   },
 
   // Verify voucher by user points
-  async verifyVoucherByUserPoint(code: string) {
-    const res = await apiClient.post(
+  async verifyVoucherByUserPoint(code: string): Promise<VerifyVoucherResponse> {
+    const res = await apiClient.post<VerifyVoucherResponse>(
       API_CONFIG.ENDPOINTS.COUPONS.VERIFY_VOUCHER,
-      { voucherCode: code }
+      { voucherCode: code } as Record<string, unknown>
     );
+    if (!res.data) {
+      throw new Error('Failed to verify voucher');
+    }
     return res.data;
   },
 
