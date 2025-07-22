@@ -56,7 +56,7 @@ private getAuthHeader(): Record<string, string> {
 
   public async get<T>(
     endpoint: string, 
-    params: Record<string, any> = {},
+    params: Record<string, string | number | boolean | (string | number | boolean)[] | undefined> = {},
     customHeaders: Record<string, string> = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}${buildQueryString(params)}`;
@@ -94,9 +94,9 @@ private getAuthHeader(): Record<string, string> {
     }
   }
 
-  public async post<T>(
+  public async post<T, U = Record<string, unknown>>(
     endpoint: string, 
-    data: any = {},
+    data: U = {} as U,
     customHeaders: Record<string, string> = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
@@ -125,9 +125,9 @@ private getAuthHeader(): Record<string, string> {
     }
   }
 
-  public async put<T>(
+  public async put<T, U = Record<string, unknown>>(
     endpoint: string, 
-    data: any = {},
+    data: U = {} as U,
     customHeaders: Record<string, string> = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
@@ -156,9 +156,9 @@ private getAuthHeader(): Record<string, string> {
     }
   }
 
-  public async delete<T>(
+  public async delete<T, U = Record<string, unknown>>(
     endpoint: string,
-    data: any = {},
+    data: U = {} as U,
     customHeaders: Record<string, string> = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
@@ -169,13 +169,18 @@ private getAuthHeader(): Record<string, string> {
     };
 
     try {
-      const response = await fetch(url, {
+      const fetchOptions: RequestInit = {
         method: 'DELETE',
         headers,
-        body: Object.keys(data).length > 0 ? JSON.stringify(data) : undefined,
         mode: 'cors',
-        // Không cần credentials cho JWT header
-      });
+      };
+
+      // Only add body if data is not empty
+      if (data && Object.keys(data as object).length > 0) {
+        fetchOptions.body = JSON.stringify(data);
+      }
+
+      const response = await fetch(url, fetchOptions);
       return this.handleResponse<T>(response);
     } catch (error) {
       console.error('DELETE request failed:', error);
@@ -186,6 +191,38 @@ private getAuthHeader(): Record<string, string> {
       };
     }
   }
+
+
+  public async patch<T, U = Record<string, unknown>>(
+  endpoint: string,
+  data: U = {} as U,
+  customHeaders: Record<string, string> = {}
+): Promise<ApiResponse<T>> {
+  const url = `${this.baseUrl}${endpoint}`;
+  const headers = {
+    ...this.defaultHeaders,
+    ...this.getAuthHeader(),
+    ...customHeaders
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+      mode: 'cors',
+    });
+    return this.handleResponse<T>(response);
+  } catch (error) {
+    console.error('PATCH request failed:', error);
+    throw {
+      success: false,
+      error: API_CONFIG.ERROR_MESSAGES.NETWORK_ERROR,
+      statusCode: 0
+    };
+  }
+}
+
 
   // Add other HTTP methods as needed (PATCH, etc.)
 }

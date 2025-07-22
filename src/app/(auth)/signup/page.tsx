@@ -5,11 +5,57 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
+import { useCartStore } from '@/app/stores/slice/cartStore';
 import toast from 'react-hot-toast';
+import { auth, facebookProvider } from "@/app/api/firebaseClient";
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+
+
 
 export default function SignUpPage() {
   const router = useRouter();
   const { register, isAuthenticated, isLoading, error, clearError } = useAuthStore();
+  const { items: cartItems } = useCartStore();
+  const [searchParams] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search);
+    }
+    return new URLSearchParams();
+  });
+  
+  // Get the redirect URL from query params, session storage, or use default
+  const getRedirectPath = () => {
+    // Check for explicit redirect in URL first
+    const explicitRedirect = searchParams.get('redirect');
+    if (explicitRedirect) return explicitRedirect;
+    
+    // Try to get the previous page from session storage
+    if (typeof window !== 'undefined') {
+      // Get the full URL including path and search params
+      const fullPath = sessionStorage.getItem('preAuthFullPath');
+      if (fullPath) {
+        // If redirecting to checkout but cart is empty, go to home
+        if (fullPath === '/checkout' && (!cartItems || cartItems.length === 0)) {
+          return '/';
+        }
+        return fullPath;
+      }
+      
+      // Fallback to just the path if full path is not available
+      const pathOnly = sessionStorage.getItem('preAuthPath');
+      if (pathOnly) {
+        // If redirecting to checkout but cart is empty, go to home
+        if (pathOnly === '/checkout' && (!cartItems || cartItems.length === 0)) {
+          return '/';
+        }
+        return pathOnly;
+      }
+    }
+    
+    return '/';
+  };
+  
+  const redirectTo = getRedirectPath();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -24,9 +70,10 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      // Redirect to the original page after successful signup and auto-login
+      router.push(redirectTo);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirectTo]);
 
   useEffect(() => {
     if (error) {
@@ -51,100 +98,210 @@ export default function SignUpPage() {
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setApiError(''); // Clear previous API errors
     
-    if (!validateForm()) {
+    const validationErrors: Record<string, string> = {};
+    if (!formData.name) validationErrors.name = 'Vui lòng nhập tên';
+    if (!formData.email) {
+      validationErrors.email = 'Vui lòng nhập email';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      validationErrors.email = 'Email không hợp lệ';
+    }
+    if (!formData.password) {
+      validationErrors.password = 'Vui lòng nhập mật khẩu';
+    } else if (formData.password.length < 6) {
+      validationErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    if (formData.password !== formData.confirmPassword) {
+      validationErrors.confirmPassword = 'Mật khẩu không khớp';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
-    
+
     try {
-      const userData = {
-        username: formData.email.split('@')[0], // Using email prefix as username
+      const registrationResult = await register({
+        username: formData.name,
         email: formData.email,
         password: formData.password,
         full_name: formData.name,
-        phone_number: '', // Add empty values for required fields
-        address: '',
-        role: 'user',
-        avatar_url: ''
-      };
-      
-      console.log('Sending registration request:', userData);
-      
-      const result = await register(userData);
-      
-      if (result.success) {
-        toast.success('Đăng ký thành công!');
-        router.push('/signin');
-      } else {
-        // Handle case where register returns success: false but no error
-        const errorMsg = result.message || 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.';
-        toast.error(errorMsg);
-        setApiError(errorMsg);
-      }
-    } catch (err: any) {
-      console.error('Registration failed:', {
-        error: err,
-        response: err.response?.data,
-        status: err.response?.status,
-        message: err.message,
-        stack: err.stack
-      });
-      
-      // Handle specific error cases
-      console.error('Error details:', {
-        status: err.response?.status,
-        data: err.response?.data,
-        message: err.message
+        phone_number: '', // You might want to add this field to your form
+        role: 'customer',
       });
 
-      if (err.response?.status === 500) {
-        const errorMsg = 'Lỗi máy chủ. Vui lòng thử lại sau.';
-        toast.error(errorMsg);
-        setApiError(errorMsg);
-      } else if (err.response?.data?.message?.toLowerCase().includes('email') || 
-                err.message?.toLowerCase().includes('email')) {
-        setErrors(prev => ({
-          ...prev,
-          email: 'Email đã được sử dụng. Vui lòng sử dụng email khác.'
-        }));
-      } else if (err.response?.data?.message) {
-        // Display the error message from the server
-        setApiError(err.response.data.message);
+      if (registrationResult.success) {
+        // The useEffect will handle the redirect when isAuthenticated becomes true
+        toast.success('Đăng ký và đăng nhập thành công! Đang chuyển hướng...');
       } else {
-        const errorMsg = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
-        toast.error(errorMsg);
-        setApiError(errorMsg);
+        setApiError(registrationResult.message || 'Đăng ký thất bại');
       }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setApiError('Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại sau.');
+    }
+  };
+
+  const { verifyToken } = useAuthStore();
+   // Thêm scope cho Facebook để lấy thêm thông tin
+  facebookProvider.addScope('email');
+  facebookProvider.addScope('public_profile');
+  
+  // Xử lý đăng nhập bằng Facebook
+  const handleFacebookLogin = async () => {
+    try {
+      // Bước 1: Xác thực với Facebook
+      let result;
+      try {
+        result = await signInWithPopup(auth, facebookProvider);
+      } catch (error: unknown) {
+        // Bỏ qua lỗi khi người dùng đóng popup
+        if (error && typeof error === 'object' && 'code' in error) {
+          const errorCode = (error as { code: string }).code;
+          if (errorCode === 'auth/cancelled-popup-request' || 
+              errorCode === 'auth/popup-closed-by-user') {
+            return; // Không hiển thị lỗi nếu người dùng đóng popup
+          }
+        }
+        throw error; // Ném lỗi khác để xử lý tiếp
+      }
+      
+      const idToken = await result.user.getIdToken();
+
+      console.log('Facebook ID Token:', idToken);
+
+      // Bước 2: Gửi token lên backend để xác thực
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/facebook`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          idToken,
+          skipMfa: true 
+        }),
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Facebook API Error:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.message || 'Đăng nhập Facebook thất bại');
+        } catch {
+          throw new Error(`Đăng nhập thất bại: ${res.status} ${res.statusText}`);
+        }
+      }
+      
+      const data = await res.json();
+      console.log('Facebook API Response:', data);
+
+      if (!data.token) {
+        throw new Error("Không nhận được token từ máy chủ");
+      }
+
+      console.log('Saving Facebook token to localStorage and verifying...');
+      localStorage.setItem("token", data.token);
+      
+      // Xác thực token bằng auth store
+      const verification = await verifyToken(data.token);
+      if (!verification.success) {
+        throw new Error(verification.message || 'Xác thực token thất bại');
+      }
+      
+      toast.success("Đăng nhập Facebook thành công!");
+      
+      // Chuyển hướng sau khi đăng nhập thành công
+      if (data.profileCompleted === false) {
+        toast("Vui lòng cập nhật thông tin tài khoản để sử dụng đầy đủ tính năng!", { icon: "⚠️" });
+        router.push('/account');
+      } else {
+        router.push(redirectTo);
+      }
+    } catch (error) {
+      console.error('Facebook login error:', error);
+      const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng nhập bằng Facebook";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Bước 1: Xác thực với Google
+      const provider = new GoogleAuthProvider();
+      let result;
+      try {
+        result = await signInWithPopup(auth, provider);
+      } catch (error: unknown) {
+        // Bỏ qua lỗi khi người dùng đóng popup
+        if (error && typeof error === 'object' && 'code' in error) {
+          const errorCode = (error as { code: string }).code;
+          if (errorCode === 'auth/cancelled-popup-request' || 
+              errorCode === 'auth/popup-closed-by-user') {
+            return; // Không hiển thị lỗi nếu người dùng đóng popup
+          }
+        }
+        throw error; // Ném lỗi khác để xử lý tiếp
+      }
+      
+      const idToken = await result.user.getIdToken();
+
+      // console.log('Google ID Token:', idToken); // Log token để debug
+
+      // Bước 2: Gửi token lên backend để xác thực
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/google`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          idToken: idToken, // Đổi tên tham số thành 'idToken' để phù hợp với API
+          skipMfa: true 
+        }),
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('API Error Response:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.message || 'Đăng nhập thất bại');
+        } catch {
+          throw new Error(`Đăng nhập thất bại: ${res.status} ${res.statusText}`);
+        }
+      }
+      
+      const data = await res.json();
+      console.log('API Response Data:', data); // Log response để debug
+
+      if (!data.token) {
+        throw new Error("Không nhận được token từ máy chủ");
+      }
+
+      console.log('Saving token to localStorage and verifying...');
+      localStorage.setItem("token", data.token);
+      
+      // Xác thực token bằng auth store
+      const verification = await verifyToken(data.token);
+      if (!verification.success) {
+        throw new Error(verification.message || 'Xác thực token thất bại');
+      }
+      
+      toast.success("Đăng nhập Google thành công!");
+      
+      // Chuyển hướng sau khi đăng nhập thành công
+      if (data.profileCompleted === false) {
+        toast("Vui lòng cập nhật thông tin tài khoản để sử dụng đầy đủ tính năng!", { icon: "⚠️" });
+        router.push('/account');
+      } else {
+        router.push(redirectTo);
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng nhập bằng Google";
+      toast.error(errorMessage);
     }
   };
 
@@ -155,7 +312,7 @@ export default function SignUpPage() {
              <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
                <div className="relative w-full h-full">
                  <Image 
-                   src="/dorroo1.jpg" 
+                   src="/signin.jpg" 
                    alt="Sign In" 
                    fill
                    className="object-cover"
@@ -319,35 +476,61 @@ export default function SignUpPage() {
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <span className="sr-only">Sign up with Google</span>
-                <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-                </svg>
-              </button>
+              <div>
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <span className="sr-only">Sign in with Google</span>
+                  <svg className="w-5 h-5" aria-hidden="true" viewBox="0 0 24 24">
+                    <path
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      fill="#4285F4"
+                    />
+                    <path
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      fill="#34A853"
+                    />
+                    <path
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                      fill="#FBBC05"
+                    />
+                    <path
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      fill="#EA4335"
+                    />
+                  </svg>
+                  <span className="ml-2">Đăng nhập với Google</span>
+                </button>
+              </div>
 
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <span className="sr-only">Sign up with Facebook</span>
-                <svg className="w-5 h-5" aria-hidden="true" fill="#1877F2" viewBox="0 0 24 24">
-                  <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
-                </svg>
-              </button>
+              <div>
+                <button
+                  type="button"
+                  onClick={handleFacebookLogin}
+                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <span className="sr-only">Sign in with Facebook</span>
+                  <svg className="w-5 h-5" aria-hidden="true" fill="#1877F2" viewBox="0 0 24 24">
+                    <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+                  </svg>
+                  <span className="ml-2">Facebook</span>
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="mt-6 text-center text-sm">
-            <p className="text-gray-600">
-              Already have an account?{' '}
-              <Link href="/signin" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign in
-              </Link>
-            </p>
+            <p className="text-center text-sm text-gray-600">
+            Bạn đã có tài khoản?{' '}
+            <Link 
+              href={`/signin${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} 
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Đăng nhập ngay
+            </Link>
+          </p>
           </div>
         </div>
       </div>

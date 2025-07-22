@@ -1,25 +1,31 @@
 // components/Header/SearchSidebar.tsx
-'use client';
+"use client";
 
-import { useRef, useEffect, useCallback, useState } from 'react';
-import { gsap } from 'gsap';
-import { useRouter, useSearchParams } from 'next/navigation';
-import CloseIcon from '@mui/icons-material/Close';
-import SearchIcon from '@mui/icons-material/Search';
-import Image from 'next/image';
-import { useSearchStore } from '@/app/stores/slice/searchStore';
-import type { Product } from '@/app/stores/type';
-import { Skeleton } from '@/components/common/UI/Skeleton';
+import { useRef, useEffect, useCallback, useState, Suspense } from "react";
+import { gsap } from "gsap";
+import { useRouter, useSearchParams } from "next/navigation";
+import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
+import HistoryIcon from "@mui/icons-material/History";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import Image from "next/image";
+import { useSearchStore } from "@/app/stores/slice/searchStore";
+import type { Product } from "@/app/stores/type";
+import { Skeleton } from "@/components/common/UI/Skeleton";
 
 interface SearchSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
+// Inner component that uses useSearchParams
+function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'pages'>('products');
+  const [activeTab, setActiveTab] = useState<
+    "products" | "categories" | "pages"
+  >("products");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Sử dụng search store
   const {
@@ -42,62 +48,78 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
 
   // Format price with VND currency
   const formatPrice = (price: number | string): string => {
-    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    const numPrice = typeof price === "string" ? parseFloat(price) : price;
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
       minimumFractionDigits: 0,
     }).format(numPrice);
   };
 
   // Calculate final price based on discount percentage
-  const calculateDiscountedPrice = (originalPrice: number | string, discount: number | string = 0): number => {
-    const price = typeof originalPrice === 'string' ? parseFloat(originalPrice) : originalPrice;
-    const discountPercent = typeof discount === 'string' ? parseFloat(discount) : discount;
-    
+  const calculateDiscountedPrice = (
+    originalPrice: number | string,
+    discount: number | string = 0
+  ): number => {
+    const price =
+      typeof originalPrice === "string"
+        ? parseFloat(originalPrice)
+        : originalPrice;
+    const discountPercent =
+      typeof discount === "string" ? parseFloat(discount) : discount;
+
     if (!discountPercent || discountPercent <= 0) return price;
-    
+
     const discountAmount = (price * discountPercent) / 100;
     return Math.max(0, price - discountAmount);
   };
 
   // Debounce search input
-  const performSearch = useCallback((query: string) => {
-    if (query.trim() === '') {
-      clearSearch();
-      return;
-    }
-
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-
-    // Set the search start time when starting a new search
-    searchStartTime.current = Date.now();
-    
-    debounceTimer.current = setTimeout(() => {
-      // Start the search
-      originalSearchProducts(query);
-      
-      // Calculate remaining time to reach minimum duration
-      const elapsed = Date.now() - searchStartTime.current;
-      const remainingTime = Math.max(0, minSearchDuration - elapsed);
-      
-      // If we still need to wait to reach min duration
-      if (remainingTime > 0) {
-        setTimeout(() => {
-          // This ensures the loading state is cleared after min duration
-          // even if the search completed earlier
-          if (isSearching) {
-            // Force a re-render to update the loading state
-            const currentQuery = searchQuery;
-            setSearchQuery(currentQuery + ' ');
-            setSearchQuery(currentQuery.trim());
-          }
-        }, remainingTime);
+  const performSearch = useCallback(
+    (query: string) => {
+      if (query.trim() === "") {
+        clearSearch();
+        return;
       }
-    }, 300); // Keep a short debounce for typing
-  }, [originalSearchProducts, clearSearch, isSearching, setSearchQuery, searchQuery]);
+
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+
+      // Set the search start time when starting a new search
+      searchStartTime.current = Date.now();
+
+      debounceTimer.current = setTimeout(() => {
+        // Start the search
+        originalSearchProducts(query);
+
+        // Calculate remaining time to reach minimum duration
+        const elapsed = Date.now() - searchStartTime.current;
+        const remainingTime = Math.max(0, minSearchDuration - elapsed);
+
+        // If we still need to wait to reach min duration
+        if (remainingTime > 0) {
+          setTimeout(() => {
+            // This ensures the loading state is cleared after min duration
+            // even if the search completed earlier
+            if (isSearching) {
+              // Force a re-render to update the loading state
+              const currentQuery = searchQuery;
+              setSearchQuery(currentQuery + " ");
+              setSearchQuery(currentQuery.trim());
+            }
+          }, remainingTime);
+        }
+      }, 300); // Keep a short debounce for typing
+    },
+    [
+      originalSearchProducts,
+      clearSearch,
+      isSearching,
+      setSearchQuery,
+      searchQuery,
+    ]
+  );
 
   // Xử lý thay đổi input tìm kiếm
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,10 +128,62 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
     performSearch(query);
   };
 
+  // Lưu lịch sử tìm kiếm vào localStorage
+  const saveSearchToHistory = useCallback((query: string) => {
+    if (!query.trim()) return;
+
+    // Lấy lịch sử tìm kiếm từ localStorage
+    const savedSearches = localStorage.getItem("recentSearches");
+    let searches: string[] = savedSearches ? JSON.parse(savedSearches) : [];
+
+    // Loại bỏ trùng lặp nếu có
+    searches = searches.filter(
+      (item) => item.toLowerCase() !== query.toLowerCase()
+    );
+
+    // Thêm tìm kiếm mới vào đầu danh sách
+    searches.unshift(query);
+
+    // Giới hạn số lượng lịch sử tìm kiếm (giữ 10 tìm kiếm gần nhất)
+    if (searches.length > 10) {
+      searches = searches.slice(0, 10);
+    }
+
+    // Lưu lại vào localStorage
+    localStorage.setItem("recentSearches", JSON.stringify(searches));
+
+    // Cập nhật state
+    setRecentSearches(searches);
+  }, []);
+
+  // Xóa toàn bộ lịch sử tìm kiếm
+  const clearSearchHistory = () => {
+    localStorage.removeItem("recentSearches");
+    setRecentSearches([]);
+  };
+
+  // Xóa một mục tìm kiếm cụ thể
+  const removeSearchItem = (query: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const updatedSearches = recentSearches.filter((item) => item !== query);
+    localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
+    setRecentSearches(updatedSearches);
+  };
+
+  // Chọn một tìm kiếm từ lịch sử
+  const selectRecentSearch = (query: string) => {
+    setSearchQuery(query);
+    performSearch(query);
+  };
+
   // Xử lý submit form tìm kiếm
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      // Lưu tìm kiếm vào lịch sử
+      saveSearchToHistory(searchQuery.trim());
       router.push(`/search?name=${encodeURIComponent(searchQuery.trim())}`);
       onClose();
     }
@@ -119,14 +193,18 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       // Đặt giá trị ban đầu từ URL nếu có
-      const query = searchParams.get('name') || '';
+      const query = searchParams.get("name") || "";
       if (query) {
         setSearchQuery(query);
-        performSearch(query);
+        // Không thực hiện tìm kiếm ngay lập tức để tránh load liên tục
+        // performSearch(query);
       }
       searchInputRef.current.focus();
+    } else if (!isOpen) {
+      // Khi đóng sidebar, xóa kết quả tìm kiếm
+      clearSearch();
     }
-  }, [isOpen, searchParams, setSearchQuery, performSearch]);
+  }, [isOpen, searchParams, setSearchQuery, clearSearch]);
 
   // Animation khi mở/đóng sidebar
   useEffect(() => {
@@ -134,15 +212,15 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
 
     if (isOpen) {
       gsap.to(searchPopupRef.current, {
-        x: '0%',
+        x: "0%",
         duration: 0.3,
-        ease: 'power2.inOut',
+        ease: "power2.inOut",
       });
     } else {
       gsap.to(searchPopupRef.current, {
-        x: '100%',
+        x: "100%",
         duration: 0.3,
-        ease: 'power2.inOut',
+        ease: "power2.inOut",
       });
     }
   }, [isOpen]);
@@ -150,25 +228,35 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
   // Đóng sidebar khi nhấn ESC
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen, onClose]);
 
   // Xử lý click vào kết quả tìm kiếm
   const handleResultClick = (product: Product) => {
-    router.push(`/product/${product.slug}`);
+    router.push(`/products/${product.slug}`);
     onClose();
   };
+
+  // Load recent searches from localStorage when component mounts
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedSearches = localStorage.getItem("recentSearches");
+      if (savedSearches) {
+        setRecentSearches(JSON.parse(savedSearches));
+      }
+    }
+  }, []);
 
   // Animation setup for the new UI
   useEffect(() => {
@@ -176,23 +264,23 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
 
     if (isOpen) {
       gsap.set(searchPopupRef.current, {
-        x: '100%',
-        display: 'flex',
+        x: "100%",
+        display: "flex",
       });
 
       gsap.to(searchPopupRef.current, {
-        x: '0%',
+        x: "0%",
         duration: 0.4,
-        ease: 'power2.out',
+        ease: "power2.out",
       });
     } else {
       gsap.to(searchPopupRef.current, {
-        x: '100%',
+        x: "100%",
         duration: 0.3,
-        ease: 'power2.in',
+        ease: "power2.in",
         onComplete: () => {
           if (searchPopupRef.current) {
-            searchPopupRef.current.style.display = 'none';
+            searchPopupRef.current.style.display = "none";
           }
         },
       });
@@ -202,8 +290,8 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
   return (
     <div
       ref={searchPopupRef}
-      className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col overflow-hidden"
-      style={{ display: 'none' }}
+      className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[999] flex flex-col overflow-hidden"
+      style={{ display: "none" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
@@ -229,7 +317,9 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
               ref={searchInputRef}
               type="text"
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              placeholder={isSearching ? 'Đang tìm kiếm...' : 'Tìm kiếm sản phẩm...'}
+              placeholder={
+                isSearching ? "Đang tìm kiếm..." : "Tìm kiếm sản phẩm..."
+              }
               value={searchQuery}
               onChange={handleSearchChange}
             />
@@ -241,33 +331,13 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
       <div className="flex border-b">
         <button
           className={`flex-1 py-3 text-sm font-medium ${
-            activeTab === 'products'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
+            activeTab === "products"
+              ? "text-blue-600 border-b-2 border-blue-600"
+              : "text-gray-600 hover:text-gray-900"
           }`}
-          onClick={() => setActiveTab('products')}
+          onClick={() => setActiveTab("products")}
         >
           Sản phẩm
-        </button>
-        <button
-          className={`flex-1 py-3 text-sm font-medium ${
-            activeTab === 'categories'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-          onClick={() => setActiveTab('categories')}
-        >
-          Danh mục
-        </button>
-        <button
-          className={`flex-1 py-3 text-sm font-medium ${
-            activeTab === 'pages'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-          onClick={() => setActiveTab('pages')}
-        >
-          Trang
         </button>
       </div>
 
@@ -289,7 +359,7 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
           </div>
         ) : searchResults.length > 0 ? (
           <div className="space-y-4">
-            {activeTab === 'products' && (
+            {activeTab === "products" && (
               <div className="space-y-2">
                 {searchResults.map((product) => (
                   <div
@@ -297,7 +367,7 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
                     onClick={() => handleResultClick(product)}
                     className="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         handleResultClick(product);
                       }
                     }}
@@ -307,7 +377,11 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
                     <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 relative">
                       {product.images?.[0]?.url || product.image_url ? (
                         <Image
-                          src={product.images?.[0]?.url || product.image_url || '/images/placeholder-product.png'}
+                          src={
+                            product.images?.[0]?.url ||
+                            product.image_url ||
+                            "/images/placeholder-product.png"
+                          }
                           alt={product.product_name}
                           fill
                           sizes="64px"
@@ -316,13 +390,24 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
                             // Fallback to placeholder if image fails to load
                             const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = '/images/placeholder-product.png';
+                            target.src = "/images/placeholder-product.png";
                           }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <svg
+                            className="w-6 h-6 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                           </svg>
                         </div>
                       )}
@@ -332,42 +417,54 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
                         {product.product_name}
                       </h3>
                       {product.discount > 0 ? (
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-red-500 font-semibold text-sm">
-                            {formatPrice(calculateDiscountedPrice(product.product_price, product.discount))}
-                          </span>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-red-500 font-semibold text-sm">
+                              {formatPrice(
+                                calculateDiscountedPrice(
+                                  product.product_price,
+                                  product.discount
+                                )
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-400 text-xs line-through">
+                              {formatPrice(product.product_price)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-green-600">
+                            Tiết kiệm:{" "}
+                            {formatPrice(
+                              Number(product.product_price) -
+                                calculateDiscountedPrice(
+                                  product.product_price,
+                                  product.discount
+                                )
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <span className="text-gray-400 text-xs line-through">
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-800 font-semibold text-sm">
                             {formatPrice(product.product_price)}
                           </span>
+                          <span className="text-xs text-green-600">
+                            (Đã bao gồm VAT)
+                          </span>
                         </div>
-                        <div className="text-xs text-green-600">
-                          Tiết kiệm: {formatPrice(Number(product.product_price) - calculateDiscountedPrice(product.product_price, product.discount))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-800 font-semibold text-sm">
-                          {formatPrice(product.product_price)}
-                        </span>
-                        <span className="text-xs text-green-600">
-                          (Đã bao gồm VAT)
-                        </span>
-                      </div>
-                    )}
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
-            {activeTab === 'categories' && (
+            {activeTab === "categories" && (
               <div className="text-center py-8 text-gray-500">
                 Tính năng đang được phát triển
               </div>
             )}
-            {activeTab === 'pages' && (
+            {activeTab === "pages" && (
               <div className="text-center py-8 text-gray-500">
                 Tính năng đang được phát triển
               </div>
@@ -377,6 +474,48 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
           <div className="text-center py-8 text-gray-500">
             Không tìm thấy kết quả nào cho &quot;{searchQuery}&quot;
           </div>
+        ) : recentSearches.length > 0 ? (
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center text-gray-700">
+                <HistoryIcon className="mr-2" fontSize="small" />
+                <h3 className="font-medium">Tìm kiếm gần đây</h3>
+              </div>
+              <button
+                onClick={clearSearchHistory}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                type="button"
+              >
+                <DeleteOutlineIcon fontSize="small" className="mr-1" />
+                Xóa tất cả
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {recentSearches.map((query, index) => (
+                <li key={index} className="flex items-center justify-between">
+                  <button
+                    onClick={() => selectRecentSearch(query)}
+                    className="flex-1 text-left py-2 px-3 hover:bg-gray-50 rounded-md text-gray-700 flex items-center"
+                    type="button"
+                  >
+                    <HistoryIcon
+                      fontSize="small"
+                      className="mr-2 text-gray-400"
+                    />
+                    {query}
+                  </button>
+                  <button
+                    onClick={(e) => removeSearchItem(query, e)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                    aria-label="Xóa tìm kiếm này"
+                    type="button"
+                  >
+                    <CloseIcon fontSize="small" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-gray-500">
             <SearchIcon className="w-12 h-12 mb-4" />
@@ -384,6 +523,24 @@ export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
+  return (
+    <div
+      className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      }`}
+    >
+      <Suspense fallback={
+        <div className="h-full w-full bg-white flex items-center justify-center">
+          <div className="animate-pulse">Đang tải tìm kiếm...</div>
+        </div>
+      }>
+        <SearchSidebarContent onClose={onClose} isOpen={isOpen} />
+      </Suspense>
     </div>
   );
 }

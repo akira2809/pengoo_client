@@ -15,6 +15,7 @@ export interface UserApiData { // Export để có thể dùng trong store
   avatar_url: string;
   address: string;
   role: string;
+  points?: number; 
 }
 
 // Responses từ API của bạn
@@ -37,6 +38,7 @@ interface VerifyDecodedData {
   picture?: string; // Một số API có thể trả về 'picture' thay vì 'avatar_url'
   address?: string;
   role?: string;
+  points?: number;
 }
 
 interface VerifyResponse {
@@ -73,7 +75,7 @@ export const authService = {
    * Gửi yêu cầu đăng nhập và trả về access token.
    */
   signIn: async (credentials: { email: string; password: string }): Promise<SignInResponse> => {
-    const response = await fetch(`${AUTH_API_BASE_URL}/signin`, {
+    const response = await fetch(`${AUTH_API_BASE_URL}/simple-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
@@ -233,4 +235,11 @@ export const authService = {
       message: data.message || 'Đổi mật khẩu thành công',
     };
   },
+
+  /**
+ * Người dùng nhập mã khuyến mãi để đổi voucher (dựa trên điểm)
+ * Endpoint: POST /coupons/verify-voucher
+ */
+
+
 };

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 // Ensure User interface is available (can be imported from useAuthStore if defined there)
 interface User {
@@ -16,6 +17,7 @@ interface User {
   avatar_url: string;
   address: string;
   role: string;
+  points?: number; 
 }
 
 export default function AccountPage() {
@@ -38,6 +40,7 @@ export default function AccountPage() {
       });
       setAccountData(user);
     }
+      console.log('User data:', user);
   }, [user]);
 
   // Handle input changes for form fields
@@ -206,7 +209,7 @@ export default function AccountPage() {
               <div className="relative flex-shrink-0">
                 <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
                   {formData.avatar_url ? ( // Use formData for avatar when editing
-                    <img
+                    <Image
                       src={formData.avatar_url}
                       alt="Ảnh đại diện"
                       className="w-full h-full object-cover"
@@ -287,11 +290,15 @@ export default function AccountPage() {
                     <p className="text-2xl font-semibold text-gray-900 leading-tight">
                       {accountData.full_name || accountData.username || 'Chưa cập nhật'}
                     </p>
-                    <p className="text-base text-gray-600">{accountData.email}</p>
+                    <p className="text-base text-gray-600"><strong>Email: </strong>{accountData.email}</p>
                     <p className="text-base text-gray-600">
+                      <strong>Số điện thoại: </strong>
                       {accountData.phone_number || 'Chưa cập nhật số điện thoại'}
                     </p>
-                    <p className="text-sm text-gray-500">Tên người dùng: {accountData.username}</p>
+                    <p className="text-sm text-gray-500"><strong>Tên người dùng: </strong>{accountData.username}</p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Điểm của bạn: </strong>{accountData.points ?? 0}
+                    </p>
                   </div>
                 )}
               </div>

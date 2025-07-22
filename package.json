@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3001",
     "analyze": "cross-env ANALYZE=true next build",
     "lint": "next lint"
   },
@@ -18,11 +18,15 @@
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
     "@n8n/chat": "^0.45.0",
+    "@payos/node": "^1.0.10",
     "@studio-freight/lenis": "^1.0.42",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/line-clamp": "^0.4.4",
+    "@types/date-fns": "^2.6.3",
     "class-variance-authority": "^0.7.1",
+    "confetti": "^2.0.6",
     "critters": "^0.0.25",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "firebase": "^11.10.0",
     "framer-motion": "^12.15.0",
@@ -38,6 +42,8 @@
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
+    "react-toastify": "^11.0.5",
     "react-use": "^17.6.0",
     "tailwind-merge": "^3.3.0",
     "zustand": "^5.0.5"

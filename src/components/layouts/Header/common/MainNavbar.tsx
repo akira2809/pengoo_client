@@ -1,4 +1,3 @@
-// components/layouts/Header/common/MainNavbar.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -121,11 +120,14 @@ export default function MainNavbar({
   return (
     <>
       {/* Spacer div - creates space when navbar becomes fixed */}
-      {isScrolled && <div className="h-[73px]" />}
+      {isScrolled && <div className="h-[60px] md:h-[65px] lg:h-[73px]" />}
       
       <div 
         className={`
-          bg-background-900 text-text-50 px-4 py-4 flex justify-between items-center md:px-12
+          bg-background-900 text-text-50 
+          px-4 py-3 md:py-4 lg:py-5 
+          flex justify-between items-center 
+          md:px-6 lg:px-12
           transition-all duration-300 ease-in-out
           ${isScrolled 
             ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95' 
@@ -135,19 +137,21 @@ export default function MainNavbar({
       >
         {/* Mobile Menu Icon (Left) / Desktop Left Menu Wrapper */}
         <div className="flex items-center">
+          {/* Menu Icon: visible on small screens, hidden on md (tablets) and larger */}
           <button
-            className={`md:hidden z-20 ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200`}
+            className={`lg:hidden z-20 ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200`}
             onClick={onMenuToggle}
             aria-label="Toggle menu"
           >
             <MenuIcon className="text-text-50"/>
           </button>
 
-          {/* Desktop Left Menu */}
-          <nav className="hidden md:flex space-x-6 text-sm font-semibold ml-4">
+          {/* Desktop/Tablet Left Menu: hidden on small screens, flex on md (tablets) and larger */}
+          {/* Note: Adjust space-x-6 as needed for tablet spacing */}
+          <nav className="hidden lg:flex space-x-6 text-sm font-semibold ml-4">
             <NavLinks
               onCollectionsToggle={handleCollectionsToggle}
-              isDesktop={true}
+              isDesktop={true} // This prop should indicate if it's a desktop-like view
             />
           </nav>
         </div>
@@ -157,8 +161,8 @@ export default function MainNavbar({
 
         {/* Right Icons (Always visible) */}
         <div className="flex items-center space-x-2 md:space-x-4 text-sm z-10">
-          {/* Language và USD chỉ hiển thị trên desktop */}
-          <div className="hidden md:flex items-center space-x-1">
+          {/* Language và USD chỉ hiển thị trên desktop/tablet lớn hơn */}
+          <div className="hidden lg:flex items-center space-x-1"> {/* Changed md:flex to lg:flex */}
             <LanguageIcon className="text-text-50"/>
             <span>USD</span>
           </div>

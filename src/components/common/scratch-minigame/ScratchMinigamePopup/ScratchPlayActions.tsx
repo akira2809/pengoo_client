@@ -1,6 +1,8 @@
 import TicketEarningActions from "../TicketEarningActions";
 import DailyTicketButton from "../DailyTicketButton";
 
+type TicketEarningType = "post" | "product" | "social";
+
 export default function ScratchPlayActions({
   tickets,
   isAuthenticated,
@@ -16,9 +18,9 @@ export default function ScratchPlayActions({
 }: {
   tickets: number | null;
   isAuthenticated: boolean;
-  earnLoading: any;
-  earnMsg: any;
-  onEarn: any;
+  earnLoading: TicketEarningType | null;
+  earnMsg: Record<TicketEarningType, string>;
+  onEarn: (type: TicketEarningType, tickets?: number) => void;
   claimLoading: boolean;
   claimMsg: string | null;
   onClaim: () => void;

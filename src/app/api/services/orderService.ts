@@ -1,55 +1,8 @@
 // Define CartItem interface locally since it's not exported from cartStore
-interface CartItem {
-  id: number;
-  product_name: string;
-  product_price: number | string;
-  quantity: number;
-  discount?: number;
-  image_url?: string;
-}
+import { CreateOrderRequest, CreateOrderResponse, CheckoutFormData, CartItem, OrderItemDetail } from '@/app/type/order';
+import { apiClient } from '../apiClient';
+import { API_CONFIG } from '../apiConfig';
 
-// Define form data interface for checkout
-interface CheckoutFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  apartment: string;
-  note?: string;
-  paymentMethod: 'cod' | 'payos';
-  shippingMethod: 'localHCM' | 'outsideHCM';
-  total: number;
-  couponCode?: string;
-}
-
-export interface OrderItemDetail {
-  productId: number;
-  quantity: number;
-  price: number;
-}
-
-export interface CreateOrderRequest {
-  userId?: number | null;
-  delivery_id: number;
-  payment_type: 'cod' | 'payos';
-  total_price: number;
-  shipping_address: string;
-  payment_status: 'pending' | 'paid' | 'failed';
-  productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  couponCode?: string;
-  details: OrderItemDetail[];
-}
-
-export interface CreateOrderResponse {
-  success: boolean;
-  order_id: number;
-  order_code: string;
-  payment_url?: string;
-  message?: string;
-  error?: string;
-}
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -65,7 +18,7 @@ export const orderService = {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Có lỗi xảy ra khi tạo đơn hàng');
       }
@@ -88,23 +41,23 @@ export const orderService = {
     return cartItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
-      price: typeof item.product_price === 'string' 
-        ? parseFloat(item.product_price) 
+      price: typeof item.product_price === 'string'
+        ? parseFloat(item.product_price)
         : item.product_price
     }));
   },
 
   // Helper to prepare order data for the API
   prepareOrderData(
-    formData: CheckoutFormData, 
-    cartItems: CartItem[], 
+    formData: CheckoutFormData,
+    cartItems: CartItem[],
     userId?: number
   ): CreateOrderRequest {
     const isPayOS = formData.paymentMethod === 'payos';
-    
+
     return {
       userId: userId || null,
-      delivery_id: formData.shippingMethod === 'localHCM' ? 1 : 5, // 1 for local, 2 for outside HCM
+      delivery_id: formData.delivery_id,
       payment_type: isPayOS ? 'payos' : 'cod',
       total_price: formData.total,
       shipping_address: `${formData.address}, ${formData.city}`,
@@ -113,5 +66,36 @@ export const orderService = {
       couponCode: formData.couponCode,
       details: this.mapCartItemsToOrderItems(cartItems)
     };
-  }
+  },
+
+  // Xóa đơn hàng
+  async deleteOrder(id: string) {
+    return apiClient.delete<CartItem[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
+  },
+  // Lấy tất cả đơn hàng
+  async getAllOrders() {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BASE);
+  },
+
+  //Lấy đơn hàng theo ID
+  async getOrderById(id: string) {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
+  },
+
+  // Huỷ đơn hàng
+  async cancelOrder(orderId: number): Promise<void> {
+    try {
+      await apiClient.patch(API_CONFIG.ENDPOINTS.ORDERS.UPDATE_STATUS(orderId), {
+        productStatus: 'cancelled'
+      });
+    } catch (error) {
+      console.error('Cancel order failed:', error);
+      throw error;
+    }
+  },
+
+  async getDeliveryMethod() {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
+
+  },
 };

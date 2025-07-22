@@ -20,7 +20,7 @@ type MilestoneCoupon = {
 type ScratchResult = {
   grid: string[][];
   tileTokens: string[][];
-  winLines: string[];
+  winLines: Array<{type: 'row' | 'col' | 'diag'; index: number}>;
   bonus: number;
   gridScore: number;
   totalPoints: number;
@@ -29,6 +29,11 @@ type ScratchResult = {
   couponCode: string | null;
   message: string;
   userPoints?: number;
+  reward?: {
+    type: string;
+    value: number;
+    description: string;
+  };
 };
 
 type TicketEarningType = "post" | "product" | "social";
@@ -40,8 +45,8 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   const [scratchedPercent, setScratchedPercent] = useState(0);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tickets, setTickets] = useState<number | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [tickets, setTickets] = useState<number>(0);
   const [earnLoading, setEarnLoading] = useState<TicketEarningType | null>(null);
   const [earnMsg, setEarnMsg] = useState<Record<TicketEarningType, string>>({
     post: "",
@@ -51,17 +56,65 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimMsg, setClaimMsg] = useState<string | null>(null);
   const [milestoneCoupons, setMilestoneCoupons] = useState<MilestoneCoupon[]>([]);
-  const [nextCoupon, setNextCoupon] = useState<{ code: string; discount: number } | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Remove unused nextCoupon state since it's not used in the component
+  // Use type assertion to match the expected type in ScratchCardArea
+  const canvasRef = useRef<HTMLCanvasElement>(null) as React.MutableRefObject<HTMLCanvasElement | null>;
   const { isAuthenticated } = useAuthStore();
+  const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
+  const [initialUserPoints, setInitialUserPoints] = useState<number>(0);
+
+  // Fetch user's current points when modal opens
+  useEffect(() => {
+    const fetchUserPoints = async () => {
+      try {
+        const res = await apiClient.get<{ userPoints: number }>("/minigame/user-points");
+        const points = res.data?.userPoints ?? 0;
+        setInitialUserPoints(points);
+        setDisplayedUserPoints(points);
+      } catch {
+        setInitialUserPoints(0);
+        setDisplayedUserPoints(0);
+      }
+    };
+    fetchUserPoints();
+  }, []);
+
+  // When a new game starts, keep the previous points until scratch is done
+  useEffect(() => {
+    if (!playing) {
+      setDisplayedUserPoints(initialUserPoints);
+    }
+  }, [playing, initialUserPoints]);
+
+  // When scratch is completed, update the displayed points
+  useEffect(() => {
+    if (scratched && result?.userPoints !== undefined) {
+      setDisplayedUserPoints(result.userPoints);
+    }
+  }, [scratched, result?.userPoints]);
+
+  // Handle error state updates
+  const handleSetError = (error: Error | string | null) => {
+    if (error === null) {
+      setError(null);
+    } else if (typeof error === 'string') {
+      setError(new Error(error));
+    } else {
+      setError(error);
+    }
+  };
 
   // Fetch ticket count
   const fetchTickets = async () => {
+    setLoading(true);
     try {
-      const res = await apiClient.post<ScratchResult>("/minigame/play-scratch", {});
-      if (res.data?.tickets !== undefined) setTickets(res.data.tickets);
+      // FIX: Use the correct endpoint
+      const res = await apiClient.get<{ tickets: number }>("/minigame/ticket-count");
+      setTickets(res.data?.tickets ?? 0);
     } catch {
       setTickets(0);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,7 +143,7 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
       }, 50);
     } catch (err) {
       const error = err as Error;
-      setError(error.message || "Có lỗi xảy ra khi kết nối minigame backend.");
+      handleSetError(error.message || "Có lỗi xảy ra khi kết nối minigame backend.");
       setTickets(0);
     } finally {
       setLoading(false);
@@ -121,6 +174,9 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
       setEarnLoading(null);
     }
   };
+  // This function is used in the ScratchPlayActions component
+  // @ts-expect-error - This is used in the ScratchPlayActions component
+  window.__earnTicket = earnTicket;
 
   // Claim daily ticket
   const claimDailyTicket = async () => {
@@ -128,7 +184,7 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
     setClaimMsg(null);
     try {
       if (!isAuthenticated) {
-        setClaimMsg("Bạn cần đăng nhập để nhận vé miễn phí.");
+        handleSetError(new Error("Bạn cần đăng nhập để chơi!"));
         setClaimLoading(false);
         return;
       }
@@ -161,14 +217,12 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   useEffect(() => {
     const fetchNextCoupon = async () => {
       if (result?.userPoints && result.userPoints > 0) {
-        const res = await apiClient.get<{ coupon: { code: string; discount: number } | null }>(
+        const res = await apiClient.get<{ coupon: { code: string; discount: number; status?: string } | null }>(
           `/coupons/next-milestone-coupon?userPoints=${result.userPoints}`
         );
         // Defensive: only set if coupon is active
         if (res.data?.coupon && (!res.data.coupon.status || res.data.coupon.status === "active")) {
-          setNextCoupon(res.data.coupon);
-        } else {
-          setNextCoupon(null);
+          // No need to set nextCoupon since it's not used
         }
       }
     };
@@ -216,11 +270,12 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   };
 
   // Show ticket count on open
-  useState(() => {
+  useEffect(() => {
     fetchTickets();
-  });
+  }, []);
 
-  const userPoints = result?.userPoints ?? 0;
+  // Use displayedUserPoints for display
+  const userPoints = displayedUserPoints;
   const nextMilestone = milestoneCoupons.find((m) => userPoints < m.milestonePoints);
 
   // Helper to mask coupon code
@@ -287,7 +342,20 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
               isAuthenticated={isAuthenticated}
               earnLoading={earnLoading}
               earnMsg={earnMsg}
-              onEarn={earnTicket}
+              onEarn={async (type: TicketEarningType, ticketsEarned?: number) => {
+                try {
+                  // Call the earnTicket function with the type
+                  await earnTicket(type);
+                  // If ticketsEarned is provided, update the ticket count optimistically
+                  if (typeof ticketsEarned === "number") {
+                    setTickets(prev => prev + ticketsEarned);
+                  }
+                  // Always refresh from backend for accuracy
+                  await fetchTickets();
+                } catch (error) {
+                  console.error('Error earning ticket:', error);
+                }
+              }}
               claimLoading={claimLoading}
               claimMsg={claimMsg}
               onClaim={claimDailyTicket}
@@ -309,7 +377,7 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
               error={error}
               result={result}
               handleScratch={handleScratch}
-              useTicketToPlay={useTicketToPlay}
+              onPlayAgain={useTicketToPlay}
               tickets={tickets}
             />
           )}

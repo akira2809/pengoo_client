@@ -33,7 +33,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({ productId
         // Filter only visible reviews
         const allReviews = Array.isArray(res.data) ? res.data : [];
         setReviews(allReviews.filter((r) => r.status === 'Visible'));
-      } catch (err) {
+      } catch {
         setError('Không thể tải đánh giá. Vui lòng thử lại sau.');
       } finally {
         setLoading(false);
@@ -52,14 +52,15 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({ productId
         rating: userRating,
         content: userComment,
       });
-      const newReview = res.data;
+      const newReview = res.data as Review;
       // Only add if visible
       if (newReview.status === 'Visible') {
         setReviews([newReview, ...reviews]);
       }
       setUserRating(0);
       setUserComment('');
-    } catch (err) {
+    } catch (error) {
+      console.error('Error submitting review:', error);
       alert('Không thể gửi đánh giá. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);

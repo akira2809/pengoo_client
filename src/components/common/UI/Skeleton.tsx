@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import { motion, HTMLMotionProps } from 'framer-motion';
 import { forwardRef } from 'react';
 
 type SkeletonVariant = 'default' | 'card' | 'text' | 'title' | 'avatar' | 'button' | 'image';

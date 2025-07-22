@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const ShuffleHero = () => {
   return (
@@ -9,7 +9,7 @@ const ShuffleHero = () => {
           Better every day
         </span>
         <h3 className="text-4xl md:text-6xl font-semibold">
-          Let's change it up a bit
+          Let&apos;s change it up a bit
         </h3>
         <p className="text-base md:text-lg text-slate-700 my-4 md:my-6">
           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam nobis in
@@ -24,7 +24,7 @@ const ShuffleHero = () => {
   );
 };
 
-const shuffle = (array: (typeof squareData)[0][]) => {
+const shuffle = (array: { id: number; src: string }[]) => {
   let currentIndex = array.length,
     randomIndex;
 
@@ -76,7 +76,7 @@ const squareData = [
   },
   {
     id: 9,
-    src: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80",
+    src: "https://images.unsplash.com/photo-1431324155629-869d353cecc7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80",
   },
   {
     id: 10,
@@ -124,20 +124,23 @@ const generateSquares = () => {
 };
 
 const ShuffleGrid = () => {
-  const timeoutRef = useRef<any>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [squares, setSquares] = useState(generateSquares());
+
+  const shuffleSquares = useCallback(() => {
+    setSquares(generateSquares());
+    timeoutRef.current = setTimeout(shuffleSquares, 3000);
+  }, []);
 
   useEffect(() => {
     shuffleSquares();
 
-    return () => clearTimeout(timeoutRef.current);
-  }, []);
-
-  const shuffleSquares = () => {
-    setSquares(generateSquares());
-
-    timeoutRef.current = setTimeout(shuffleSquares, 3000);
-  };
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [shuffleSquares]);
 
   return (
     <div className="grid grid-cols-4 grid-rows-4 h-[450px] gap-1">

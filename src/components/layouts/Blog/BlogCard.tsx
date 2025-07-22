@@ -11,7 +11,7 @@ interface BlogCardProps {
   link: string;
 }
 
-const BlogCard: React.FC<BlogCardProps> = ({ id, imageSrc, title, excerpt, date, link }) => {
+const BlogCard: React.FC<BlogCardProps> = ({ imageSrc, title, excerpt, date, link }) => {
   return (
     <a href={link} className="block group h-full"> {/* Thêm h-full */}
       <div className="bg-white rounded-lg overflow-hidden h-full flex flex-col">

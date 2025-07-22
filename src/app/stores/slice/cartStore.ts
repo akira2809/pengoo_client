@@ -30,7 +30,7 @@ interface OldCartItem {
   image?: string;
   image_url?: string;
   discount?: number | string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface CartState {
@@ -88,13 +88,17 @@ export const useCartStore = create<CartState>()(
               0
             ),
             quantity: item.quantity || 1,
-            image_url: String(
-              'image' in item ? item.image :
-              'image_url' in item ? item.image_url :
-              'images' in item && Array.isArray((item as any).images) && (item as any).images[0]?.url ? 
-                (item as any).images[0].url :
-              ''
-            ),
+            image_url: (() => {
+              if ('image' in item && item.image) return String(item.image);
+              if ('image_url' in item && item.image_url) return String(item.image_url);
+              if ('images' in item && Array.isArray(item.images) && item.images[0]) {
+                const firstImage = item.images[0];
+                if (typeof firstImage === 'object' && firstImage !== null && 'url' in firstImage) {
+                  return String(firstImage.url);
+                }
+              }
+              return '';
+            })(),
             discount: Number(item.discount) || 0,
           };
           
@@ -135,20 +139,20 @@ export const useCartStore = create<CartState>()(
       name: 'cart-storage',
       storage: createJSONStorage(() => localStorage),
       version: 2, // Increment version to trigger migration
-      migrate: (persistedState: unknown) => {
+      migrate: (persistedState: unknown): { items: CartItem[] } => {
         if (!persistedState) return { items: [] };
         
         // Handle both direct state and wrapped state (from persist)
-        const state = (persistedState as { state?: CartState }).state || persistedState as CartState;
+        const state = (persistedState as { state?: CartState }).state || (persistedState as CartState);
         
-        if (!state || !Array.isArray((state as any).items)) {
+        if (!state || !Array.isArray((state as { items?: unknown }).items)) {
           return { items: [] };
         }
         
         // Migrate each item to the new format
-        const migratedItems = (state as any).items
-          .filter((item: unknown) => item !== null && typeof item === 'object')
-          .map((item: unknown) => {
+        const migratedItems = (state as { items: Array<unknown> }).items
+          .filter((item: unknown): item is Record<string, unknown> => item !== null && typeof item === 'object')
+          .map((item: Record<string, unknown>): CartItem | undefined => {
             // Handle old format
             if (isOldCartItem(item)) {
               return {
@@ -172,7 +176,8 @@ export const useCartStore = create<CartState>()(
               discount: Number(typedItem.discount) || 0,
               ...typedItem, // Spread any additional properties
             };
-          });
+          })
+          .filter((item): item is CartItem => item !== undefined);
         
         return { items: migratedItems };
       },

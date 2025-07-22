@@ -89,7 +89,7 @@ export default function HeroBanner() {
   }
 
   return (
-    <div className="relative w-full h-[70vh] md:h-[90vh] overflow-hidden">
+    <div className="relative w-full h-[70vh] md:h-[83vh] overflow-hidden">
       {images.map((src, index) => (
         <div
           key={index}

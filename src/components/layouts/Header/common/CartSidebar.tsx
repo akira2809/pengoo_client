@@ -109,10 +109,10 @@ function CartSidebarContent({
   return (
     <div
       ref={cartPopupRef}
-      className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[999] flex flex-col"
+      className="fixed top-0 right-0 w-full md:w-1/3 min-w-[320px] h-full bg-background-50 shadow-2xl z-[99999999] flex flex-col"
       style={{ display: cartOpen ? "flex" : "none" }}
     >
-        <div className="flex justify-between items-center p-4 border-b bg-background-700 text-text-950">
+        <div className="flex justify-between items-center p-4 border-b bg-background-900 text-text-950">
           <h3 className="text-lg font-semibold text-text-50">Shopping Cart</h3>
           <button
             onClick={onClose}
@@ -138,7 +138,7 @@ function CartSidebarContent({
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center space-x-4 text-text-900  bg-background-50 p-4 rounded-lg hover:bg-sky-200 transition-colors"
+                  className="flex items-center space-x-4 text-text-900  bg-background-50 p-4 rounded-lg hover:bg-sky-100 transition-colors"
                 >
                   {(() => {
                     // Check if we have a valid image URL
@@ -258,7 +258,7 @@ function CartSidebarContent({
         {cartItems.length > 0 && (
           <div className="border-t bg-background-nav p-4">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-semibold text-text-nav">
+              <span className="text-2xl font-semibold text-text-nav">
                 Total:
               </span>
               <span className="text-xl font-bold text-primary">

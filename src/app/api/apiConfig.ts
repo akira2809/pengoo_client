@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   // Base URL for all API requests
   BASE_URL: 'http://localhost:3000',
-  
+
   // API endpoints
   ENDPOINTS: {
     // Product endpoints
@@ -13,16 +13,29 @@ export const API_CONFIG = {
       BY_SLUG: (slug: string) => `/products/slug/${slug}`,
       SEARCH: '/products?name=',
       CATEGORIES: '/categories',
-      BY_CATEGORY: (category: string) => `/products/category/${category}`
+      TAGS: '/tags',
+      BY_CATEGORY: (category: string) => `/products/category/${category}`,
+      BY_TAG: (tag: string) => `/products/tag/${tag}`,
     },
-    
+
+    // Collection endpoints
+    COLLECTIONS: {
+      BASE: '/collections',
+      BY_ID: (id: string | number) => `/collections/${id}`,
+      BY_SLUG: (slug: string) => `/collections/slug/${slug}`,
+    },
+
     // Order endpoints
     ORDERS: {
       BASE: '/orders',
       BY_ID: (id: string) => `/orders/${id}`,
-      USER_ORDERS: '/orders/user'
+      USER_ORDERS: '/orders/user',
+      UPDATE_STATUS: (id: number) => `/orders/${id}/status`,
+      PAYOS_SUCCESS: '/orders/payos/order-success',
+      PAYOS_CANCEL: '/orders/payos/order-cancel',
+      DELIVERY: '/orders/delivery',
     },
-    
+
     // User endpoints
     USERS: {
       BASE: '/users',
@@ -30,7 +43,31 @@ export const API_CONFIG = {
       ADDRESSES: '/users/addresses',
       FAVORITES: '/users/favorites'
     },
-    
+
+    // Coupon endpoints
+    COUPONS: {
+      BASE: '/coupons',
+      VERIFY_VOUCHER: '/coupons/verify-voucher',
+      APPLYVOUCHER: '/coupons/validate',
+      GET_BY_USER_ID: '/coupons/get-voucher-by-userId'
+    },
+
+    // Tag endpoints
+    TAGS: {
+      BASE: '/tags',
+      BY_ID: (id: number | string) => `/tags/${id}`,
+    },
+
+
+    // wishlist endpoints
+    WISHLIST: {
+      BASE: '/wishlist',
+      BY_USER_ID: (userId: number) => `/wishlist?userId=${userId}`,
+      BY_PRODUCT_ID: (productId: number) => `/wishlist/${productId}`,
+      MOVE_TO_ORDER: (orderId: number) => `/wishlist/move-to-order/${orderId}`,
+    },
+
+
     // Auth endpoints
     AUTH: {
       LOGIN: '/auth/login',
@@ -41,7 +78,7 @@ export const API_CONFIG = {
       RESET_PASSWORD: '/auth/reset-password'
     }
   },
-  
+
   // Default request configuration
   DEFAULT_REQUEST_CONFIG: {
     headers: {
@@ -51,7 +88,7 @@ export const API_CONFIG = {
     timeout: 10000, // 10 seconds
     withCredentials: true // Enable sending/receiving cookies
   },
-  
+
   // Error messages
   ERROR_MESSAGES: {
     NETWORK_ERROR: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.',
@@ -89,9 +126,9 @@ export interface PaginatedResponse<T> {
 }
 
 // Helper function to build query string
-export const buildQueryString = (params: Record<string, any>): string => {
+export const buildQueryString = (params: Record<string, string | number | boolean | (string | number | boolean)[] | null | undefined>): string => {
   const queryParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       if (Array.isArray(value)) {
@@ -101,7 +138,7 @@ export const buildQueryString = (params: Record<string, any>): string => {
       }
     }
   });
-  
+
   const queryString = queryParams.toString();
   return queryString ? `?${queryString}` : '';
 };

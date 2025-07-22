@@ -1,6 +1,7 @@
 // components/ProductDetailsSection.tsx
 "use client"
 import React, { useState } from 'react';
+import Link from 'next/link';
 import PriceDisplay from './component/PriceDisplay';
 import QuantitySelector from './component/QuantitySelector';
 import Button from './component/Button';
@@ -8,11 +9,17 @@ import InfoItem from './component/InfoItem';
 import { useCartStore } from '@/app/stores/slice/cartStore';
 import toast from 'react-hot-toast';
 
+interface Tag {
+  id: number;
+  name: string;
+  type: string;
+}
+
 interface ProductDetailsSectionProps {
   productId: string | number;
   productName: string;
   originalPrice: number;
-  discount?: number; // Đây là phần trăm giảm giá (ví dụ: 12 cho 12%)
+  discount?: number;
   description: string;
   features: string[];
   warranty: string;
@@ -20,27 +27,29 @@ interface ProductDetailsSectionProps {
   isLoading?: boolean;
   image_url?: string;
   slug?: string;
+  tags?: Tag[];
+  category?: { id: number; name: string };
 }
 
 const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   productId,
   productName,
   originalPrice,
-  discount, // Lấy prop discount từ đây
+  discount,
   description,
-  features,
   warranty,
   shippingInfo,
   image_url = '',
-  slug = ''
+  slug = '',
+  tags = [],
+  category
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const addItem = useCartStore(state => state.addItem);
 
-  // Tính toán discountedPrice dựa trên originalPrice và discount (phần trăm)
   const calculatedDiscountedPrice = discount && discount > 0
     ? originalPrice * (1 - discount / 100)
-    : originalPrice; // Nếu không có discount, giá giảm chính là giá gốc
+    : originalPrice;
 
   const handleAddToCart = () => {
     addItem({
@@ -50,9 +59,9 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       quantity: quantity,
       image_url: image_url,
       slug: slug,
-      description: description
+      description: description,
+      discount: 0
     });
-    
     toast.success(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng!`, {
       duration: 3000,
       position: 'top-center',
@@ -68,7 +77,6 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
 
   const handleBuyNow = () => {
     handleAddToCart();
-    console.log(`Mua ngay ${quantity} sản phẩm "${productName}".`);
     toast.success(`Đang tiến hành mua ${quantity} sản phẩm "${productName}"!`, {
       duration: 3000,
       position: 'top-center',
@@ -82,14 +90,24 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
     });
   };
 
+  // Extract genres and other tags
+  const genres = tags.filter(tag => tag.type === 'genre');
+  const otherTags = tags.filter(tag => tag.type !== 'genre');
+
   return (
     <div className="w-full">
       {/* Breadcrumb */}
-      <div className="text-sm text-gray-500 mb-4">
-        <span className="hover:text-[#4B3C2D]">Trang chủ</span>
-        <span className="mx-2">/</span>
-        <span className="hover:text-[#4B3C2D]">Sản phẩm</span>
-        <span className="mx-2">/</span>
+      <div className="text-sm text-gray-500 mb-4 flex items-center gap-1">
+        <Link href="/" className="hover:text-[#4B3C2D] underline">Trang chủ</Link>
+        <span className="mx-1">/</span>
+        <Link href="/products" className="hover:text-[#4B3C2D] underline">Sản phẩm</Link>
+        {category && (
+          <>
+            <span className="mx-1">/</span>
+            <span className="hover:text-[#4B3C2D]">{category.name}</span>
+          </>
+        )}
+        <span className="mx-1">/</span>
         <span className="text-[#4B3C2D] font-medium">{productName}</span>
       </div>
 
@@ -102,7 +120,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       <div className="mb-6">
         <PriceDisplay 
           originalPrice={originalPrice} 
-          percentageDiscount={discount} // Truyền percentageDiscount xuống đây
+          percentageDiscount={discount}
         />
       </div>
       
@@ -112,14 +130,28 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
           {description}
         </p>
       </div>
-      
-      {/* Features - uncomment khi cần */}
-      {/* <div className="mb-6">
-        <FeatureAccordion 
-          title="Tính năng sản phẩm"
-          features={features} 
-        />
-      </div> */}
+
+      {/* Tags and Genres */}
+      {(genres.length > 0 || otherTags.length > 0) && (
+        <div className="mb-6 flex flex-wrap gap-2">
+          {genres.length > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-semibold text-gray-600">Thể loại:</span>
+              {genres.map(tag => (
+                <span key={tag.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">{tag.name}</span>
+              ))}
+            </div>
+          )}
+          {otherTags.length > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-semibold text-gray-600">Tags:</span>
+              {otherTags.map(tag => (
+                <span key={tag.id} className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs">{tag.name}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Quantity Selector */}
       <div className="mb-6">
@@ -137,14 +169,14 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <Button 
           variant="primary" 
-          className="flex-1 justify-center py-3 text-sm font-medium"
+          className="flex-1 justify-center py-3 text-sm font-medium bg-background-900 hover:bg-background-800 text-white"
           onClick={handleAddToCart}
         >
           Thêm vào giỏ hàng
         </Button>
         <Button 
           variant="secondary" 
-          className="flex-1 justify-center py-3 text-sm font-medium"
+          className="flex-1 justify-center py-3 text-sm font-medium border border-background-900 text-background-900 hover:bg-background-50"
           onClick={handleBuyNow}
         >
           Mua ngay

@@ -15,6 +15,7 @@ export interface User {
   avatar_url: string;
   address: string;
   role: string;
+  points?: number;
 }
 
 // Định nghĩa AuthState chứa tất cả các trạng thái và hàm liên quan đến xác thực
@@ -37,6 +38,7 @@ interface AuthState {
     avatar_url?: string;
     address?: string;
     role?: string;
+    points?: number; 
   }) => Promise<{ success: boolean; message: string }>;
   verifyToken: (token: string) => Promise<{ success: boolean; user?: User; message?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -45,6 +47,7 @@ interface AuthState {
   updatePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   clearError: () => void;
   logout: () => void;
+  verifyVoucherByUserPoint: (voucherCode: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -82,7 +85,8 @@ export const useAuthStore = create<AuthState>()(
             phone_number: verifyData.decoded.phone_number || verifyData.decoded.phone || '',
             avatar_url: verifyData.decoded.avatar_url || verifyData.decoded.picture || '',
             address: verifyData.decoded.address || '',
-            role: verifyData.decoded.role || 'user'
+            role: verifyData.decoded.role || 'user',
+            points: verifyData.decoded.points || 0, 
           };
 
           set({
@@ -247,6 +251,24 @@ export const useAuthStore = create<AuthState>()(
         // Bạn có thể thêm logic xóa các dữ liệu khác liên quan đến phiên làm việc nếu cần
       },
 
+      verifyVoucherByUserPoint: async (voucherCode) => {
+        const { token } = get();
+        if (!token) {
+          return { success: false, message: 'Bạn cần đăng nhập để sử dụng mã khuyến mãi.' };
+        }
+
+        try {
+          const result = await authService.verifyVoucherByUserPoint(voucherCode, token);
+          return result;
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Lỗi xác minh mã khuyến mãi.';
+          set({ error: errorMessage });
+          return { success: false, message: errorMessage };
+        }
+      },
+
+
       /**
        * Cập nhật mật khẩu người dùng
        */
@@ -274,7 +296,13 @@ export const useAuthStore = create<AuthState>()(
        * Được sử dụng để kiểm tra token từ localStorage khi khởi động ứng dụng.
        */
       verifyToken: async (token: string) => {
-        set({ isLoading: true, error: null }); // Đặt loading khi bắt đầu xác minh
+        if (!token) {
+          console.log('No token provided for verification');
+          return { success: false, message: 'No authentication token found' };
+        }
+
+        set({ isLoading: true, error: null });
+        
         try {
           const data = await authService.verifyToken(token);
           console.log('Verify Token API Response Data:', data);
@@ -289,33 +317,48 @@ export const useAuthStore = create<AuthState>()(
               phone_number: data.decoded.phone_number || data.decoded.phone || '',
               avatar_url: data.decoded.avatar_url || data.decoded.picture || '',
               address: data.decoded.address || '',
-              role: data.decoded.role || 'user'
+              role: data.decoded.role || 'user',
+              points: data.decoded.points || 0,
             };
 
             set({
               user: userData,
               isAuthenticated: true,
-              token: token, // Lưu token hợp lệ vào store
+              token: token,
               isLoading: false,
               error: null,
             });
             return { success: true, user: userData, message: data.message || 'Token hợp lệ.' };
           } else {
-            // Nếu token không hợp lệ hoặc phản hồi không mong đợi, xóa trạng thái
-            set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: data.message || 'Token không hợp lệ.' });
-            return { success: false, message: data.message || 'Token không hợp lệ.' };
+            console.log('Token verification failed:', data.message);
+            // Only clear auth state if we're certain the token is invalid
+            if (data.message?.includes('expired') || data.message?.includes('invalid')) {
+              set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: data.message });
+              return { success: false, message: data.message };
+            }
+            // For other cases, don't clear auth state to prevent logout on temporary issues
+            set({ isLoading: false });
+            return { 
+              success: false, 
+              message: data.message || 'Không thể xác minh token. Vui lòng thử lại sau.',
+              isNetworkError: true
+            };
           }
         } catch (error: unknown) {
-          let errorMessage = 'Lỗi mạng không mong muốn khi xác minh token.';
-          if (error instanceof Error) {
-            errorMessage = error.message || 'Lỗi mạng không xác định.';
-          } else if (typeof error === 'string') {
-            errorMessage = error;
-          }
           console.error('Lỗi khi xác minh token:', error);
-          // Luôn xóa trạng thái người dùng khi có lỗi xác minh token để đảm bảo an toàn
-          set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: errorMessage });
-          return { success: false, message: errorMessage };
+          // Don't clear auth state on network errors
+          set({ isLoading: false });
+          
+          let errorMessage = 'Lỗi mạng khi xác minh token. Vui lòng kiểm tra kết nối của bạn.';
+          if (error instanceof Error) {
+            errorMessage = error.message || errorMessage;
+          }
+          
+          return { 
+            success: false, 
+            message: errorMessage,
+            isNetworkError: true
+          };
         }
       }
     }),

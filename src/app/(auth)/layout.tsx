@@ -10,7 +10,8 @@ const NO_SIDEBAR_PATHS = [
   '/signup',
   '/forgot-password',
   '/reset-password',
-  '/register'
+  '/register',
+  '/mfa-verification'
 ];
 
 export default function AuthLayout({

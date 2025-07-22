@@ -11,7 +11,7 @@ interface FeaturedBlogCardProps {
   link: string;
 }
 
-const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({ id, imageSrc, title, excerpt, date, link }) => {
+const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({ imageSrc, title, excerpt, date, link }) => {
   return (
     <a href={link} className="block group">
       <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">

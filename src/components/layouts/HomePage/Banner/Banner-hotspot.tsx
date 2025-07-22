@@ -67,7 +67,8 @@ export default function SignatureBanner() {
 
       <Dialog open={!!selected} onClose={() => setSelected(null)} className="relative z-50">
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <motion.div
+          {/* Overlay giúp click ra ngoài sẽ close */}
+          <Dialog.Panel as={motion.div}
             className="bg-white p-6 rounded-xl max-w-sm w-full shadow-xl"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -83,9 +84,10 @@ export default function SignatureBanner() {
             >
               Đặt hàng
             </button>
-          </motion.div>
-        </div>
-      </Dialog>
+      </Dialog.Panel>
+  </div>
+</Dialog>
+
     </div>
   );
 }

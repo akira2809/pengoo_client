@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react'; // Import useEffect
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAuthStore } from '../../stores/slice/useAuthStore'; // IMPORT CỬA HÀNG CỦA BẠN Ở ĐÂY
+import { useAuthStore } from '../../stores/slice/useAuthStore';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token'); // Lấy token từ URL
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
       } else {
         setError(result.message || 'Đặt lại mật khẩu thất bại. Vui lòng thử lại.');
       }
-    } catch (err: any) { // Catch lỗi mạng hoặc lỗi không xác định
+    } catch (err: unknown) { // Catch lỗi mạng hoặc lỗi không xác định
       console.error('Lỗi khi gửi yêu cầu đặt lại mật khẩu:', err);
       setError('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
     } finally {
@@ -117,14 +117,16 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen flex flex-col md:flex-row bg-white">
         <div className="w-full md:w-1/2 h-64 md:h-screen relative">
           <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+            <div className="relative w-full h-full">
             <Image 
-              src="/doro.webp" 
+              src="/signin.jpg" 
               alt="Password Reset Success" 
               className="object-cover w-full h-full" 
               width={500} 
               height={500} 
               layout="responsive" 
             />
+            </div>
           </div>
         </div>
 
@@ -167,7 +169,7 @@ export default function ResetPasswordPage() {
       <div className="w-full md:w-1/2 h-64 md:h-screen relative">
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
           <Image 
-            src="/doro.webp" 
+            src="/signin.jpg" 
             alt="Reset Password" 
             className="object-cover w-full h-full" 
             width={500} 
@@ -294,5 +296,17 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

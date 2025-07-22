@@ -41,9 +41,8 @@ export default function ForgotPasswordPage() {
         // Display error message from the store's response
         setError(result.message || 'Something went wrong. Please try again.');
       }
-    } catch (_error: any) {
+    } catch {
       // Catch any unexpected errors during the process
-      console.error("Forgot password submission error:", _error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false); // Reset loading state
@@ -55,14 +54,16 @@ export default function ForgotPasswordPage() {
       {/* Left side - Image */}
       <div className="w-full md:w-1/2 h-64 md:h-screen relative">
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+          <div className="relative w-full h-full">
           <Image 
-            src="/doro.webp" 
+            src="/signin.jpg" 
             alt="Forgot Password" 
-            className="object-cover w-full h-full" 
-            width={500} 
-            height={500} 
-            layout="responsive" 
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
           />
+          </div>
         </div>
       </div>
 

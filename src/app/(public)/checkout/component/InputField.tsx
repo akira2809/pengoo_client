@@ -8,6 +8,7 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   placeholder?: string;
   className?: string;
   required?: boolean;
+  error?: string;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -17,6 +18,7 @@ const InputField: React.FC<InputFieldProps> = ({
   placeholder,
   className = '',
   required = false,
+  error,
   ...props
 }) => {
   return (
@@ -29,10 +31,13 @@ const InputField: React.FC<InputFieldProps> = ({
         id={id}
         name={id}
         placeholder={placeholder}
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+        className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 ${
+          error ? 'border-red-500' : ''
+        }`}
         required={required}
         {...props}
       />
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 };
