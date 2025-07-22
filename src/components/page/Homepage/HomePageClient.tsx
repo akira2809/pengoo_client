@@ -106,7 +106,6 @@ function HomePage() {
     <>
       <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse" />}>
         <Banner />
-        <h1>hihi</h1>
       </Suspense>
 
       <section className="py-12 sm:py-20">
