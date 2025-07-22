@@ -1,22 +1,37 @@
-# Sử dụng Node.js 20 với Alpine Linux làm base image
-FROM node:20-alpine AS base
+# 👉 Stage 1: Install dependencies and build the app
+FROM node:20-alpine AS builder
 
+# Tạo thư mục làm việc
 WORKDIR /app
 
-#copy package files
-
+# Copy file package để cài dependencies
 COPY package*.json ./
 
-#install depencies
-RUN npm install 
+# Cài dependencies
+RUN npm install
 
-# copy rest of the project
-COPY . . 
+# Copy toàn bộ source vào
+COPY . .
 
-#build app(next se tao .next folder)
+# Build ứng dụng Next.js (tạo ra .next)
 RUN npm run build
 
+# 👉 Stage 2: Create lightweight production image
+FROM node:20-alpine AS runner
+
+
+
+# Tạo thư mục làm việc mới
+WORKDIR /app
+
+# Chỉ copy những thứ cần thiết cho runtime
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+
+# App lắng nghe ở port 3000
 EXPOSE 3000
 
-# Khởi động ứng dụng
+# Lệnh chạy ứng dụng
 CMD ["npm", "start"]
