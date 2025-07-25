@@ -72,14 +72,14 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
 
   return (
     <>
-      <div className="flex flex-col-reverse md:flex-row gap-6 w-full">
+      <div className="flex flex-col-reverse xl:flex-row gap-6 w-full">
         {/* Thumbnails */}
         {(sortedThumbnails.length > 0) && (
-          <div className="flex md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 md:pr-3">
+          <div className="flex xl:flex-col gap-2 xl:gap-3 overflow-x-auto xl:overflow-visible pb-2 xl:pb-0 xl:pr-3">
             {sortedThumbnails.map((image, index) => (
               <button
                 key={index}
-                className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 relative rounded-lg overflow-hidden transition-all
+                className={`flex-shrink-0 w-16 h-16 xl:w-20 xl:h-20 relative rounded-lg overflow-hidden transition-all
                   ${mainImage === image.url 
                     ? 'ring-2 ring-blue-500 ring-offset-2' 
                     : 'hover:ring-2 hover:ring-blue-300'}

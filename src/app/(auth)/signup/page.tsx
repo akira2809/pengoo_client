@@ -129,7 +129,7 @@ export default function SignUpPage() {
         password: formData.password,
         full_name: formData.name,
         phone_number: '', // You might want to add this field to your form
-        role: 'customer',
+        role: 'user',
       });
 
       if (registrationResult.success) {
