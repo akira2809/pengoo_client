@@ -23,6 +23,8 @@ interface ProductCardProps {
   product: ProductData & {
     images?: ImageType[];
   };
+  className?: string;
+  imageClassName?: string;
 }
 
 const formatPrice = (price: number | string): string => {

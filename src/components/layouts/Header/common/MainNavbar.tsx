@@ -5,7 +5,6 @@ import { IconButton } from "@mui/material";
 import UserIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
-import LanguageIcon from "@mui/icons-material/Language";
 import MenuIcon from "@mui/icons-material/Menu";
 import NavLinks from './NavLinks';
 import Logo from './Logo';
@@ -162,11 +161,6 @@ export default function MainNavbar({
         {/* Right Icons (Always visible) */}
         <div className="flex items-center space-x-2 md:space-x-4 text-sm z-10">
           {/* Language và USD chỉ hiển thị trên desktop/tablet lớn hơn */}
-          <div className="hidden lg:flex items-center space-x-1"> {/* Changed md:flex to lg:flex */}
-            <LanguageIcon className="text-text-50"/>
-            <span>USD</span>
-          </div>
-
           <IconButton
             className="text-gray-700 hover:text-gray-900"
             aria-label="Search"

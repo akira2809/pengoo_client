@@ -1,9 +1,9 @@
 node_modules
-.next
-.git
-.vscode
-*.log
-.env
-Dockerfile
 .dockerignore
+.git
+.gitignore
+.env
+.vscode
+npm-debug.log
+Dockerfile
 README.md
