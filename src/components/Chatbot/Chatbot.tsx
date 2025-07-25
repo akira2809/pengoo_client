@@ -250,7 +250,7 @@ export default function Chatbot() {
   if (isLoading) {
     return (
       <div className="fixed bottom-6 right-6 z-50">
-        <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
