@@ -16,6 +16,7 @@ export interface UserApiData { // Export để có thể dùng trong store
   address: string;
   role: string;
   points?: number; 
+  mfaCode?:number
 }
 
 // Responses từ API của bạn
@@ -143,7 +144,6 @@ export const authService = {
     });
 
     const data: VerifyResponse = await response.json();
-
     // Nếu response không OK hoặc isValid là false, coi là token không hợp lệ
     if (!response.ok || !data.isValid) {
       throw new Error(data.message || data.error || 'Token xác thực không hợp lệ.');
@@ -214,17 +214,26 @@ export const authService = {
   /**
    * Cập nhật mật khẩu người dùng
    */
-  updatePassword: async (currentPassword: string, newPassword: string, token: string) => {
+updatePassword: async (newPassword: string, token: string) => {
   const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ currentPassword, newPassword }),
+    body: JSON.stringify({ newPassword }),
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type');
+
+  let data: any;
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
+    console.warn(' Server returned plain text:', text);
+    throw new Error(text || 'Đổi mật khẩu thất bại');
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'Đổi mật khẩu thất bại');
@@ -232,6 +241,12 @@ export const authService = {
 
   return data;
 }
+
+
+  // async updatePassword( newPassword: string, token: string) {
+  //   return apiClient.patch(`${USERS_API_BASE_URL}/updatePassword`);
+  // },
+  
 
 
   /**

@@ -45,6 +45,9 @@ const config: Config = {
           nav: "var(--text-700)", // bạn dùng text-text-nav nên gắn luôn
         },
       },
+      fontFamily: {
+    georgia: ['Georgia', 'serif'],
+  },
     },
   },
   plugins: [

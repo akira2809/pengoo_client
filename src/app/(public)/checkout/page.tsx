@@ -238,12 +238,13 @@ const CheckoutPage: React.FC = () => {
     console.log(formData);
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-
+  
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
     console.log(formData);
+    // setShippingCost()
     setErrors((prev) => ({ ...prev, [name]: undefined })); // Clear error on change
   };
   const handleShowCouponList = async () => {

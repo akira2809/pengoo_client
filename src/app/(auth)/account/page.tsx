@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
+import { apiClient } from '@/app/api/apiClient';
 
 // Ensure User interface is available (can be imported from useAuthStore if defined there)
 interface User {
@@ -27,7 +28,21 @@ export default function AccountPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<User>>({});
   const [accountData, setAccountData] = useState<User | null>(null);
-
+const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
+useEffect(() => {
+    const fetchUserPoints = async () => {
+      try {
+        const res = await apiClient.get<{ userPoints: number }>("/minigame/user-points");
+        const points = res.data?.userPoints ?? 0;
+ 
+        setDisplayedUserPoints(points);
+      } catch {
+     
+        setDisplayedUserPoints(0);
+      }
+    };
+    fetchUserPoints();
+  }, []);
   // Initialize form data when user data becomes available
   useEffect(() => {
     if (user) {
@@ -297,7 +312,7 @@ export default function AccountPage() {
                     </p>
                     <p className="text-sm text-gray-500"><strong>Tên người dùng: </strong>{accountData.username}</p>
                     <p className="text-sm text-gray-600">
-                      <strong>Điểm của bạn: </strong>{accountData.points ?? 0}
+                      <strong>Điểm của bạn: </strong>{displayedUserPoints ?? 0}
                     </p>
                   </div>
                 )}

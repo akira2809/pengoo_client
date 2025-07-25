@@ -16,6 +16,7 @@ export interface User {
   address: string;
   role: string;
   points?: number;
+  mfaCode?: number | null
 }
 
 // Định nghĩa AuthState chứa tất cả các trạng thái và hàm liên quan đến xác thực
@@ -87,6 +88,7 @@ export const useAuthStore = create<AuthState>()(
             address: verifyData.decoded.address || '',
             role: verifyData.decoded.role || 'user',
             points: verifyData.decoded.points || 0, 
+            mfaCode: verifyData.mfaCode || null, 
           };
 
           set({
@@ -272,20 +274,22 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Cập nhật mật khẩu người dùng
        */
-      updatePassword: async (_currentPassword: string, newPassword: string) => {
+      updatePassword: async ( newPassword: string) => {
         const { token } = get();
+        console.log('token',token)
         if (!token) {
           return { success: false, message: 'Người dùng chưa đăng nhập.' };
         }
-
         set({ isLoading: true, error: null });
         try {
-          const result = await authService.updatePassword(newPassword, token); // ✅ chỉ truyền 2 tham số
+          const result = await authService.updatePassword(newPassword, token);
+          console.log(result) // ✅ chỉ truyền 2 tham số
+        // ✅ chỉ truyền 2 tham số
           set({ isLoading: false });
           return { success: true, message: result.message || 'Cập nhật mật khẩu thành công.' };
         } catch (error: unknown) {
+            console.log(error) 
           const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
-          console.error('Lỗi đổi mật khẩu:', error);
           set({ error: errorMessage, isLoading: false });
           return { success: false, message: errorMessage };
         }

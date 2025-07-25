@@ -12,7 +12,7 @@ import TimelineSection from "@/components/layouts/About/section/TimelineSection"
 import ShuffleHero from "@/components/layouts/About/section/ShuffleHero";
 
 const AboutPageContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("maztermind"); // State để theo dõi tab đang hoạt động
+  const [activeTab, setActiveTab] = useState("pengoo"); // State để theo dõi tab đang hoạt động
 
   const handleTabChange = (tabName: string) => {
     setActiveTab(tabName);
@@ -81,10 +81,10 @@ const AboutPageContent: React.FC = () => {
       <AboutTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Conditional Content Rendering */}
-      {activeTab === "maztermind" && (
+      {activeTab === "pengoo" && (
         <>
           <AboutSection
-            imageUrl="/about.webp" // Ảnh cho phần "Về Maztermind"
+            imageUrl="/about3.jpg" // Ảnh cho phần "Về Maztermind"
             altText="Người thợ thủ công đang làm việc"
             title="Cách tân mới tạo nên một “Ván cờ nghệ thuật”"
             description="Từ những bàn tay khéo léo của người thợ Việt ngoài ngôi nhà của bạn, mọi bộ cờ của Maztermind đều được thiết kế sáng tạo và tỉ mỉ, kỳ công để biến mọi cuộc chơi thành một “Ván cờ nghệ thuật”. Chúng tôi không chỉ tạo ra một trò chơi đơn thuần, chúng tôi còn tạo nên những khoảnh khắc kết nối cho bạn và những người thân yêu, và hơn hết, là những giá trị nghệ thuật vượt thời gian."
@@ -93,7 +93,7 @@ const AboutPageContent: React.FC = () => {
             imageUrl="/about2.webp" // Ảnh cho phần "Về Maztermind"
             altText="Người thợ thủ công đang làm việc"
             title="Cách tân mới tạo nên một “Ván cờ nghệ thuật”"
-            description="Từ những bàn tay khéo léo của người thợ Việt ngoài ngôi nhà của bạn, mọi bộ cờ của Maztermind đều được thiết kế sáng tạo và tỉ mỉ, kỳ công để biến mọi cuộc chơi thành một “Ván cờ nghệ thuật”. Chúng tôi không chỉ tạo ra một trò chơi đơn thuần, chúng tôi còn tạo nên những khoảnh khắc kết nối cho bạn và những người thân yêu, và hơn hết, là những giá trị nghệ thuật vượt thời gian."
+            description="Là một nhà thiết kế board games, chúng tôi trân trọng mỗi vị khách như một người “bạn cùng chơi”. Bởi vậy, chúng tôi luôn mong muốn gửi gắm bạn những sản phẩm thủ công nghệ thuật cao cấp, được nghiên cứu, chọn lọc từng loại vật liệu, áp dụng các kỹ thuật chuyên môn,... để vừa có thể mang đến những giá trị thẩm mỹ, nâng cao trải nghiệm người chơi mà không làm mất đi vẻ đẹp truyền thống, giá trị cốt lõi của trò chơi."
           />
          
          <CoreValuesSection values={coreValuesData} />
@@ -101,8 +101,8 @@ const AboutPageContent: React.FC = () => {
          <AboutSection
             imageUrl="/about.webp" // Ảnh cho phần "Về Maztermind"
             altText="Người thợ thủ công đang làm việc"
-            title="Cách tân mới tạo nên một “Ván cờ nghệ thuật”"
-            description="Từ những bàn tay khéo léo của người thợ Việt ngoài ngôi nhà của bạn, mọi bộ cờ của Maztermind đều được thiết kế sáng tạo và tỉ mỉ, kỳ công để biến mọi cuộc chơi thành một “Ván cờ nghệ thuật”. Chúng tôi không chỉ tạo ra một trò chơi đơn thuần, chúng tôi còn tạo nên những khoảnh khắc kết nối cho bạn và những người thân yêu, và hơn hết, là những giá trị nghệ thuật vượt thời gian."
+            title="Người sáng lập"
+            description="Phước Lê có hơn 5 năm kinh nghiệm trong lĩnh vực kinh doanh Board games. Anh có niềm đam mê quảng bá văn hóa Việt Nam thông qua các trò chơi board games nghệ thuật thủ công. Anh luôn khao khát đưa thương hiệu Việt Nam vươn ra thế giới và giới thiệu di sản phong phú của đất nước mình."
           />
         </>
       )}
