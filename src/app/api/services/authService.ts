@@ -214,14 +214,14 @@ export const authService = {
   /**
    * Cập nhật mật khẩu người dùng
    */
-updatePassword: async (newPassword: string, token: string) => {
+updatePassword: async (oldPassword: string, newPassword: string, token: string) => {
   const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ newPassword }),
+    body: JSON.stringify({ oldPassword, newPassword }),
   });
 
   const contentType = response.headers.get('content-type');

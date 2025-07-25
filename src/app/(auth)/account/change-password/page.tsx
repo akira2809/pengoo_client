@@ -9,7 +9,7 @@ function ChangePasswordContent() {
   const router = useRouter();
   const { updatePassword, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
-    currentPassword: '',
+    oldPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
@@ -33,12 +33,12 @@ function ChangePasswordContent() {
     }
 
     try {
-      const result = await updatePassword(formData.currentPassword, formData.newPassword);
+      const result = await updatePassword(formData.oldPassword, formData.newPassword);
       
       if (result.success) {
         setSuccess('Đổi mật khẩu thành công!');
         setFormData({
-          currentPassword: '',
+          oldPassword: '',
           newPassword: '',
           confirmPassword: '',
         });
@@ -81,19 +81,19 @@ function ChangePasswordContent() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700 mb-1">
             Mật khẩu hiện tại
           </label>
-          {/* <input
+          <input
             type="password"
-            id="currentPassword"
-            name="currentPassword"
-            value={formData.currentPassword}
+            id="oldPassword"
+            name="oldPassword"
+            value={formData.oldPassword}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
             required
             disabled={isLoading}
-          /> */}
+          />
         </div>
 
         <div>
