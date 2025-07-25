@@ -1,64 +1,39 @@
-name: next-deploy-vps
+- name: Deploy using SSH
+  uses: appleboy/ssh-action@master
+  with:
+    host: ${{ secrets.HOST }}
+    username: ${{ secrets.USERNAME }}
+    password: ${{ secrets.PASSWORD }}
+    port: 22
+    script: |
+      echo "📦 Pulling latest code..."
+      cd /root/services/pengoo_client
+      git fetch origin
+      git checkout production
+      git pull
 
-on:
-  push:
-    branches: [ production ]
+      echo "🧹 Cleaning old container & image..."
+      docker stop pengoo_client-container 2>/dev/null || true
+      docker rm pengoo_client-container 2>/dev/null || true
+      docker rmi pengoo_client 2>/dev/null || true
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+      echo "📂 Writing .env file from secret..."
+      echo "${ENV_PROD}" > .env
 
-    steps:
-    - name: Deploy using SSH
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: 22
-        script: |
-          echo "📦 Pulling latest code..."
-          cd /root/services/pengoo_client
-          git fetch origin
-          git checkout production
-          git pull
+      echo "🐳 Building Docker image..."
+      docker build -t pengoo_client .
 
-          echo "🧹 Cleaning old container & image..."
-          docker stop pengoo_client-container 2>/dev/null || true
-          docker rm pengoo_client-container 2>/dev/null || true
-          docker rmi pengoo_client 2>/dev/null || true
+      echo "🚀 Running new container..."
+      docker run -d \
+        --env-file .env \
+        --name pengoo_client-container \
+        -p 4000:3000 \
+        pengoo_client
 
-          echo "📂 Writing .env file from secret..."
-          echo "${ENV_PROD}" > .env
+      echo "🧼 Pruning unused Docker stuff..."
+      docker image prune -af
+      docker container prune -f
 
-          echo "🐳 Building Docker image..."
-          # Include all necessary environment variables in the build
-          docker build \
-            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="$NEXT_PUBLIC_FIREBASE_API_KEY" \
-            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" \
-            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="$NEXT_PUBLIC_FIREBASE_PROJECT_ID" \
-            --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET" \
-            --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID" \
-            --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="$NEXT_PUBLIC_FIREBASE_APP_ID" \
-            -t pengoo_client .
-
-          echo "🚀 Running new container..."
-          docker run -d \
-            --env-file .env \
-            --name pengoo_client-container \
-            -p 4000:3000 \
-            pengoo_client
-
-          echo "🧼 Pruning unused Docker stuff..."
-          docker image prune -af
-          docker container prune -f
-
-          echo "✅ DONE - App deployed & cleaned!"
-      env:
-        ENV_PROD: ${{ secrets.ENV_PROD }}
-        NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-        NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+      echo "✅ DONE - App deployed & cleaned!"
+  env:
+    ENV_PROD: ${{ secrets.ENV_PROD }}
