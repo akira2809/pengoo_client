@@ -26,6 +26,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  loginMethod: 'email' | 'google' | null;
   login: (credentials: {
     email: string;
     password: string;
@@ -49,6 +50,7 @@ interface AuthState {
   clearError: () => void;
   logout: () => void;
   verifyVoucherByUserPoint: (voucherCode: string) => Promise<{ success: boolean; message?: string }>;
+  setLoginMethod: (method: 'email' | 'google' | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -59,6 +61,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      loginMethod: null,
 
       /**
        * Xử lý quá trình đăng nhập người dùng.
@@ -97,6 +100,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            loginMethod: 'email',
           });
 
           return { success: true, message: 'Đăng nhập thành công.' };
@@ -240,6 +244,11 @@ export const useAuthStore = create<AuthState>()(
       clearError: () => set({ error: null }),
 
       /**
+       * Cập nhật phương thức đăng nhập
+       */
+      setLoginMethod: (method) => set({ loginMethod: method }),
+
+      /**
        * Đăng xuất người dùng, xóa tất cả trạng thái xác thực.
        */
       logout: () => {
@@ -249,6 +258,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           isLoading: false,
           error: null,
+          loginMethod: null,
         });
         // Bạn có thể thêm logic xóa các dữ liệu khác liên quan đến phiên làm việc nếu cần
       },

@@ -77,11 +77,13 @@ async function getProductBySlug(
 }
 
 // Hàm generateMetadata để tạo metadata động (Chỉ chạy trên server)
-export async function generateMetadata(props: {
-  params: { slug: string };
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: { slug: string } 
 }): Promise<Metadata> {
   // Lấy slug từ params (đã được resolve bởi Next.js)
-  const { slug } = props.params;
+  const slug = params?.slug;
   if (!slug) {
     return {
       title: "Sản phẩm không tồn tại - PENGOO",
@@ -179,9 +181,9 @@ export async function generateMetadata(props: {
 }
 
 // Đây là component trang chính của bạn
-export default async function ProductPage(props: { params: { slug: string } }) {
+export default async function ProductPage({ params }: { params: { slug: string } }) {
   // Lấy slug từ params (đã được resolve bởi Next.js)
-  const { slug } = props.params;
+  const slug = params?.slug;
   if (!slug) {
     return <div>Không tìm thấy sản phẩm</div>;
   }

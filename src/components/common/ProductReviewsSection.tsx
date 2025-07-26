@@ -38,6 +38,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({ productId
       } finally {
         setLoading(false);
       }
+      console.log(reviews);
     };
     fetchReviews();
   }, [productId]);

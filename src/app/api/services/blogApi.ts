@@ -1,24 +1,78 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app';
 
-// Cache posts for 1 hour (3600 seconds) to prevent unnecessary refetches
-export async function fetchAllPosts() {
+// Interface for blog post from API
+export interface ApiBlogPost {
+  id: number;
+  name: string;
+  canonical: string;
+  description: string;
+  content: string;
+  meta_description: string;
+  meta_keyword: string;
+  meta_title: string;
+  image: string;
+  order: number;
+  publish: boolean;
+  created_at: string;
+  updated_at: string;
+  catalogue?: {
+    id: number;
+    name: string;
+    canonical: string;
+  };
+}
+
+// Cache for storing the posts promise to prevent duplicate requests
+let postsCache: Promise<ApiBlogPost[]> | null = null;
+
+// Clear cache after 1 hour
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+let lastFetchTime = 0;
+
+export async function fetchAllPosts(): Promise<ApiBlogPost[]> {
+  const now = Date.now();
+  const isCacheValid = now - lastFetchTime < CACHE_DURATION;
+
+  // If we have a valid cache, return it
+  if (postsCache && isCacheValid) {
+    return postsCache;
+  }
+
   try {
-    const res = await fetch(`${API_URL}/posts`, { 
-      next: { 
-        revalidate: 3600, // Revalidate every hour
-        tags: ['posts'] // Add a cache tag for manual revalidation if needed
-      },
-      // Only use 'no-store' in development for fresh data
-      ...(process.env.NODE_ENV === 'development' ? { cache: 'no-store' } : {})
+    // Create a new promise for the fetch request
+    const fetchPromise = (async () => {
+      const res = await fetch(`${API_URL}/posts`, { 
+        next: { 
+          revalidate: 3600, // Revalidate every hour
+          tags: ['posts']
+        },
+      
+        // Use 'force-cache' for production, 'no-store' for development
+        cache: process.env.NODE_ENV === 'development' ? 'no-store' : 'force-cache'
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch posts: ${res.status} ${res.statusText}`);
+      }
+      
+      const data = await res.json();
+      lastFetchTime = Date.now();
+      return data;
+    })();
+
+    // Cache the promise
+    postsCache = fetchPromise;
+    
+    // Clear cache on error
+    fetchPromise.catch(() => {
+      postsCache = null;
     });
-    
-    if (!res.ok) {
-      throw new Error(`Failed to fetch posts: ${res.status} ${res.statusText}`);
-    }
-    
-    return await res.json();
+
+    return await fetchPromise;
   } catch (error) {
     console.error('Error in fetchAllPosts:', error);
+    // Clear cache on error
+    postsCache = null;
     throw error; // Re-throw to be handled by the component
   }
 }
