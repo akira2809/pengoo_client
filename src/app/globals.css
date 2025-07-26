@@ -6,7 +6,7 @@
 
 :root {
   /* Background colors */
-  --background-50:  #effaff;
+  --background-50: #effaff;
   --background-100: #def4ff;
   --background-200: #b6eaff;
   --background-300: #75ddff;
@@ -19,7 +19,7 @@
   --background-950: #04334d;
 
   /* Text colors (swap with background if needed) */
-  --text-50:  #effaff;
+  --text-50: #effaff;
   --text-100: #def4ff;
   --text-200: #b6eaff;
   --text-300: #75ddff;
@@ -39,17 +39,23 @@
 
 .collections-theme {
   @apply absolute left-0 right-0 top-full z-50 rounded-b-2xl shadow-2xl;
-  
+
   /* Hiệu ứng kính mờ trên nền tối */
-  background-color: rgba(17, 24, 39, 0.7); /* bg-gray-900 với độ trong suốt 70% */
+  background-color: rgba(
+    17,
+    24,
+    39,
+    0.7
+  ); /* bg-gray-900 với độ trong suốt 70% */
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  
+
   /* Đường viền tinh tế */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: none;
 }
-.prose, .prose * {
+.prose,
+.prose * {
   color: inherit !important;
   font-family: inherit !important;
   font-size: inherit !important;

@@ -13,14 +13,14 @@ const AboutTabs: React.FC<AboutTabsProps> = ({ activeTab, onTabChange }) => {
       <div className="container mx-auto flex justify-center text-gray-700 font-semibold text-lg md:text-xl">
         <button
           className={`py-4 px-8 md:px-12 relative transition-colors duration-300 ${
-            activeTab === 'maztermind' ? 'text-gray-900' : 'hover:text-gray-900'
+            activeTab === 'pengoo' ? 'text-gray-900' : 'hover:text-gray-900'
           }`}
-          onClick={() => onTabChange('maztermind')}
+          onClick={() => onTabChange('pengoo')}
         >
-          Về Maztermind
+          Về Pengoo
           <span
             className={`absolute bottom-0 left-0 w-full h-1 bg-gray-900 transform transition-transform duration-300 ease-out ${
-              activeTab === 'maztermind' ? 'scale-x-100' : 'scale-x-0'
+              activeTab === 'pengoo' ? 'scale-x-100' : 'scale-x-0'
             }`}
           ></span>
         </button>

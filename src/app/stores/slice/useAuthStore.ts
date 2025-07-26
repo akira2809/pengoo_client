@@ -16,6 +16,8 @@ export interface User {
   address: string;
   role: string;
   points?: number;
+  mfaCode?: number | null;
+  provider: string;
 }
 
 // Định nghĩa AuthState chứa tất cả các trạng thái và hàm liên quan đến xác thực
@@ -90,6 +92,7 @@ export const useAuthStore = create<AuthState>()(
             address: verifyData.decoded.address || '',
             role: verifyData.decoded.role || 'user',
             points: verifyData.decoded.points || 0, 
+            mfaCode: verifyData.mfaCode || null, 
           };
 
           set({
@@ -282,24 +285,27 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Cập nhật mật khẩu người dùng
        */
-      updatePassword: async (currentPassword: string, newPassword: string) => {
+      updatePassword: async ( oldPassword:string, newPassword: string) => {
         const { token } = get();
+        console.log('token',token)
         if (!token) {
           return { success: false, message: 'Người dùng chưa đăng nhập.' };
         }
-
         set({ isLoading: true, error: null });
         try {
-          const result = await authService.updatePassword(currentPassword, newPassword, token);
+          const result = await authService.updatePassword(oldPassword, newPassword, token);
+          console.log(result) // ✅ chỉ truyền 2 tham số
+        // ✅ chỉ truyền 2 tham số
           set({ isLoading: false });
           return { success: true, message: result.message || 'Cập nhật mật khẩu thành công.' };
         } catch (error: unknown) {
+            console.log(error) 
           const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
-          console.error('Lỗi đổi mật khẩu:', error);
           set({ error: errorMessage, isLoading: false });
           return { success: false, message: errorMessage };
         }
       },
+
 
       /**
        * Xác minh một token đã cho.
@@ -329,6 +335,7 @@ export const useAuthStore = create<AuthState>()(
               address: data.decoded.address || '',
               role: data.decoded.role || 'user',
               points: data.decoded.points || 0,
+              provider: data.decoded.provider || '',
             };
 
             set({

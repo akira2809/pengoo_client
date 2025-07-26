@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app';
 
 export async function GET(req: NextRequest, context: { params: Promise<{ productId: string }> }) {
   const { productId } = await context.params;

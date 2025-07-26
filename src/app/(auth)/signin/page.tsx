@@ -188,7 +188,7 @@ export default function SignInPage() {
       console.log('Facebook ID Token:', idToken);
 
       // Bước 2: Gửi token lên backend để xác thực
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/facebook`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app'}/api/auth/facebook`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -266,7 +266,7 @@ export default function SignInPage() {
       // console.log('Google ID Token:', idToken); // Log token để debug
 
       // Bước 2: Gửi token lên backend để xác thực
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/google`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app'}/api/auth/google`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

@@ -4,6 +4,7 @@ import { useEffect, useState, ComponentPropsWithoutRef } from 'react';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { useStore } from '@/app/stores/store'; // Assuming this is a Zustand store
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
+import { apiClient } from '@/app/api/apiClient';
 
 // --- Type Definitions (assuming from store) ---
 type Coupon = {
@@ -38,7 +39,24 @@ export default function CouponsPage() {
     const [inputCode, setInputCode] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
     const ITEMS_PER_PAGE = 5;
+
+    // fetch points
+    useEffect(() => {
+        const fetchUserPoints = async () => {
+          try {
+            const res = await apiClient.get<{ userPoints: number }>("/minigame/user-points");
+            const points = res.data?.userPoints ?? 0;
+     
+            setDisplayedUserPoints(points);
+          } catch {
+         
+            setDisplayedUserPoints(0);
+          }
+        };
+        fetchUserPoints();
+      }, []);
 
     useEffect(() => {
         if (user?.id) fetchMyVouchers();
@@ -79,7 +97,7 @@ export default function CouponsPage() {
                                     type="text"
                                     id="coupon-code"
                                     value={inputCode}
-                                    onChange={(e) => setInputCode(e.target.value.toUpperCase())}
+                                    onChange={(e) => setInputCode(e.target.value)}
                                     placeholder="Nhập mã tại đây"
                                     className="w-full pl-10 pr-28 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                 />
@@ -99,7 +117,7 @@ export default function CouponsPage() {
                             <StarIcon className="text-yellow-500 w-8 h-8 shrink-0"/>
                             <div>
                                 <p className="text-sm text-gray-600">Điểm của bạn</p>
-                                <p className="text-2xl font-bold text-gray-900">{user?.points ?? 0}</p>
+                                <p className="text-2xl font-bold text-gray-900">{displayedUserPoints ?? 0}</p>
                             </div>
                         </div>
                     </div>

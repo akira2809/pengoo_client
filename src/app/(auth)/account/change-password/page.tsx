@@ -70,7 +70,7 @@ function ChangePasswordContent() {
   const router = useRouter();
   const { updatePassword, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
-    currentPassword: '',
+    oldPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
@@ -92,10 +92,10 @@ function ChangePasswordContent() {
     }
 
     try {
-      const result = await updatePassword(formData.currentPassword, formData.newPassword);
+      const result = await updatePassword(formData.oldPassword, formData.newPassword);
       if (result.success) {
         setSuccess('Đổi mật khẩu thành công! Bạn sẽ được chuyển hướng sau giây lát.');
-        setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
         setTimeout(() => router.push('/account'), 2500);
       } else {
         setError(result.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.');
@@ -137,9 +137,9 @@ function ChangePasswordContent() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <PasswordInput
             label="Mật khẩu hiện tại"
-            id="currentPassword"
-            name="currentPassword"
-            value={formData.currentPassword}
+            id="oldPassword"
+            name="oldPassword"
+            value={formData.oldPassword}
             onChange={handleChange}
             required
             disabled={isLoading}

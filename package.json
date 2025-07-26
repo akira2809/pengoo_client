@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 3001",
     "build": "next build",
-    "start": "next start ",
+    "start": "next start",
     "analyze": "cross-env ANALYZE=true next build",
     "lint": "next lint"
   },
@@ -45,6 +45,7 @@
     "react-markdown": "^10.1.0",
     "react-toastify": "^11.0.5",
     "react-use": "^17.6.0",
+    "sweetalert2": "^11.22.2",
     "tailwind-merge": "^3.3.0",
     "zustand": "^5.0.5"
   },

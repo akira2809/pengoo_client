@@ -48,68 +48,69 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const addItem = useCartStore(state => state.addItem);
-  
   // Process tags to ensure they're in the correct format
-  const processedTags = React.useMemo(() => {
-    if (!Array.isArray(tags)) return [];
+  // const processedTags = React.useMemo(() => {
+  //   if (!Array.isArray(tags)) return [];
     
-    return tags.map((tag: Tag | string | Record<string, unknown>, index) => {
-      // If the tag is a string that looks like [object Object], handle it
-      if (typeof tag === 'string') {
-        console.warn('Found string tag:', tag);
-        return { 
-          id: Date.now() + index, 
-          name: tag === '[object Object]' ? 'Invalid Tag' : tag, 
-          type: 'unknown' 
-        };
-      }
+  //   return tags.map((tag: Tag | string | Record<string, unknown>, index) => {
+  //     // If the tag is a string that looks like [object Object], handle it
+  //     if (typeof tag === 'string') {
+  //       console.warn('Found string tag:', tag);
+  //       return { 
+  //         id: Date.now() + index, 
+  //         name: tag === '[object Object]' ? 'Invalid Tag' : tag, 
+  //         type: 'unknown' 
+  //       };
+  //     }
       
-      // If the name is [object Object], try to find the actual name in the tag object
-      if (tag && typeof tag === 'object' && tag.name === '[object Object]') {
-        console.warn('Found tag with [object Object] name:', tag);
-        // Try to find a property that looks like a name
-        const possibleName = Object.entries(tag).find(
-          ([key, value]) => 
-            key !== 'name' && 
-            key !== 'id' && 
-            key !== 'type' &&
-            typeof value === 'string' && 
-            value !== '[object Object]'
-        );
+  //     // If the name is [object Object], try to find the actual name in the tag object
+  //     if (tag && typeof tag === 'object' && tag.name === '[object Object]') {
+  //       console.warn('Found tag with [object Object] name:', tag);
+  //       // Try to find a property that looks like a name
+  //       const possibleName = Object.entries(tag).find(
+  //         ([key, value]) => 
+  //           key !== 'name' && 
+  //         key !== 'id' && 
+  //         key !== 'type' &&
+  //         typeof value === 'string' && 
+  //         value !== '[object Object]'
+  //       );
         
-        if (possibleName) {
-          return {
-            id: Number(tag.id) || Date.now() + index,
-            name: possibleName[1] as string,
-            type: String(tag.type || 'unknown')
-          };
-        }
-      }
+  //       if (possibleName) {
+  //         return {
+  //           id: Number(tag.id) || Date.now() + index,
+  //           name: possibleName[1] as string,
+  //           type: String(tag.type || 'unknown')
+  //         };
+  //       }
+  //     }
       
-      // If tag is already in the correct format, return it as is
-      if (tag && typeof tag === 'object' && 'id' in tag && 'name' in tag && 'type' in tag) {
-        return {
-          id: Number(tag.id) || Date.now() + index,
-          name: String(tag.name === '[object Object]' ? 'Unknown Tag' : tag.name),
-          type: String(tag.type || 'unknown')
-        };
-      }
+  //     // If tag is already in the correct format, return it as is
+  //     if (tag && typeof tag === 'object' && 'id' in tag && 'name' in tag && 'type' in tag) {
+  //       // console.log("tag" + tag)
+  //       console.log("tags" + tags)
+  //       return {
+  //         id: Number(tag.id) || Date.now() + index,
+  //         name: String(tag.name === '[object Object]' ? 'Unknown Tag' : tag.name),
+  //         type: String(tag.type || 'unknown')
+  //       };
+  //     }
       
-      // Fallback for any other cases
-      console.warn('Unexpected tag format:', tag);
-      return { 
-        id: (tag && typeof tag === 'object' && 'id' in tag) ? Number(tag.id) : Date.now() + index,
-        name: 'Unknown Tag',
-        type: (tag && typeof tag === 'object' && 'type' in tag) ? String(tag.type) : 'unknown'
-      };
-    });
-  }, [tags]);
+  //     // Fallback for any other cases
+  //     console.warn('Unexpected tag format:', tag);
+  //     return { 
+  //       id: (tag && typeof tag === 'object' && 'id' in tag) ? Number(tag.id) : Date.now() + index,
+  //       name: 'Unknown Tag',
+  //       type: (tag && typeof tag === 'object' && 'type' in tag) ? String(tag.type) : 'unknown'
+  //     };
+  //   });
+  // }, [tags]);
 
   // Debug logging
   React.useEffect(() => {
-    console.log('Raw tags from props:', JSON.stringify(tags, null, 2));
-    console.log('Processed tags:', processedTags);
-  }, [tags, processedTags]);
+    // console.log('Raw tags from props:', JSON.stringify(tags, null, 2));
+    // console.log('Processed tags:', processedTags);
+  }, [tags]);
 
   const calculatedDiscountedPrice = discount && discount > 0
     ? originalPrice * (1 - discount / 100)
@@ -156,12 +157,12 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
 
   // Log tags for debugging
   React.useEffect(() => {
-    console.log('Tags received:', tags);
+    // console.log('Tags received:', tags);
   }, [tags]);
 
   // Extract genres and other tags from processed tags
-  const genres = processedTags.filter(tag => tag?.type?.toLowerCase() === 'genre');
-  const otherTags = processedTags.filter(tag => tag?.type?.toLowerCase() !== 'genre');
+  // const genres = processedTags.filter(tag => tag?.type?.toLowerCase() === 'genre');
+  // const otherTags = processedTags.filter(tag => tag?.type?.toLowerCase() !== 'genre');
 
   return (
     <div className="w-full">
@@ -201,19 +202,19 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       </div>
 
       {/* Tags and Genres */}
-      {(genres.length > 0 || otherTags.length > 0) ? (
+      {(tags.length > 0) ? (
         <div className="mb-6 flex flex-wrap gap-2">
-          {genres.length > 0 && (
+          {tags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
               <span className="text-xs font-semibold text-gray-600">Thể loại:</span>
-              {genres.map(tag => (
+              {tags.map(tag => (
                 <span key={tag.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs whitespace-nowrap">
                   {tag?.name || 'N/A'}
                 </span>
               ))}
             </div>
           )}
-          {otherTags.length > 0 && (
+          {/* {otherTags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
               <span className="text-xs font-semibold text-gray-600">Tags:</span>
               {otherTags.map(tag => (
@@ -222,7 +223,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
                 </span>
               ))}
             </div>
-          )}
+          )} */}
         </div>
       ) : (
         <div className="mb-6 text-sm text-gray-500">

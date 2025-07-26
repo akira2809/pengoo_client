@@ -23,8 +23,6 @@ interface ProductCardProps {
   product: ProductData & {
     images?: ImageType[];
   };
-  className?: string;
-  imageClassName?: string;
 }
 
 const formatPrice = (price: number | string): string => {
@@ -246,7 +244,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <Link href={`/products/${product.slug}`} className="block group" passHref>
       <article
         ref={cardRef}
-        className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[450px] max-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         itemScope
         itemType="https://schema.org/Product"
       >
@@ -323,19 +321,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Thông tin sản phẩm */}
-        <div className="px-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+        <div className="flex flex-col flex-1 px-2 overflow-hidden my-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <h2
             className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
             itemProp="name"
           >
             {product.product_name}
           </h2>
-          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.description}</p>
-          <div className="mt-2">
+          <p className="text-xs text-gray-500 line-clamp-2 mt-1">
+            {product.description}
+          </p>
+          <div className="mt-auto">
             {hasDiscount ? (
               // Display when there's a discount
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-1 mb-1">
+                <div className="flex itemsx`-center gap-2">
                   <span className="text-red-500 font-semibold text-base">
                     {formatPrice(finalPrice)}
                   </span>
@@ -343,12 +343,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     {formatPrice(product.product_price)}
                   </span>
                 </div>
-                <div className="text-xs text-green-600">
-                  Tiết kiệm: {formatPrice(Number(product.product_price) - finalPrice)}
+                <div className="flex justify-between text-xs mt-1">
+                  <div className="text-green-600">
+                    Tiết kiệm: {formatPrice(Number(product.product_price) - finalPrice)}
+                  </div>         
+                  <div className="text-gray-500">
+                    Đã bán: {product.quantity_sold ?? 0}
+                  </div>
                 </div>
               </div>
             ) : (
               // Display when there's no discount
+            <div className="flex flex-col gap-1 mb-1">
               <div className="flex items-center gap-2">
                 <span className="text-gray-800 font-semibold text-base">
                   {formatPrice(product.product_price)}
@@ -357,10 +363,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   (Đã bao gồm VAT)
                 </span>
               </div>
+              <span className="text-xs text-gray-500">
+                Đã bán: {product.quantity_sold ?? 0}
+              </span>
+            </div>
             )}
           </div>
         </div>
+            
 
+        {/* Hiển thị các tag */}
+        {/* {Array.isArray(product.tags) && product.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-4 px-2 mb-2">
+            {product.tags.map((tag) => (
+              <span
+                key={tag.id}
+                className="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded-full text-gray-700 capitalize"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        )} */}
         {/* Nút Mua ngay */}
         <button className="w-full bg-background-900 text-white py-2 rounded-b-xl hover:bg-background-800 transition">
           Mua ngay
