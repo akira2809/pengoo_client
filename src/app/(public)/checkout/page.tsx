@@ -50,6 +50,7 @@ const CheckoutPage: React.FC = () => {
   );
   const [delivery, setDelivery] = useState([]);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [shippingCost, setShippingCost] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: user?.email || "",
@@ -109,6 +110,7 @@ const CheckoutPage: React.FC = () => {
           const deliveryMethod = await orderService.getDeliveryMethod();
           if (deliveryMethod?.data && Array.isArray(deliveryMethod.data)) {
             setDelivery(deliveryMethod.data as DeliveryMethod[]);
+            setShippingCost(deliveryMethod.data[0].fee)
           } else {
             console.error(
               "Invalid delivery method data format:",
@@ -153,7 +155,7 @@ const CheckoutPage: React.FC = () => {
   );
 
   // Calculate shipping cost
-  const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
+  // const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
 
   // Calculate total
   const total = subtotal - shippingCost - discountAmount;
@@ -207,7 +209,11 @@ const CheckoutPage: React.FC = () => {
     authChecked,
     getTotalItems,
   ]);
-
+  const changeShipFee = (id: number) =>{
+    const data:{fee:number} = delivery.find(item => id === item.id)
+    console.log(data)
+    return data ? data.fee : 25000
+  }
   // Show loading state while checking auth or cart
   if (isAuthLoading || !authChecked || !isCartReady) {
     return (
@@ -238,11 +244,14 @@ const CheckoutPage: React.FC = () => {
     console.log(formData);
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-  
+    
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    if(name == "delivery_id"){
+      setShippingCost(changeShipFee(Number(value)))
+    }
     console.log(formData);
     // setShippingCost()
     setErrors((prev) => ({ ...prev, [name]: undefined })); // Clear error on change
@@ -274,7 +283,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleApplyCoupon = async () => {
-    const code = formData.couponCode?.trim().toUpperCase();
+    const code = formData.couponCode?.trim();
 
     if (!code) {
       showErrorToast('Vui lòng nhập mã giảm giá.');
@@ -703,7 +712,7 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               {/* Billing Address */}
-              <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">
+              {/* <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">
                 Địa chỉ thanh toán
               </h2>
               <div className="space-y-3 mb-6">
@@ -725,7 +734,7 @@ const CheckoutPage: React.FC = () => {
                   label="Sử dụng địa chỉ thanh toán khác"
                   // isCustomClass={true}
                 />
-              </div>
+              </div> */}
 
               {/* Submit Button - Now correctly inside the form */}
               <button

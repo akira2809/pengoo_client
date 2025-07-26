@@ -16,7 +16,8 @@ export interface User {
   address: string;
   role: string;
   points?: number;
-  mfaCode?: number | null
+  mfaCode?: number | null;
+  provider: string;
 }
 
 // Định nghĩa AuthState chứa tất cả các trạng thái và hàm liên quan đến xác thực
@@ -334,6 +335,7 @@ export const useAuthStore = create<AuthState>()(
               address: data.decoded.address || '',
               role: data.decoded.role || 'user',
               points: data.decoded.points || 0,
+              provider: data.decoded.provider || '',
             };
 
             set({
