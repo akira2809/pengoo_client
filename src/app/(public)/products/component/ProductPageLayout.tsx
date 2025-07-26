@@ -65,6 +65,7 @@ const sortOptions = [
   { id: 3, name: "Thứ tự bằng chữ cái (Z-A)", value: "za" },
   { id: 4, name: "Giá: Thấp đến Cao", value: "price_asc" },
   { id: 5, name: "Giá: Cao đến Thấp", value: "price_desc" },
+  { id: 6, name: "Bán chạy", value: "sold_desc" },
 ];
 export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   products,
@@ -264,6 +265,9 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
         break;
       case "price_desc":
         sorted.sort((a, b) => b.product_price - a.product_price);
+        break;
+      case "sold_desc":
+        sorted.sort((a, b) => (b.quantity_sold ?? 0) - (a.quantity_sold ?? 0));
         break;
       default:
         break;

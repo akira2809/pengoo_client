@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     req.headers.get('authorization')?.replace('Bearer ', '');
   const body = await req.json();
 
-  const backendRes = await fetch('http://localhost:3000/minigame/earn-ticket', {
+  const backendRes = await fetch('https://pengoo-back-end.vercel.app/minigame/earn-ticket', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

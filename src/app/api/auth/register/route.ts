@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Registration request body:', body);
     
-    const response = await fetch('http://localhost:3000/users/register', {
+    const response = await fetch('https://pengoo-back-end.vercel.app/users/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

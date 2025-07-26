@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app';
 
 // Cache posts for 1 hour (3600 seconds) to prevent unnecessary refetches
 export async function fetchAllPosts() {

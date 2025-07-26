@@ -274,7 +274,7 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Cập nhật mật khẩu người dùng
        */
-      updatePassword: async ( newPassword: string) => {
+      updatePassword: async ( oldPassword:string, newPassword: string) => {
         const { token } = get();
         console.log('token',token)
         if (!token) {
@@ -282,7 +282,7 @@ export const useAuthStore = create<AuthState>()(
         }
         set({ isLoading: true, error: null });
         try {
-          const result = await authService.updatePassword(newPassword, token);
+          const result = await authService.updatePassword(oldPassword, newPassword, token);
           console.log(result) // ✅ chỉ truyền 2 tham số
         // ✅ chỉ truyền 2 tham số
           set({ isLoading: false });

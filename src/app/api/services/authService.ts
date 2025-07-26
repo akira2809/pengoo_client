@@ -2,8 +2,8 @@
 
 // Nên sử dụng biến môi trường cho các URL API trong ứng dụng thực tế
 // Ví dụ: process.env.NEXT_PUBLIC_AUTH_API_URL
-const AUTH_API_BASE_URL = 'http://localhost:3000/api/auth';
-const USERS_API_BASE_URL = 'http://localhost:3000/users';
+const AUTH_API_BASE_URL = 'https://pengoo-back-end.vercel.app/api/auth';
+const USERS_API_BASE_URL = 'https://pengoo-back-end.vercel.app/users';
 
 // Định nghĩa lại UserApiData để phản ánh chính xác từ backend API
 export interface UserApiData { // Export để có thể dùng trong store
