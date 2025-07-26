@@ -16,6 +16,7 @@ export interface UserApiData { // Export để có thể dùng trong store
   address: string;
   role: string;
   points?: number; 
+  mfaCode?:number
 }
 
 // Responses từ API của bạn
@@ -143,7 +144,6 @@ export const authService = {
     });
 
     const data: VerifyResponse = await response.json();
-
     // Nếu response không OK hoặc isValid là false, coi là token không hợp lệ
     if (!response.ok || !data.isValid) {
       throw new Error(data.message || data.error || 'Token xác thực không hợp lệ.');
@@ -214,27 +214,41 @@ export const authService = {
   /**
    * Cập nhật mật khẩu người dùng
    */
-  updatePassword: async (currentPassword: string, newPassword: string, token: string): Promise<{ success: boolean; message: string }> => {
-    const response = await fetch(`${AUTH_API_BASE_URL}/change-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
+updatePassword: async (oldPassword: string, newPassword: string, token: string): Promise<{ success: boolean; message: string }> => {
+  const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ oldPassword, newPassword }),
+  });
 
-    const data = await response.json();
+  const contentType = response.headers.get('content-type');
+  let data: { success: boolean; message: string };
 
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Đổi mật khẩu thất bại');
-    }
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
+    console.warn('Server returned plain text:', text);
+    data = { success: false, message: text };
+    throw new Error(text || 'Đổi mật khẩu thất bại');
+  }
 
-    return {
-      success: true,
-      message: data.message || 'Đổi mật khẩu thành công',
-    };
-  },
+  if (!response.ok) {
+    throw new Error(data.message || 'Đổi mật khẩu thất bại');
+  }
+
+  return data;
+}
+
+
+  // async updatePassword( newPassword: string, token: string) {
+  //   return apiClient.patch(`${USERS_API_BASE_URL}/updatePassword`);
+  // },
+  
+
 
   /**
  * Người dùng nhập mã khuyến mãi để đổi voucher (dựa trên điểm)

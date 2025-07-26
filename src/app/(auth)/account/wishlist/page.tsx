@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { wishlistService } from '@/app/api/services/wishlistService';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { useCartStore } from '@/app/stores/slice/cartStore';
-import toast from 'react-hot-toast';
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
+// import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
+// import { confirmRemoveAll, confirmRemoveSelected } from '@/components/common/UI/confirmDialog';
 
 // --- Type Definitions ---
 import { ProductData } from '@/app/type/product';
@@ -142,6 +143,80 @@ export default function WishlistPage() {
     );
   }
 
+//   const removeSelectedItems = async () => {
+//     if (!user?.id || selectedItems.length === 0) return;
+//     const confirmed = await confirmRemoveSelected();
+//       if (!confirmed) return;
+
+//     try{
+//     await Promise.all(
+//       selectedItems.map(wishlistId => {
+//         const item = wishlist.find(i => i.id === wishlistId);
+//         if (item) {
+//           return wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id));
+//         }
+//         return Promise.resolve();
+//       })
+//     );
+//     setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
+//     setSelectedItems([]);
+//     showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
+//   } catch (error) {
+//     showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
+//   }
+// };
+
+//  const removeAllItems = async () => {
+//   if (!user?.id || wishlist.length === 0) return;
+
+//   const confirmed = await confirmRemoveAll();
+//   if (!confirmed) return;
+
+//   try {
+//     await Promise.all(
+//       wishlist.map(item =>
+//         wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id))
+//       )
+//     );
+//     setWishlist([]);
+//     setSelectedItems([]);
+//     showSuccessToast('Đã xoá toàn bộ sản phẩm khỏi danh sách yêu thích!');
+//   } catch (error) {
+//     showErrorToast('Có lỗi xảy ra khi xoá danh sách yêu thích.');
+//   }
+// };
+
+//   const handleRemove = async (productId: number) => {
+//     if (!user?.id) return;
+//     await wishlistService.removeFromWishlist(Number(user.id), Number(productId));
+//     setWishlist(prev => prev.filter(item => item.product.id !== productId));
+//     setSelectedItems(prev => prev.filter(id => {
+//       const item = wishlist.find(i => i.id === id);
+//       return item && item.product.id !== productId;
+//     }));
+//   };
+
+//   const handleAddToCart = (e: MouseEvent, product: WishlistItem['product']) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+
+//     addItem({
+//       id: product.id,
+//       product_name: product.product_name,
+//       product_price: product.product_price,
+//       quantity: 1,
+//       image_url: product.image || '',
+//       slug: product.slug || '',
+//       description: product.meta_description || '',
+//       discount: product.discount || 0
+//     });
+
+//     showSuccessToast(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
+//   };
+
+//   if (!user?.id) return <div className="text-center py-16 text-red-600">Bạn chưa đăng nhập.</div>;
+//   if (loading) return <div className="text-center py-16 text-gray-600">Đang tải...</div>;
+
   if (!user?.id) {
     return (
          <div className="text-center py-20 bg-white rounded-lg shadow-sm max-w-2xl mx-auto mt-10">
@@ -154,6 +229,7 @@ export default function WishlistPage() {
     );
   }
   
+
   if (wishlist.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-lg shadow-sm max-w-2xl mx-auto mt-10">

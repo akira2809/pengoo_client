@@ -46,6 +46,7 @@ export interface CreateOrderRequest {
 }
 
 export interface CreateOrderResponse {
+  id: number;
   success: boolean;
   order_id: number;
   order_code: string;

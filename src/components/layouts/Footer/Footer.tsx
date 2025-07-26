@@ -33,7 +33,7 @@ export default function Footer() {
               <li><Link href="/how-to-play" className="hover:underline">Cách chơi</Link></li>
               <li><Link href="/commitment" className="hover:underline">Cam kết</Link></li>
               <li><Link href="/press" className="hover:underline">Press</Link></li>
-              <li><Link href="/blog" className="hover:underline">Blog</Link></li>
+              <li><Link href="/blogs" className="hover:underline">Blog</Link></li>
             </ul>
           </div>
 
@@ -55,7 +55,7 @@ export default function Footer() {
               <li><Link href="/partner" className="hover:underline">Quà tặng doanh nghiệp</Link></li>
               <li><Link href="/partner" className="hover:underline">Đối tác mua sỉ</Link></li>
               <li><Link href="/custom-design" className="hover:underline">Thiết kế theo yêu cầu</Link></li>
-              <li><Link href="/product-catalog" className="hover:underline">Catalogue sản phẩm</Link></li>
+              <li><Link href="/collections" className="hover:underline">Collection sản phẩm</Link></li>
             </ul>
           </div>
 

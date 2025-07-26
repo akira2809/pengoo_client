@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useCartStore } from "@/app/stores/slice/cartStore";
-import { useAuthStore } from "@/app/stores/slice/useAuthStore";
-import { orderService } from "@/app/api/services/orderService";
-import InputField from "../../(public)/checkout/component/InputField";
-import RadioButton from "../../(public)/checkout/component/RadioButton";
-import Image from "next/image";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCartStore } from '@/app/stores/slice/cartStore';
+import { useAuthStore } from '@/app/stores/slice/useAuthStore';
+import { orderService } from '@/app/api/services/orderService';
+import InputField from '../../(public)/checkout/component/InputField';
+import RadioButton from '../../(public)/checkout/component/RadioButton';
+import Image from 'next/image';
+import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
+import { useStore } from '@/app/stores/store';
 import { toast } from "react-hot-toast";
-import { useStore } from "@/app/stores/store";
 import Link from "next/link";
 
 //
@@ -49,6 +50,7 @@ const CheckoutPage: React.FC = () => {
   );
   const [delivery, setDelivery] = useState([]);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [shippingCost, setShippingCost] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: user?.email || "",
@@ -108,6 +110,7 @@ const CheckoutPage: React.FC = () => {
           const deliveryMethod = await orderService.getDeliveryMethod();
           if (deliveryMethod?.data && Array.isArray(deliveryMethod.data)) {
             setDelivery(deliveryMethod.data as DeliveryMethod[]);
+            setShippingCost(deliveryMethod.data[0].fee)
           } else {
             console.error(
               "Invalid delivery method data format:",
@@ -128,7 +131,6 @@ const CheckoutPage: React.FC = () => {
           ]);
         }
       };
-
       fetchData();
     }
   }, [user?.id, fetchMyVouchers]);
@@ -153,7 +155,7 @@ const CheckoutPage: React.FC = () => {
   );
 
   // Calculate shipping cost
-  const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
+  // const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
 
   // Calculate total
   const total = subtotal - shippingCost - discountAmount;
@@ -177,10 +179,8 @@ const CheckoutPage: React.FC = () => {
     const checkAuthAndCart = async () => {
       // Check if cart is empty using getTotalItems to ensure we have the latest count
       if (getTotalItems() === 0) {
-        toast.error(
-          "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ."
-        );
-        router.push("/");
+        showErrorToast('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
+        router.push('/');
         return;
       }
 
@@ -209,7 +209,11 @@ const CheckoutPage: React.FC = () => {
     authChecked,
     getTotalItems,
   ]);
-
+  const changeShipFee = (id: number) =>{
+    const data:{fee:number} = delivery.find(item => id === item.id)
+    console.log(data)
+    return data ? data.fee : 25000
+  }
   // Show loading state while checking auth or cart
   if (isAuthLoading || !authChecked || !isCartReady) {
     return (
@@ -240,12 +244,16 @@ const CheckoutPage: React.FC = () => {
     console.log(formData);
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-
+    
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    if(name == "delivery_id"){
+      setShippingCost(changeShipFee(Number(value)))
+    }
     console.log(formData);
+    // setShippingCost()
     setErrors((prev) => ({ ...prev, [name]: undefined })); // Clear error on change
   };
   const handleShowCouponList = async () => {
@@ -275,24 +283,23 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleApplyCoupon = async () => {
-    const code = formData.couponCode?.trim().toUpperCase();
+    const code = formData.couponCode?.trim();
 
     if (!code) {
-      toast.error("Vui lòng nhập mã giảm giá.");
+      showErrorToast('Vui lòng nhập mã giảm giá.');
       return;
     }
     const data = await applyVoucher(code, subtotal);
-    console.log("Coupon data:", data);
+    // console.log('Coupon data:', data);
     if (!data) {
-      toast.error("Mã giảm giá không hợp lệ hoặc đã hết hạn.");
+      showErrorToast(`Mã khuyến mãi không hợp lệ hoặc đã hết hạn.`);
       setDiscountAmount(0);
-      setIsCouponApplied(false);
-      toast.error("Mã giảm giá không hợp lệ.");
+      setIsCouponApplied(false)
       return;
     } else {
       setDiscountAmount(data.discount);
       setIsCouponApplied(true);
-      toast.success("Áp dụng mã giảm giá thành công!");
+      showSuccessToast(`Áp dụng mã khuyến mãi ${data.coupon.code} thành công!`);
     }
     // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
     // if (code === 'SAVE10') {
@@ -329,7 +336,7 @@ const CheckoutPage: React.FC = () => {
 
     // Validate cart has items
     if (cartItems.length === 0) {
-      toast.error("Giỏ hàng của bạn đang trống");
+      showErrorToast('Giỏ hàng của bạn đang trống.');
       return;
     }
 
@@ -705,7 +712,7 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               {/* Billing Address */}
-              <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">
+              {/* <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">
                 Địa chỉ thanh toán
               </h2>
               <div className="space-y-3 mb-6">
@@ -727,7 +734,7 @@ const CheckoutPage: React.FC = () => {
                   label="Sử dụng địa chỉ thanh toán khác"
                   // isCustomClass={true}
                 />
-              </div>
+              </div> */}
 
               {/* Submit Button - Now correctly inside the form */}
               <button
@@ -808,7 +815,7 @@ const CheckoutPage: React.FC = () => {
                   className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3"
                 />
                 {showCouponList && listVouchers.length > 0 && (
-                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full mt-1 shadow-lg max-h-60 overflow-auto divide-y divide-gray-100">
+                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
                     {listVouchers.map((uc) => (
                       <li
                         key={uc.id}

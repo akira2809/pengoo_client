@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app';
 
 // Interface for blog post from API
 export interface ApiBlogPost {

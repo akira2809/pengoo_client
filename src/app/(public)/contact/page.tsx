@@ -20,6 +20,7 @@ const ContactPage = () => {
         altText="Gói quà miễn phí"
         title="Gói quà miễn phí"
         description={`Tận tay chọn món quà đầy tinh tế và sang trọng tại showroom để bạn gửi gắm tình cảm và sự quan tâm đến ai đó một cách trọn vẹn nhất.`}
+        imageOnRight
       />
 
       <ContactSection

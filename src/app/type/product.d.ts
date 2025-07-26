@@ -69,7 +69,7 @@ export interface ProductData {
   category_ID: Category | number;
   tag_ID: string | number;
   publisher_ID: Publisher | number;
-  tags: string[];
+  tags?: TagType[];
   images: ProductImage[];
   features: ProductFeature[];
   created_at: string;
@@ -78,6 +78,12 @@ export interface ProductData {
   shipping_info?: string;
   quantity_stock?: number;
   cmsContent?: CmsContent; // <-- Add this for CMS integration
+}
+
+export interface TagType {
+  id: number | string;
+  name: string;
+  type?: string;
 }
 
 // Export empty array since we're using API
