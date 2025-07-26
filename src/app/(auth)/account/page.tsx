@@ -28,7 +28,7 @@ export default function ModernAccountPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<User>>({});
   const [accountData, setAccountData] = useState<User | null>(null);
-const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
+  const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
 useEffect(() => {
     const fetchUserPoints = async () => {
       try {
@@ -269,7 +269,7 @@ useEffect(() => {
                   <p className="text-indigo-100 text-lg mb-2">@{accountData.username}</p>
                   <div className="flex items-center justify-center sm:justify-start space-x-2">
                     <StarIcon className="w-5 h-5 text-yellow-300" />
-                    <span className="text-white font-semibold">{accountData.points ?? 0} điểm</span>
+                    <span className="text-white font-semibold">{displayedUserPoints ?? 0} điểm</span>
                   </div>
                 </div>
               </div>
@@ -430,7 +430,7 @@ useEffect(() => {
                       <p className="text-indigo-100">Điểm hiện tại của bạn</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-bold">{accountData.points ?? 0}</p>
+                      <p className="text-3xl font-bold">{displayedUserPoints ?? 0}</p>
                       <div className="flex items-center mt-1">
                         <StarIcon className="w-4 h-4 text-yellow-300 mr-1" />
                         <span className="text-sm text-indigo-100">điểm</span>
