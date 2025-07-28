@@ -2,8 +2,8 @@
 
 // Nên sử dụng biến môi trường cho các URL API trong ứng dụng thực tế
 // Ví dụ: process.env.NEXT_PUBLIC_AUTH_API_URL
-const AUTH_API_BASE_URL = 'https://pengoo-back-end.vercel.app/api/auth';
-const USERS_API_BASE_URL = 'https://pengoo-back-end.vercel.app/users';
+const AUTH_API_BASE_URL = 'http://localhost:3000/api/auth';
+const USERS_API_BASE_URL = 'http://localhost:3000/users';
 
 // Định nghĩa lại UserApiData để phản ánh chính xác từ backend API
 export interface UserApiData { // Export để có thể dùng trong store
@@ -214,7 +214,7 @@ export const authService = {
   /**
    * Cập nhật mật khẩu người dùng
    */
-updatePassword: async (oldPassword: string, newPassword: string, token: string) => {
+updatePassword: async (oldPassword: string, newPassword: string, token: string): Promise<{ success: boolean; message: string }> => {
   const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
     method: 'PATCH',
     headers: {
@@ -225,13 +225,14 @@ updatePassword: async (oldPassword: string, newPassword: string, token: string) 
   });
 
   const contentType = response.headers.get('content-type');
+  let data: { success: boolean; message: string };
 
-  let data: any;
   if (contentType && contentType.includes('application/json')) {
     data = await response.json();
   } else {
     const text = await response.text();
-    console.warn(' Server returned plain text:', text);
+    console.warn('Server returned plain text:', text);
+    data = { success: false, message: text };
     throw new Error(text || 'Đổi mật khẩu thất bại');
   }
 

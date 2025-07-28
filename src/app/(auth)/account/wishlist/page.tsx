@@ -7,8 +7,8 @@ import { wishlistService } from '@/app/api/services/wishlistService';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import { useCartStore } from '@/app/stores/slice/cartStore';
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
-import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
-import { confirmRemoveAll, confirmRemoveSelected } from '@/components/common/UI/confirmDialog';
+// import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
+// import { confirmRemoveAll, confirmRemoveSelected } from '@/components/common/UI/confirmDialog';
 
 type WishlistItem = {
   id: number;

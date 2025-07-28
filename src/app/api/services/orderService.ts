@@ -4,7 +4,7 @@ import { apiClient } from '../apiClient';
 import { API_CONFIG } from '../apiConfig';
 
 
-const API_BASE_URL = 'https://pengoo-back-end.vercel.app';
+const API_BASE_URL = 'http://localhost:3000';
 
 export const orderService = {
   createOrder: async (orderData: CreateOrderRequest): Promise<CreateOrderResponse> => {

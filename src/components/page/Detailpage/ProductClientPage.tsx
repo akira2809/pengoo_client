@@ -84,7 +84,6 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
         if (!isMounted) return;
         if (!response?.data) throw new Error('Không tìm thấy thông tin sản phẩm');
         setProduct(response.data);
-        console.log(product.tags)
       } catch (err) {
         if (isMounted) setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi khi tải thông tin sản phẩm');
       } finally {
