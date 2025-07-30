@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
-    loader: 'cloudinary',
-    path: 'https://res.cloudinary.com/do6lj4onq/image/upload/',
+    loader: 'custom',
+    loaderFile: './src/lib/cloudinary-loader.ts',
     formats: ["image/webp", "image/avif"] as const,
     domains: [
       'res.cloudinary.com',
@@ -21,16 +21,6 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
-    unoptimized: false,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-    loaderFile: './src/lib/cloudinary-loader.ts',
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:",
   },
