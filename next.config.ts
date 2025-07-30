@@ -6,49 +6,35 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
-    // Use Cloudinary loader for production
-    loader: 'cloudinary',
-    path: 'https://res.cloudinary.com/do6lj4onq/image/upload/',
+    // 1. ĐÃ XÓA BỎ loader và path của Cloudinary để dùng trình tối ưu hóa mặc định
     
-    // Image formats and settings
-    formats: ["image/webp", "image/avif"] as const,
+    // Các cài đặt hình ảnh khác
+    formats: ["image/webp", "image/avif"],
     dangerouslyAllowSVG: true,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
-    
-    // Allowed domains
-    domains: [
-      'res.cloudinary.com',
-      'picsum.photos',
-      'loremflickr.com',
-      'assets.awwwards.com',
-      'placehold.co',
-      'localhost',
+
+    // 2. CẤU HÌNH remotePatterns để cho phép các tên miền hình ảnh trên production
+    remotePatterns: [
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
+      { protocol: 'https', hostname: 'loremflickr.com' },
+      { protocol: 'https', hostname: 'assets.awwwards.com' },
+      { protocol: 'https', hostname: 'placehold.co' },
+      // Thêm các hostname khác bạn cần tại đây
     ],
     
-    // For development, allow all image sources
-    ...(process.env.NODE_ENV !== 'production' && {
-      remotePatterns: [
-        {
-          protocol: 'https',
-          hostname: '**',
-        },
-      ],
-    }),
+    // Các cấu hình còn lại giữ nguyên
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:",
   },
   experimental: {
     scrollRestoration: true,
     optimizeCss: true,
-    // turbopack: true, // NẾU BẠN MUỐN THỬ VÔ HIỆU HÓA TURBOPACK ĐỂ LOẠI BỎ CẢNH BÁO `params`
   },
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
+    // Cho phép build thành công kể cả khi có lỗi TypeScript
     ignoreBuildErrors: true,
   },
 };
