@@ -7,27 +7,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     formats: ["image/webp", "image/avif"] as const,
-    domains: [
-      "res.cloudinary.com",
-      "picsum.photos",
-      "loremflickr.com",
-      "assets.awwwards.com",
-      "placehold.co",
-      "localhost",
-    ],
+    domains: ['res.cloudinary.com'],
     dangerouslyAllowSVG: true,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
-    unoptimized: false,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:",
   },
