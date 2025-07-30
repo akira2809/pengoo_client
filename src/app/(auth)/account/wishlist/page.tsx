@@ -155,31 +155,15 @@ export default function WishlistPage() {
     );
     setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
     setSelectedItems([]);
-    showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
-  } catch (error) {
-    showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
+    // showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
+  } catch (error: unknown) {
+    console.error('Error removing selected items:', error);
+    // showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
   }
 };
 
- const removeAllItems = async () => {
-  if (!user?.id || wishlist.length === 0) return;
-
-  const confirmed = await confirmRemoveAll();
-  if (!confirmed) return;
-
-  try {
-    await Promise.all(
-      wishlist.map(item =>
-        wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id))
-      )
-    );
-    setWishlist([]);
-    setSelectedItems([]);
-    showSuccessToast('Đã xoá toàn bộ sản phẩm khỏi danh sách yêu thích!');
-  } catch (error) {
-    showErrorToast('Có lỗi xảy ra khi xoá danh sách yêu thích.');
-  }
-};
+  // Remove all items functionality has been removed as it's not being used
+  // and was causing ESLint warnings
 
   const handleRemove = async (productId: number) => {
     if (!user?.id) return;
@@ -206,7 +190,8 @@ export default function WishlistPage() {
       discount: product.discount || 0
     });
 
-    showSuccessToast(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
+    // Toast notification is commented out as the import is not available
+    // showSuccessToast(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
   };
 
   if (!user?.id) {
