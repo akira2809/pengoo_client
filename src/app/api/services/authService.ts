@@ -15,8 +15,8 @@ export interface UserApiData { // Export để có thể dùng trong store
   avatar_url: string;
   address: string;
   role: string;
-  points?: number; 
-  mfaCode?:number
+  points?: number;
+  mfaCode?: number
 }
 
 // Responses từ API của bạn
@@ -40,6 +40,7 @@ interface VerifyDecodedData {
   address?: string;
   role?: string;
   points?: number;
+  provider?: string
 }
 
 interface VerifyResponse {
@@ -124,10 +125,10 @@ export const authService = {
       console.error("Backend Register Error Response (HTTP !OK):", data);
       throw new Error(data.message || data.error || 'Đăng ký thất bại. Vui lòng thử lại sau.');
     }
-    
+
     // Nếu backend trả về 200 OK nhưng trong body có trường error, vẫn coi là lỗi logic
     if (data.error) {
-        throw new Error(data.error);
+      throw new Error(data.error);
     }
 
     return data; // Trả về tất cả dữ liệu từ backend
@@ -214,40 +215,40 @@ export const authService = {
   /**
    * Cập nhật mật khẩu người dùng
    */
-updatePassword: async (oldPassword: string, newPassword: string, token: string): Promise<{ success: boolean; message: string }> => {
-  const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({ oldPassword, newPassword }),
-  });
+  updatePassword: async (oldPassword: string, newPassword: string, token: string): Promise<{ status: number; message: string }> => {
+    const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ oldPassword, newPassword }),
+    });
 
-  const contentType = response.headers.get('content-type');
-  let data: { success: boolean; message: string };
+    const contentType = response.headers.get('content-type');
+    let data: { success: boolean; message: string };
 
-  if (contentType && contentType.includes('application/json')) {
-    data = await response.json();
-  } else {
-    const text = await response.text();
-    console.warn('Server returned plain text:', text);
-    data = { success: false, message: text };
-    throw new Error(text || 'Đổi mật khẩu thất bại');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.warn('Server returned plain text:', text);
+      data = { success: false, message: text };
+      throw new Error(text || 'Đổi mật khẩu thất bại');
+    }
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Đổi mật khẩu thất bại');
+    }
+
+    return data;
   }
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Đổi mật khẩu thất bại');
-  }
-
-  return data;
-}
 
 
   // async updatePassword( newPassword: string, token: string) {
   //   return apiClient.patch(`${USERS_API_BASE_URL}/updatePassword`);
   // },
-  
+
 
 
   /**

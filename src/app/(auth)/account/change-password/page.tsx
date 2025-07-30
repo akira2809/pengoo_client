@@ -23,10 +23,10 @@ const EyeOffIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
 );
 
 const LockIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
 );
 
 // --- Reusable Password Input Component ---
@@ -44,7 +44,7 @@ function PasswordInput({ label, id, ...props }: PasswordInputProps) {
       </label>
       <div className="relative">
         <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <LockIcon className="text-gray-400"/>
+          <LockIcon className="text-gray-400" />
         </span>
         <input
           type={showPassword ? 'text' : 'password'}
@@ -93,7 +93,7 @@ function ChangePasswordContent() {
 
     try {
       const result = await updatePassword(formData.oldPassword, formData.newPassword);
-      if (result.success) {
+      if (result.status == 200) {
         setSuccess('Đổi mật khẩu thành công! Bạn sẽ được chuyển hướng sau giây lát.');
         setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
         setTimeout(() => router.push('/account'), 2500);
@@ -116,8 +116,8 @@ function ChangePasswordContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-6">
         <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Đổi mật khẩu</h1>
-            <p className="mt-2 text-sm text-gray-600">Để bảo mật, hãy chọn một mật khẩu mạnh.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Đổi mật khẩu</h1>
+          <p className="mt-2 text-sm text-gray-600">Để bảo mật, hãy chọn một mật khẩu mạnh.</p>
         </div>
 
         {error && (
@@ -167,7 +167,7 @@ function ChangePasswordContent() {
             disabled={isLoading}
             autoComplete="new-password"
           />
-          
+
           <div className="flex flex-col sm:flex-row-reverse gap-3 pt-2">
             <button
               type="submit"
