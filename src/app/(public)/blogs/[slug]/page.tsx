@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const imageUrl = isValidImageUrl(post.image) ? post.image : PLACEHOLDER_IMAGE;
   // Giả sử domain gốc của bạn
-  const baseUrl = 'https://pengoo.vn'; // THAY THẾ BẰNG DOMAIN THỰC TẾ CỦA BẠN!
+  const baseUrl = 'https://pengoo.store'; // THAY THẾ BẰNG DOMAIN THỰC TẾ CỦA BẠN!
   const fullImageUrl = imageUrl.startsWith('/') ? `${baseUrl}${imageUrl}` : imageUrl;
   const postUrl = `${baseUrl}/blogs/${post.canonical || (await params).slug}`; // Sử dụng canonical nếu có, hoặc slug
 
@@ -91,7 +91,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     notFound(); // Next.js sẽ hiển thị trang 404
   }
 
-  const baseUrl = 'https://pengoo.vn';
+  const baseUrl = 'https://pengoo.store';
   const postUrl = `${baseUrl}/blogs/${post.canonical || params.slug}`;
 
   const mappedPost = {
@@ -135,7 +135,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 "name": "PENGOO Board Game",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": "https://pengoo.vn/images/logo.png", // Thay thế bằng URL logo của bạn
+                  "url": "https://pengoo.store/images/logo.png", // Thay thế bằng URL logo của bạn
                 }
               },
               "mainEntityOfPage": {

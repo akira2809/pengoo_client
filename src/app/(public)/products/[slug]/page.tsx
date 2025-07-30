@@ -1,8 +1,8 @@
 // src/app/(public)/product/[slug]/page.tsx
-// Đây là Server Component chính cho trang chi tiết sản phẩm
 import { Metadata } from "next";
 import { productService } from "@/app/api/services/productService";
 import { ProductData } from "@/app/type/product";
+import ProductLoader from "./ProductLoader";
 
 // Define types that are used in the product data
 interface CategoryType {
@@ -14,9 +14,6 @@ interface PublisherType {
   id: number;
   name: string;
 }
-
-// Import ProductLoader Client Component wrapper
-import ProductLoader from "./ProductLoader";
 
 // Hàm fetch dữ liệu sản phẩm (sẽ chạy trên server)
 async function getProductBySlug(
@@ -76,166 +73,188 @@ async function getProductBySlug(
   }
 }
 
-// Hàm generateMetadata để tạo metadata động (Chỉ chạy trên server)
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: { slug: string } 
+// ✅ ĐÃ SỬA: Lấy slug trực tiếp từ params
+export async function generateMetadata({
+  params: { slug },
+}: {
+  params: { slug: string };
 }): Promise<Metadata> {
-  // Lấy slug từ params (đã được resolve bởi Next.js)
-  const slug = params?.slug;
-  if (!slug) {
-    return {
-      title: "Sản phẩm không tồn tại - PENGOO",
-      description: "Xin lỗi, sản phẩm bạn tìm kiếm không tồn tại.",
-      robots: {
-        index: false,
-        follow: false,
-      },
-    };
-  }
-
-  const { product, error } = await getProductBySlug(slug);
-
-  if (!product) {
-    console.warn(
-      `Không tìm thấy sản phẩm với slug: ${slug}. Lỗi: ${error || "Không rõ."}`
-    );
-    return {
-      title: "Sản phẩm không tồn tại - PENGOO",
-      description: "Xin lỗi, sản phẩm bạn tìm kiếm không tồn tại.",
-      robots: {
-        index: false,
-        follow: false,
-      },
-    };
-  }
-
-  const productName = product.product_name || "Sản phẩm Board Game";
-  const productDescription =
-    product.description ||
-    `Khám phá ${productName} - một trò chơi board game tuyệt vời từ PENGOO.`;
-  const productImageUrl =
-    product.images?.[0]?.url || "/placeholder-product.jpg";
-
-  // Handle category name safely
-  const getCategoryName = (
-    categoryId: number | CategoryType | undefined
-  ): string => {
-    if (!categoryId) return "board game";
-    if (typeof categoryId === "object" && "name" in categoryId) {
-      return categoryId.name;
-    }
-    return "board game";
-  };
-
-  const productKeywords = [
-    productName.toLowerCase(),
-    getCategoryName(product.category_ID).toLowerCase(),
-    "PENGOO",
-    "trò chơi",
-    "board game",
-    `mua ${productName.toLowerCase()}`,
-    ...(product.features || [])
-      .map((f) => f.title)
-      .filter(Boolean)
-      .map((f) => f.toLowerCase()),
-    ...(product.tags || [])
-      .filter((t): t is string => typeof t === "string" && t.trim() !== "")
-      .map((t) => t.toLowerCase()),
-  ]
-    .filter(Boolean)
-    .slice(0, 10);
-
-  return {
-    title: `${productName} | Board Game Chính Hãng tại PENGOO`,
-    description: productDescription,
-    keywords: productKeywords,
-    openGraph: {
-      title: `${productName} | Board Game Chính Hãng tại PENGOO`,
-      description: productDescription,
-      url: `https://yourwebsite.com/product/${product.slug}`,
-      siteName: "PENGOO",
-      images: [
-        {
-          url: productImageUrl,
-          width: 800,
-          height: 600,
-          alt: `Hình ảnh ${productName} - Board Game PENGOO`,
+  try {
+    if (!slug) {
+      return {
+        title: "Sản phẩm không tồn tại - PENGOO",
+        description: "Xin lỗi, sản phẩm bạn tìm kiếm không tồn tại.",
+        robots: {
+          index: false,
+          follow: false,
         },
-      ],
-      locale: "vi_VN",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
+      };
+    }
+
+    const { product, error } = await getProductBySlug(slug);
+
+    if (!product) {
+      console.warn(
+        `Không tìm thấy sản phẩm với slug: ${slug}. Lỗi: ${error || "Không rõ."}`
+      );
+      return {
+        title: "Sản phẩm không tồn tại - PENGOO",
+        description: "Xin lỗi, sản phẩm bạn tìm kiếm không tồn tại.",
+        robots: {
+          index: false,
+          follow: false,
+        },
+      };
+    }
+
+    const productName = product.product_name || "Sản phẩm Board Game";
+    const productDescription =
+      product.description ||
+      `Khám phá ${productName} - một trò chơi board game tuyệt vời từ PENGOO.`;
+    const productImageUrl =
+      product.images?.[0]?.url || "/placeholder-product.jpg";
+
+    // Handle category name safely
+    const getCategoryName = (
+      categoryId: number | CategoryType | undefined
+    ): string => {
+      if (!categoryId) return "board game";
+      if (typeof categoryId === "object" && "name" in categoryId) {
+        return categoryId.name;
+      }
+      return "board game";
+    };
+
+    const productKeywords = [
+      productName.toLowerCase(),
+      getCategoryName(product.category_ID).toLowerCase(),
+      "PENGOO",
+      "trò chơi",
+      "board game",
+      `mua ${productName.toLowerCase()}`,
+      ...(product.features || [])
+        .map((f) => f.title)
+        .filter(Boolean)
+        .map((f) => f.toLowerCase()),
+      ...(product.tags || [])
+        .filter((t): t is string => typeof t === "string" && t.trim() !== "")
+        .map((t) => t.toLowerCase()),
+    ]
+      .filter(Boolean)
+      .slice(0, 10);
+
+    return {
       title: `${productName} | Board Game Chính Hãng tại PENGOO`,
       description: productDescription,
-      creator: "@yourtwitterhandle",
-      images: [productImageUrl],
-    },
-    alternates: {
-      canonical: `https://yourwebsite.com/product/${product.slug}`,
-    },
-  };
+      keywords: productKeywords,
+      openGraph: {
+        title: `${productName} | Board Game Chính Hãng tại PENGOO`,
+        description: productDescription,
+        url: `https://pengoo.store/product/${product.slug}`,
+        siteName: "PENGOO",
+        images: [
+          {
+            url: productImageUrl,
+            width: 800,
+            height: 600,
+            alt: `Hình ảnh ${productName} - Board Game PENGOO`,
+          },
+        ],
+        locale: "vi_VN",
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${productName} | Board Game Chính Hãng tại PENGOO`,
+        description: productDescription,
+        creator: "@yourtwitterhandle",
+        images: [productImageUrl],
+      },
+      alternates: {
+        canonical: `https://pengoo.store/product/${product.slug}`,
+      },
+    };
+  } catch (error) {
+    console.error("Error in generateMetadata:", error);
+    return {
+      title: "Lỗi - PENGOO",
+      description: "Đã xảy ra lỗi khi tải thông tin sản phẩm.",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
 }
 
-// Đây là component trang chính của bạn
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  // Lấy slug từ params (đã được resolve bởi Next.js)
-  const slug = params?.slug;
-  if (!slug) {
-    return <div>Không tìm thấy sản phẩm</div>;
-  }
+// ✅ ĐÃ SỬA: Lấy slug trực tiếp từ params
+export default async function ProductPage({
+  params: { slug },
+}: {
+  params: { slug: string };
+}) {
+  try {
+    if (!slug) {
+      return <div>Không tìm thấy sản phẩm</div>;
+    }
 
-  const { product, error } = await getProductBySlug(slug);
+    const { product, error } = await getProductBySlug(slug);
 
-  const schemaData = product
-    ? {
-        "@context": "https://schema.org",
-        "@type": "Product",
-        name: product.product_name || "Sản phẩm Board Game",
-        image: product.images?.[0]?.url || "/placeholder-product.jpg",
-        description:
-          product.description ||
-          `Khám phá ${
-            product.product_name || "Sản phẩm Board Game"
-          } - một trò chơi board game tuyệt vời từ PENGOO.`,
-        // Remove sku and mpn as they don't exist in ProductData
-        brand: {
-          "@type": "Brand",
-          name: "PENGOO",
-        },
-        offers: {
-          "@type": "Offer",
-          url: `https://yourwebsite.com/product/${product.slug}`,
-          priceCurrency: "VND",
-          price: product.product_price || 0,
-          itemCondition: "https://schema.org/NewCondition",
-          availability:
-            (product.quantity_stock || 0) > 0
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
-          seller: {
-            "@type": "Organization",
+    const schemaData = product
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.product_name || "Sản phẩm Board Game",
+          image: product.images?.[0]?.url || "/placeholder-product.jpg",
+          description:
+            product.description ||
+            `Khám phá ${
+              product.product_name || "Sản phẩm Board Game"
+            } - một trò chơi board game tuyệt vời từ PENGOO.`,
+          brand: {
+            "@type": "Brand",
             name: "PENGOO",
           },
-        },
-        // Remove aggregateRating as the properties don't exist in ProductData
-      }
-    : null;
+          offers: {
+            "@type": "Offer",
+            url: `https://pengoo.store/product/${product.slug}`,
+            priceCurrency: "VND",
+            price: product.product_price || 0,
+            itemCondition: "https://schema.org/NewCondition",
+            availability:
+              (product.quantity_stock || 0) > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+            seller: {
+              "@type": "Organization",
+              name: "PENGOO",
+            },
+          },
+        }
+      : null;
 
-  return (
-    <>
-      {/* Render Schema Markup nếu có dữ liệu sản phẩm */}
-      {schemaData && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-        />
-      )}
-      {/* Truyền dữ liệu sản phẩm đã fetch được vào Client Component Loader */}
-      <ProductLoader initialProduct={product} initialError={error} />
-    </>
-  );
+    return (
+      <>
+        {/* Render Schema Markup nếu có dữ liệu sản phẩm */}
+        {schemaData && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+          />
+        )}
+        {/* Truyền dữ liệu sản phẩm đã fetch được vào Client Component Loader */}
+        <ProductLoader initialProduct={product} initialError={error} />
+      </>
+    );
+  } catch (error) {
+    console.error("Error in ProductPage:", error);
+    return (
+      <div className="container mx-auto p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Lỗi! </strong>
+          <span className="block sm:inline">Đã xảy ra lỗi khi tải thông tin sản phẩm.</span>
+        </div>
+      </div>
+    );
+  }
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import Image from 'next/image';
+import { apiClient } from '@/app/api/apiClient';
 import { 
   UserIcon, 
   ShoppingBagIcon, 
@@ -55,6 +56,22 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user, loginMethod } = useAuthStore();
+  const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
+  
+    useEffect(() => {
+      const fetchUserPoints = async () => {
+        try {
+          const res = await apiClient.get<{ userPoints: number }>("/minigame/user-points");
+          const points = res.data?.userPoints ?? 0;
+  
+          setDisplayedUserPoints(points);
+        } catch {
+      
+          setDisplayedUserPoints(0);
+        }
+      };
+      fetchUserPoints();
+    }, []);
 
   // Close drawer when route changes
   useEffect(() => {
@@ -156,17 +173,15 @@ export function Sidebar() {
               </div>
               
               {/* Points display */}
-              {user?.points !== undefined && (
                 <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <SparklesIcon className="w-4 h-4 text-yellow-600" />
                       <span className="text-sm font-medium text-yellow-800">Điểm tích lũy</span>
                     </div>
-                    <span className="font-bold text-yellow-900">{user.points}</span>
+                    <span className="font-bold text-yellow-900">{displayedUserPoints ?? 0}</span>
                   </div>
                 </div>
-              )}
             </div>
 
             <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">

@@ -15,7 +15,7 @@ export default function NavLinks({
   return (
     <>
       <Link href="/products" className="hover:underline" onClick={onLinkClick}>
-        Products
+        Sản phẩm
       </Link>
 
       <div className="relative">
@@ -25,7 +25,7 @@ export default function NavLinks({
             className="hover:underline focus:outline-none"
             onClick={onCollectionsToggle}
           >
-            Collections
+            Bộ sưu tập
           </button>
         ) : (
           // Mobile: click chuyển sang trang collections

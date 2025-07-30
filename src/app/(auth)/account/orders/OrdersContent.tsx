@@ -111,6 +111,8 @@ export function OrdersContent() {
         <Image
           src={item.product?.images?.[0]?.url || 'https://via.placeholder.com/150'}
           alt={item.product?.product_name || 'Sản phẩm'}
+          width={80}
+          height={80}
           className="h-20 w-20 rounded-md object-cover bg-gray-100"
         />
         <div className="flex-1">

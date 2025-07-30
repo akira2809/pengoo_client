@@ -98,7 +98,7 @@ function ChangePasswordContent() {
         setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
         setTimeout(() => router.push('/account'), 2500);
       } else {
-        setError(result.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.');
+        setError(result?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.');
       }
     } catch (err) {
       console.error('Lỗi khi đổi mật khẩu:', err);

@@ -442,7 +442,7 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
 
       {/* Nút "Filter" Sticky chỉ hiển thị trên mobile */}
       <button
-        className="fixed bottom-4 right-4 lg:hidden flex items-center px-5 py-3 bg-amber-800 text-white rounded-full shadow-lg hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 z-40 text-lg"
+        className="fixed bottom-4 left-4 lg:hidden flex items-center px-5 py-3 bg-amber-800 text-white rounded-full shadow-lg hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 z-40 text-lg"
         onClick={() => setIsMobileFilterOpen(true)}
       >
         <IoFilter className="mr-2 text-xl" /> Lọc

@@ -29,15 +29,16 @@ export default function ModernAccountPage() {
   const [formData, setFormData] = useState<Partial<User>>({});
   const [accountData, setAccountData] = useState<User | null>(null);
   const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
-useEffect(() => {
+
+  useEffect(() => {
     const fetchUserPoints = async () => {
       try {
         const res = await apiClient.get<{ userPoints: number }>("/minigame/user-points");
         const points = res.data?.userPoints ?? 0;
- 
+
         setDisplayedUserPoints(points);
       } catch {
-     
+    
         setDisplayedUserPoints(0);
       }
     };

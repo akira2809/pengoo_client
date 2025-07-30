@@ -68,7 +68,7 @@ export default function CollectionSection() {
     <section className="max-w-screen-2xl mx-auto px-4 py-12 sm:px-6 lg:px-16">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4 sm:gap-0">
         <h2 className="text-4xl md:text-5xl font-bold text-text-900 tracking-tight">Bộ sưu tập</h2>
-        <Link href="/collection" className="flex items-center text-lg text-gray-600 hover:text-gray-900 transition-colors duration-200 group">
+        <Link href="/collections" className="flex items-center text-lg text-gray-600 hover:text-gray-900 transition-colors duration-200 group">
           Xem tất cả
           <span className="ml-2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 group-hover:bg-gray-200 transition-colors duration-200">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -85,7 +85,7 @@ export default function CollectionSection() {
             imageSrc={item.image_url || '/placeholder.png'}
             altText={item.name}
             title={item.name}
-            href={`/collection/${item.slug}`}
+            href={`/collections/${item.slug}`}
           />
         ))}
       </div>
