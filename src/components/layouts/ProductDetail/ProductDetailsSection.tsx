@@ -1,4 +1,3 @@
-// components/ProductDetailsSection.tsx
 "use client"
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -48,69 +47,6 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const addItem = useCartStore(state => state.addItem);
-  // Process tags to ensure they're in the correct format
-  // const processedTags = React.useMemo(() => {
-  //   if (!Array.isArray(tags)) return [];
-    
-  //   return tags.map((tag: Tag | string | Record<string, unknown>, index) => {
-  //     // If the tag is a string that looks like [object Object], handle it
-  //     if (typeof tag === 'string') {
-  //       console.warn('Found string tag:', tag);
-  //       return { 
-  //         id: Date.now() + index, 
-  //         name: tag === '[object Object]' ? 'Invalid Tag' : tag, 
-  //         type: 'unknown' 
-  //       };
-  //     }
-      
-  //     // If the name is [object Object], try to find the actual name in the tag object
-  //     if (tag && typeof tag === 'object' && tag.name === '[object Object]') {
-  //       console.warn('Found tag with [object Object] name:', tag);
-  //       // Try to find a property that looks like a name
-  //       const possibleName = Object.entries(tag).find(
-  //         ([key, value]) => 
-  //           key !== 'name' && 
-  //         key !== 'id' && 
-  //         key !== 'type' &&
-  //         typeof value === 'string' && 
-  //         value !== '[object Object]'
-  //       );
-        
-  //       if (possibleName) {
-  //         return {
-  //           id: Number(tag.id) || Date.now() + index,
-  //           name: possibleName[1] as string,
-  //           type: String(tag.type || 'unknown')
-  //         };
-  //       }
-  //     }
-      
-  //     // If tag is already in the correct format, return it as is
-  //     if (tag && typeof tag === 'object' && 'id' in tag && 'name' in tag && 'type' in tag) {
-  //       // console.log("tag" + tag)
-  //       console.log("tags" + tags)
-  //       return {
-  //         id: Number(tag.id) || Date.now() + index,
-  //         name: String(tag.name === '[object Object]' ? 'Unknown Tag' : tag.name),
-  //         type: String(tag.type || 'unknown')
-  //       };
-  //     }
-      
-  //     // Fallback for any other cases
-  //     console.warn('Unexpected tag format:', tag);
-  //     return { 
-  //       id: (tag && typeof tag === 'object' && 'id' in tag) ? Number(tag.id) : Date.now() + index,
-  //       name: 'Unknown Tag',
-  //       type: (tag && typeof tag === 'object' && 'type' in tag) ? String(tag.type) : 'unknown'
-  //     };
-  //   });
-  // }, [tags]);
-
-  // Debug logging
-  React.useEffect(() => {
-    // console.log('Raw tags from props:', JSON.stringify(tags, null, 2));
-    // console.log('Processed tags:', processedTags);
-  }, [tags]);
 
   const calculatedDiscountedPrice = discount && discount > 0
     ? originalPrice * (1 - discount / 100)
@@ -155,14 +91,10 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
     });
   };
 
-  // Log tags for debugging
-  React.useEffect(() => {
-    // console.log('Tags received:', tags);
-  }, [tags]);
-
-  // Extract genres and other tags from processed tags
-  // const genres = processedTags.filter(tag => tag?.type?.toLowerCase() === 'genre');
-  // const otherTags = processedTags.filter(tag => tag?.type?.toLowerCase() !== 'genre');
+  // Extract genres, age, and other tags
+  const genres = tags.filter(tag => tag.type === 'genre');
+  const ageTags = tags.filter(tag => tag.type === 'age');
+  const otherTags = tags.filter(tag => tag.type !== 'genre' && tag.type !== 'age');
 
   return (
     <div className="w-full">
@@ -201,21 +133,29 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         </p>
       </div>
 
-      {/* Tags and Genres */}
-      {(tags.length > 0) ? (
+      {/* Tags, Genres, and Age */}
+      {(genres.length > 0 || ageTags.length > 0 || otherTags.length > 0) ? (
         <div className="mb-6 flex flex-wrap gap-2">
-          {tags.length > 0 && (
+          {genres.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
               <span className="text-xs font-semibold text-gray-600">Thể loại:</span>
-              {tags.map(tag => (
+              {genres.map(tag => (
                 <span key={tag.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs whitespace-nowrap">
                   {tag?.name || 'N/A'}
                 </span>
               ))}
             </div>
           )}
-          {/* {otherTags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1">
+          {ageTags.length > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-semibold text-gray-600">Độ tuổi:</span>
+              {ageTags.map(tag => (
+                <span key={tag.id} className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">{tag.name}</span>
+              ))}
+            </div>
+          )}
+          {otherTags.length > 0 && (
+            <div className="flex items-center gap-1">
               <span className="text-xs font-semibold text-gray-600">Tags:</span>
               {otherTags.map(tag => (
                 <span key={tag.id} className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs whitespace-nowrap">
@@ -223,7 +163,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
                 </span>
               ))}
             </div>
-          )} */}
+          )}
         </div>
       ) : (
         <div className="mb-6 text-sm text-gray-500">

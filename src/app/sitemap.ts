@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 
 // Đảm bảo NEXT_PUBLIC_APP_URL được định nghĩa trong .env.local hoặc môi trường triển khai
 // Ví dụ: NEXT_PUBLIC_APP_URL=https://pengoo.vn
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pengoo.store'; // Cập nhật domain thực tế ở đây!
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pengoo-back-end.vercel.app'; // Cập nhật domain thực tế ở đây!
 
 // Define types for our API responses
 interface Product {
