@@ -6,9 +6,18 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
-    // Use different loaders based on the image source
-    loader: 'default',
+    // Use Cloudinary loader for production
+    loader: 'cloudinary',
+    path: 'https://res.cloudinary.com/do6lj4onq/image/upload/',
+    
+    // Image formats and settings
     formats: ["image/webp", "image/avif"] as const,
+    dangerouslyAllowSVG: true,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
+    
+    // Allowed domains
     domains: [
       'res.cloudinary.com',
       'picsum.photos',
@@ -17,12 +26,9 @@ const nextConfig: NextConfig = {
       'placehold.co',
       'localhost',
     ],
-    dangerouslyAllowSVG: true,
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
-    // Allow all image domains in development for easier testing
-    ...(process.env.NODE_ENV === 'development' && {
+    
+    // For development, allow all image sources
+    ...(process.env.NODE_ENV !== 'production' && {
       remotePatterns: [
         {
           protocol: 'https',
