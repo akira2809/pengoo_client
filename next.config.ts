@@ -6,26 +6,32 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
-    // 1. ĐÃ XÓA BỎ loader và path của Cloudinary để dùng trình tối ưu hóa mặc định
+    // Use custom loader for Cloudinary
+    loader: 'custom',
+    loaderFile: './src/lib/cloudinary-loader.ts',
     
-    // Các cài đặt hình ảnh khác
+    // Image formats and settings
     formats: ["image/webp", "image/avif"],
     dangerouslyAllowSVG: true,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
-
-    // 2. CẤU HÌNH remotePatterns để cho phép các tên miền hình ảnh trên production
+    
+    // Allowed remote patterns for images
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'loremflickr.com' },
       { protocol: 'https', hostname: 'assets.awwwards.com' },
       { protocol: 'https', hostname: 'placehold.co' },
-      // Thêm các hostname khác bạn cần tại đây
     ],
     
-    // Các cấu hình còn lại giữ nguyên
+    // In development, allow all domains for easier testing
+    ...(process.env.NODE_ENV !== 'production' && {
+      remotePatterns: [
+        { protocol: 'https', hostname: '**' },
+      ],
+    }),
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:",
   },
@@ -34,14 +40,11 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
   },
   typescript: {
-    // Cho phép build thành công kể cả khi có lỗi TypeScript
     ignoreBuildErrors: true,
   },
 };
 
-const withBundleAnalyzerConfig = withBundleAnalyzer({
+export default withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
   openAnalyzer: true,
-});
-
-export default withBundleAnalyzerConfig(nextConfig);
+})(nextConfig);
