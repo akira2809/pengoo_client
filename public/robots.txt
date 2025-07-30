@@ -1,14 +1,11 @@
 User-agent: *
-Allow: /
-
-# Sitemap
-Sitemap: /sitemap.xml
-
-# Disallow admin and API routes
 Disallow: /admin/
 Disallow: /api/
 
-# Allow all other pages
-Allow: /*
+Allow: /
 
-# Crawl-delay: 10  # Uncomment and adjust if needed to limit crawl rate
+# Sitemap
+Sitemap: https://pengoo.store/sitemap.xml
+
+# Crawl-delay (optional, uncomment if needed)
+# Crawl-delay: 10

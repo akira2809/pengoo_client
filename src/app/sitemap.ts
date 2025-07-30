@@ -1,11 +1,10 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next';
 
-// Đảm bảo NEXT_PUBLIC_APP_URL được định nghĩa trong .env.local hoặc môi trường triển khai
-// Ví dụ: NEXT_PUBLIC_APP_URL=https://pengoo.vn
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pengoo-back-end.vercel.app'; // Cập nhật domain thực tế ở đây!
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pengoo.store';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app';
 
-// Define types for our API responses
+// Type định nghĩa dữ liệu từ API
 interface Product {
   slug: string;
   updatedAt?: string;
@@ -24,101 +23,45 @@ interface Collection {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date(); // Lấy thời gian hiện tại cho các trang tĩnh
+  const now = new Date();
 
-  // 1. Các trang tĩnh quan trọng
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}`, // Trang chủ
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/about`, // Trang giới thiệu
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/contact`, // Trang liên hệ
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/products`, // Trang danh mục sản phẩm chính
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blogs`, // Trang danh sách blog
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/collections`, // Trang danh mục collections chính
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/termsOfServicePolicy`, // Trang chính sách sử dụng
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/promotionPolicy`, // Trang chính sách khuyến mãi
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/returnPolicy`, // Trang chính sách đổi trả
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/shippingPolicy`, // Trang chính sách giao hàng
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/commitment`, // Trang cam kết
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
+    { url: `${baseUrl}`, lastModified: now, changeFrequency: 'daily', priority: 1 },
+    { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/products`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${baseUrl}/blogs`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/collections`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${baseUrl}/termsOfServicePolicy`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/promotionPolicy`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/returnPolicy`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/shippingPolicy`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/commitment`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
   ];
 
-  // 2. Lấy dữ liệu sản phẩm động
-  const products = await getProducts();
-  const productPages: MetadataRoute.Sitemap = products.map((product: Product) => ({
-    url: `${baseUrl}/products/${product.slug}`,
-    lastModified: product.updatedAt ? new Date(product.updatedAt) : now,
+  const [products, blogPosts, collections] = await Promise.all([
+    fetchAPI<Product[]>(`${apiUrl}/products`),
+    fetchAPI<BlogPost[]>(`${apiUrl}/posts`),
+    fetchAPI<Collection[]>(`${apiUrl}/collections`),
+  ]);
+
+  const productPages = products.map((p) => ({
+    url: `${baseUrl}/products/${p.slug}`,
+    lastModified: p.updatedAt ? new Date(p.updatedAt) : now,
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
 
-  // 3. Lấy dữ liệu bài viết blog động
-  const blogPosts = await getBlogPosts();
-  const blogPages: MetadataRoute.Sitemap = blogPosts.map((post: BlogPost) => ({
-    url: `${baseUrl}/blogs/${post.canonical || post.slug}`,
-    lastModified: post.updatedAt ? new Date(post.updatedAt) : new Date(post.created_at || now),
+  const blogPages = blogPosts.map((b) => ({
+    url: `${baseUrl}/blogs/${b.canonical || b.slug}`,
+    lastModified: b.updatedAt ? new Date(b.updatedAt) : new Date(b.created_at || now),
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
 
-  // 4. Lấy dữ liệu collection động
-  const collections = await getCollections();
-  const collectionPages: MetadataRoute.Sitemap = collections.map((collection: Collection) => ({
-    url: `${baseUrl}/collections/${collection.slug}`,
-    lastModified: collection.updatedAt ? new Date(collection.updatedAt) : now,
+  const collectionPages = collections.map((c) => ({
+    url: `${baseUrl}/collections/${c.slug}`,
+    lastModified: c.updatedAt ? new Date(c.updatedAt) : now,
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
@@ -126,61 +69,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [...staticPages, ...productPages, ...blogPages, ...collectionPages];
 }
 
-// --- Các hàm lấy dữ liệu từ API của bạn ---
-
-async function getProducts(): Promise<Product[]> {
+async function fetchAPI<T>(url: string): Promise<T> {
   try {
-    const res = await fetch(`${baseUrl}/products`, { 
+    const res = await fetch(url, {
       next: { revalidate: 3600 },
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
     if (!res.ok) {
-      console.error('Failed to fetch products for sitemap:', res.statusText);
-      return [];
+      console.error(`❌ Failed to fetch ${url}:`, res.status, res.statusText);
+      return [] as T;
     }
     return await res.json();
   } catch (error) {
-    console.error('Error fetching products for sitemap:', error);
-    return [];
-  }
-}
-
-async function getBlogPosts(): Promise<BlogPost[]> {
-  try {
-    const res = await fetch(`${baseUrl}/posts`, { 
-      next: { revalidate: 3600 },
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!res.ok) {
-      console.error('Failed to fetch blog posts for sitemap:', res.statusText);
-      return [];
-    }
-    return await res.json();
-  } catch (error) {
-    console.error('Error fetching blog posts for sitemap:', error);
-    return [];
-  }
-}
-
-async function getCollections(): Promise<Collection[]> {
-  try {
-    const res = await fetch(`${baseUrl}/collections`, { 
-      next: { revalidate: 3600 },
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!res.ok) {
-      console.error('Failed to fetch collections for sitemap:', res.statusText);
-      return [];
-    }
-    return await res.json();
-  } catch (error) {
-    console.error('Error fetching collections for sitemap:', error);
-    return [];
+    console.error(`❌ Error fetching ${url}:`, error);
+    return [] as T;
   }
 }
