@@ -6,8 +6,18 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
+    // Use custom loader for Cloudinary
+    loader: 'custom',
+    loaderFile: './src/lib/cloudinary-loader.ts',
+    
+    // Image formats and settings
     formats: ["image/webp", "image/avif"],
     dangerouslyAllowSVG: true,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
+    
+    // Allowed remote patterns for images
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'picsum.photos' },
@@ -15,9 +25,13 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'assets.awwwards.com' },
       { protocol: 'https', hostname: 'placehold.co' },
     ],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    
+    // In development, allow all domains for easier testing
+    ...(process.env.NODE_ENV !== 'production' && {
+      remotePatterns: [
+        { protocol: 'https', hostname: '**' },
+      ],
+    }),
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:",
   },
