@@ -36,12 +36,16 @@ export default function CollectionsDropdown({
       try {
         setLoading(true);
         const response = await collectionService.getCollections();
-        if (response?.data) {
+        if (response?.data && Array.isArray(response.data)) {
           setCollections(response.data);
+        } else {
+          console.warn('Unexpected collections data format:', response?.data);
+          setCollections([]);
         }
       } catch (err) {
         console.error('Error fetching categories:', err);
         setError('Không thể tải danh mục sản phẩm');
+        setCollections([]);
       } finally {
         setLoading(false);
       }
@@ -141,7 +145,7 @@ export default function CollectionsDropdown({
             </h3>
             {/* ✅ Cập nhật màu link */}
             <Link 
-              href="/collection" 
+              href="/collections" 
               onClick={onClose}
               className="flex items-center text-sm font-semibold text-white/70 hover:text-white transition-colors group"
             >
@@ -150,7 +154,7 @@ export default function CollectionsDropdown({
             </Link>
           </div> 
           <div ref={collectionsItemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {collections.slice(0, 3).map((col) => (
+            {(collections || []).slice(0, 3).map((col) => (
               <Link
                 key={col.id}
                 href={`/collections/${col.slug}`} // ✅ Sử dụng ID thay vì slug

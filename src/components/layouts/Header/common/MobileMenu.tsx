@@ -2,7 +2,6 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import CloseIcon from "@mui/icons-material/Close";
-import LanguageIcon from "@mui/icons-material/Language";
 import NavLinks from './NavLinks';
 
 interface MobileMenuProps {
@@ -82,11 +81,7 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
           <NavLinks onLinkClick={onClose} />
         </nav>
 
-        <div className="flex items-center space-x-2 text-base text-text-50 font-semibold mb-4">
-          <LanguageIcon />
-          <span>English (USD)</span>
-        </div>
-
+       
         <div className="text-sm text-text-50 font-normal mb-4">
           Follow us on social media!
         </div>

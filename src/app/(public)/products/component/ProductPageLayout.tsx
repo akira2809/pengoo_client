@@ -65,6 +65,7 @@ const sortOptions = [
   { id: 3, name: "Thứ tự bằng chữ cái (Z-A)", value: "za" },
   { id: 4, name: "Giá: Thấp đến Cao", value: "price_asc" },
   { id: 5, name: "Giá: Cao đến Thấp", value: "price_desc" },
+  { id: 6, name: "Bán chạy", value: "sold_desc" },
 ];
 export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   products,
@@ -265,6 +266,9 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
       case "price_desc":
         sorted.sort((a, b) => b.product_price - a.product_price);
         break;
+      case "sold_desc":
+        sorted.sort((a, b) => (b.quantity_sold ?? 0) - (a.quantity_sold ?? 0));
+        break;
       default:
         break;
     }
@@ -438,7 +442,7 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
 
       {/* Nút "Filter" Sticky chỉ hiển thị trên mobile */}
       <button
-        className="fixed bottom-4 right-4 lg:hidden flex items-center px-5 py-3 bg-amber-800 text-white rounded-full shadow-lg hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 z-40 text-lg"
+        className="fixed bottom-4 left-4 lg:hidden flex items-center px-5 py-3 bg-amber-800 text-white rounded-full shadow-lg hover:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 z-40 text-lg"
         onClick={() => setIsMobileFilterOpen(true)}
       >
         <IoFilter className="mr-2 text-xl" /> Lọc

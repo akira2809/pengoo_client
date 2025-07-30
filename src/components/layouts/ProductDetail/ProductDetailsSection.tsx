@@ -1,4 +1,3 @@
-// components/ProductDetailsSection.tsx
 "use client"
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -29,6 +28,7 @@ interface ProductDetailsSectionProps {
   slug?: string;
   tags?: Tag[];
   category?: { id: number; name: string };
+  quantity_stock: number;
 }
 
 const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
@@ -42,7 +42,8 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   image_url = '',
   slug = '',
   tags = [],
-  category
+  category,
+  quantity_stock = 0
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const addItem = useCartStore(state => state.addItem);
@@ -133,13 +134,15 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       </div>
 
       {/* Tags, Genres, and Age */}
-      {(genres.length > 0 || ageTags.length > 0 || otherTags.length > 0) && (
+      {(genres.length > 0 || ageTags.length > 0 || otherTags.length > 0) ? (
         <div className="mb-6 flex flex-wrap gap-2">
           {genres.length > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <span className="text-xs font-semibold text-gray-600">Thể loại:</span>
               {genres.map(tag => (
-                <span key={tag.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">{tag.name}</span>
+                <span key={tag.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+                  {tag?.name || 'N/A'}
+                </span>
               ))}
             </div>
           )}
@@ -155,10 +158,16 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
             <div className="flex items-center gap-1">
               <span className="text-xs font-semibold text-gray-600">Tags:</span>
               {otherTags.map(tag => (
-                <span key={tag.id} className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs">{tag.name}</span>
+                <span key={tag.id} className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+                  {tag?.name || 'N/A'}
+                </span>
               ))}
             </div>
           )}
+        </div>
+      ) : (
+        <div className="mb-6 text-sm text-gray-500">
+          Không có tags nào cho sản phẩm này.
         </div>
       )}
       
@@ -169,6 +178,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
           <QuantitySelector 
             quantity={quantity} 
             onQuantityChange={setQuantity}
+            max={quantity_stock}
             className="w-36"
           />
         </div>

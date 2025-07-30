@@ -64,15 +64,15 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
   const [product, setProduct] = useState<ProductData | null>(initialProduct);
   const [loading, setLoading] = useState(!initialProduct && !initialError);
   const [error, setError] = useState<string | null>(initialError);
-
+  
   useEffect(() => {
     let isMounted = true;
-
+    
     // Always reset state when slug changes
     setLoading(true);
     setError(null);
     setProduct(null);
-
+    
     const fetchProduct = async () => {
       if (!slug) {
         setError('Không tìm thấy sản phẩm');
@@ -123,7 +123,7 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
       </div>
     );
   }
-
+  
   if (error || !product) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
@@ -142,15 +142,15 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
         <button
           onClick={() => window.location.reload()}
           className="mt-6 px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-        >
+          >
           Tải lại trang
         </button>
       </div>
     );
   }
-
+  
   const cms = product?.cmsContent;
-
+  
   return (
     <div className="container mx-auto px-4">
       {/* Image Gallery - CMS driven */}
@@ -177,13 +177,9 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
             shippingInfo={cms?.shippingInfo || product.shipping_info || 'Vận chuyển toàn quốc'}
             image_url={product.images?.[0]?.url || ''}
             slug={product.slug || String(product.id)}
-            tags={Array.isArray(product.tags) ? product.tags.map((tag, index) => ({
-              id: index,
-              name: String(tag),
-              type: 'tag'
-            })) : []}
+            tags={product.tags || []}
             category={typeof product.category_ID === 'object' ? product.category_ID : undefined}
-          />
+            />
         </div>
       </div>
 

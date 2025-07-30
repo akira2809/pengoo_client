@@ -20,14 +20,14 @@ export const metadata: Metadata = {
     default: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè | Trải Nghiệm Giải Trí Đỉnh Cao', // Tiêu đề mặc định cho trang chủ
   },
   icons: {
-    icon: '../../public/pengoo_icon.jpg',
-    apple: '../../public/pengoo_icon.jpg',
+    icon: '../../public/logoweb-01.png',
+    apple: '../../public/logoweb-01.png',
   },
   description: 'PENGOO chuyên cung cấp các loại board game, trò chơi gia đình và đồ chơi trí tuệ độc đáo. Khám phá ngay để có những khoảnh khắc giải trí và gắn kết tuyệt vời!',
   applicationName: 'PENGOO',
   creator: 'Tên nhà phát triển hoặc công ty của bạn', // Thay thế
   publisher: 'PENGOO',
-  metadataBase: new URL('https://yourwebsite.com'), // Thay bằng URL cơ sở của bạn
+  metadataBase: new URL('https://pengoo.store'), // Thay bằng URL cơ sở của bạn
   keywords: [
     'PENGOO', 'board game', 'trò chơi board game', 'board game gia đình', 
     'board game bạn bè', 'đồ chơi trí tuệ', 'trò chơi giải trí', 
@@ -37,11 +37,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè',
     description: 'Khám phá bộ sưu tập board game độc đáo tại PENGOO.',
-    url: 'https://yourwebsite.com', // URL trang chủ của bạn
+    url: 'https://pengoo.store', // URL trang chủ của bạn
     siteName: 'PENGOO',
     images: [
       {
-        url: 'https://yourwebsite.com/images/opengraph-image.jpg', // Ảnh Open Graph chung
+        url: 'https://pengoo.store/images/opengraph-image.jpg', // Ảnh Open Graph chung
         width: 1200,
         height: 630,
         alt: 'PENGOO - Board Game cho Gia đình và Bạn bè',
@@ -56,20 +56,23 @@ export const metadata: Metadata = {
     creator: '@yourtwitterhandle',
     title: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè',
     description: 'Khám phá bộ sưu tập board game độc đáo tại PENGOO.',
-    images: ['https://yourwebsite.com/images/twitter-image.jpg'], // Ảnh Twitter Card chung
+    images: ['https://pengoo.store/images/twitter-image.jpg'], // Ảnh Twitter Card chung
   },
   // Thêm manifest link ở đây
   manifest: '/site.webmanifest', 
 };
 
-// ĐỊNH NGHĨA EXPORT VIEWPORT RIÊNG BIỆT
+// Viewport configuration
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#1A202C', // Màu theme cho ứng dụng (ví dụ: màu tối của header)
-  colorScheme: 'light', // Hoặc 'light dark' nếu bạn hỗ trợ cả hai
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#1A202C' },
+  ],
+  colorScheme: 'light dark', // Support both light and dark modes
 };
 
 const No_Header_Paths = [

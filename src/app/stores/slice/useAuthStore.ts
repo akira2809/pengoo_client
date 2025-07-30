@@ -16,6 +16,8 @@ export interface User {
   address: string;
   role: string;
   points?: number;
+  mfaCode?: number | null;
+  provider: string;
 }
 
 // Định nghĩa AuthState chứa tất cả các trạng thái và hàm liên quan đến xác thực
@@ -25,6 +27,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  loginMethod: 'email' | 'google' | null;
   login: (credentials: {
     email: string;
     password: string;
@@ -48,6 +51,7 @@ interface AuthState {
   clearError: () => void;
   logout: () => void;
   verifyVoucherByUserPoint: (voucherCode: string) => Promise<{ success: boolean; message?: string }>;
+  setLoginMethod: (method: 'email' | 'google' | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -58,6 +62,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      loginMethod: null,
 
       /**
        * Xử lý quá trình đăng nhập người dùng.
@@ -87,6 +92,7 @@ export const useAuthStore = create<AuthState>()(
             address: verifyData.decoded.address || '',
             role: verifyData.decoded.role || 'user',
             points: verifyData.decoded.points || 0, 
+            mfaCode: verifyData.mfaCode || null, 
           };
 
           set({
@@ -95,6 +101,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            loginMethod: 'email',
           });
 
           return { success: true, message: 'Đăng nhập thành công.' };
@@ -238,6 +245,11 @@ export const useAuthStore = create<AuthState>()(
       clearError: () => set({ error: null }),
 
       /**
+       * Cập nhật phương thức đăng nhập
+       */
+      setLoginMethod: (method) => set({ loginMethod: method }),
+
+      /**
        * Đăng xuất người dùng, xóa tất cả trạng thái xác thực.
        */
       logout: () => {
@@ -247,6 +259,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           isLoading: false,
           error: null,
+          loginMethod: null,
         });
         // Bạn có thể thêm logic xóa các dữ liệu khác liên quan đến phiên làm việc nếu cần
       },
@@ -272,24 +285,35 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Cập nhật mật khẩu người dùng
        */
-      updatePassword: async (currentPassword: string, newPassword: string) => {
+     updatePassword: async (oldPassword: string, newPassword: string) => {
         const { token } = get();
+
         if (!token) {
           return { success: false, message: 'Người dùng chưa đăng nhập.' };
         }
 
         set({ isLoading: true, error: null });
+
         try {
-          const result = await authService.updatePassword(currentPassword, newPassword, token);
+          const result = await authService.updatePassword(oldPassword, newPassword, token);
+
           set({ isLoading: false });
-          return { success: true, message: result.message || 'Cập nhật mật khẩu thành công.' };
+
+          return {
+            success: true,
+            message: result.message || 'Cập nhật mật khẩu thành công.',
+          };
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
-          console.error('Lỗi đổi mật khẩu:', error);
+          const errorMessage =
+            error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
+
           set({ error: errorMessage, isLoading: false });
+
           return { success: false, message: errorMessage };
         }
       },
+
+
 
       /**
        * Xác minh một token đã cho.
@@ -319,6 +343,7 @@ export const useAuthStore = create<AuthState>()(
               address: data.decoded.address || '',
               role: data.decoded.role || 'user',
               points: data.decoded.points || 0,
+              provider: data.decoded.provider || '',
             };
 
             set({

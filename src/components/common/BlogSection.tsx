@@ -16,7 +16,7 @@ export interface ApiBlogPost {
   meta_keyword: string;
   meta_title: string;
   image: string;
-  order: number;
+  order: number | null;
   publish: boolean;
   created_at: string;
   updated_at: string;
@@ -29,26 +29,23 @@ export interface ApiBlogPost {
 
 // Interface for blog post in the component
 export interface BlogPost {
-  id: string;
+  id: number;
   imageSrc: string;
   title: string;
   excerpt: string;
   date: string;
   link: string;
-  isFeatured?: boolean;
+  isFeatured: boolean;
   category?: {
+    id: number;
     name: string;
     link: string;
   };
 }
 
 // Helper to check if image URL is valid
-function isValidImageUrl(url: string | undefined): boolean {
-  if (!url) return false;
-  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
-}
 
-const PLACEHOLDER_IMAGE = '/placeholder.jpg';
+const PLACEHOLDER_IMAGE = '/images/placeholder-blog.jpg';
 
 // Component props
 interface BlogSectionProps {
@@ -63,76 +60,66 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   posts: initialPosts = []
 }) => {
   const [posts, setPosts] = React.useState<ApiBlogPost[]>(initialPosts);
-  const [isLoading, setIsLoading] = React.useState(!initialPosts.length);
+  const [isLoading, setIsLoading] = React.useState(initialPosts.length === 0);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Fetch posts if no initial posts provided
   React.useEffect(() => {
-    // Only fetch if we don't have initial posts and we're not already loading
-    if (initialPosts.length) {
+    if (initialPosts.length > 0) {
       setPosts(initialPosts);
       setIsLoading(false);
       return;
     }
 
-    // Add a flag to handle component unmounting
-    let isMounted = true;
-    
     const fetchPosts = async () => {
       try {
         const data = await fetchAllPosts();
-        if (isMounted) {
-          setPosts(data);
-        }
+        setPosts(data);
       } catch (err) {
         console.error('Error fetching posts:', err);
-        if (isMounted) {
-          setError('Không thể tải bài viết. Vui lòng thử lại sau.');
-        }
+        setError('Không thể tải bài viết. Vui lòng thử lại sau.');
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 
-    // Only fetch if we don't have any posts yet
-    if (posts.length === 0) {
-      setIsLoading(true);
-      fetchPosts();
-    }
-
-    // Cleanup function
-    return () => {
-      isMounted = false;
-    };
-  }, [initialPosts, posts.length]); // Add posts.length to dependency array
+    fetchPosts();
+  }, [initialPosts]);
 
   // Transform API posts to component format
-  const formattedPosts = React.useMemo(() => {
+  const formattedPosts = React.useMemo<BlogPost[]>(() => {
+    if (!posts || posts.length === 0) return [];
+
     return posts.map((post) => {
       // Format date in Vietnamese locale
-      const formattedDate = new Date(post.created_at).toLocaleDateString('vi-VN', {
+      const postDate = post.updated_at ? new Date(post.updated_at) : new Date();
+      const formattedDate = postDate.toLocaleDateString('vi-VN', {
         day: '2-digit',
-        month: 'short',
+        month: '2-digit',
         year: 'numeric',
-        timeZone: 'Asia/Ho_Chi_Minh'
       });
-      
-      // Handle category info if available
+
+      // Handle category
       const category = post.catalogue ? {
+        id: post.catalogue.id,
         name: post.catalogue.name,
-        link: `/categories/${post.catalogue.canonical}`
+        link: `/blogs/category/${post.catalogue.canonical}`
       } : undefined;
 
+      // Handle image URL
+      const isValidImage = post.image && 
+        (post.image.startsWith('http') || post.image.startsWith('/'));
+      const imageSrc = isValidImage ? post.image : PLACEHOLDER_IMAGE;
+
       return {
-        id: post.id.toString(),
-        imageSrc: isValidImageUrl(post.image) ? post.image : PLACEHOLDER_IMAGE,
-        title: post.name,
+        id: post.id,
+        imageSrc,
+        title: post.name || 'Không có tiêu đề',
         excerpt: post.description || post.meta_description || '',
         date: formattedDate,
-        link: `/blogs/${post.canonical}`,
+        link: `/blogs/${post.canonical || post.id}`,
         isFeatured: post.order === 1,
-        category: category
+        category
       };
     });
   }, [posts]);
@@ -161,70 +148,63 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
     return (
       <section className="py-16 px-4 md:py-24">
         <div className="max-w-screen-xl mx-auto text-center">
-          <p>No blog posts found.</p>
+          <p>Không có bài viết nào để hiển thị.</p>
         </div>
       </section>
     );
   }
 
-
-
   return (
     <section className="py-16 px-4 md:py-24">
       <div className="max-w-screen-xl mx-auto">
-        <div className="flex justify-between items-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-800">
-            {title}
-          </h2>
-          <a
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
+          <a 
             href={viewAllLink}
-            className="flex items-center text-lg font-semibold text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
           >
-            View all <FiArrowRight className="ml-2 text-xl" />
+            Xem tất cả <FiArrowRight className="ml-2" />
           </a>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {formattedPosts.map((post) => (
-            <a
-              key={post.id}
-              href={post.link}
-              className="block group"
-              aria-label={`Read more about ${post.title}`}
-            >
-              <div className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden h-full flex flex-col">
-                <div className="relative w-full h-60 overflow-hidden">
-                  <Image
-                    src={post.imageSrc}
-                    alt={post.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    priority={post.isFeatured}
-                  />
-                </div>
-
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex justify-between items-center mb-2">
-                    {post.category && (
-                      <span className="text-sm font-medium text-blue-600">
-                        {post.category.name}
-                      </span>
-                    )}
-                    <p className="text-sm text-gray-500">{post.date}</p>
-                  </div>
-                  <h3 className="text-2xl font-extrabold text-gray-900 mb-3 group-hover:text-background-800 transition-colors duration-200 leading-tight">
-                    {post.title}
-                  </h3>
-                  <p className="text-base text-gray-700 leading-relaxed line-clamp-3 flex-1">
-                    {post.excerpt}
-                  </p>
-                  <span className="mt-4 inline-block text-blue-600 font-medium hover:text-blue-800 transition-colors">
-                    Read more →
+            <article key={post.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+              <div className="aspect-w-16 aspect-h-9 relative">
+                <Image
+                  src={post.imageSrc}
+                  alt={post.title}
+                  width={400}
+                  height={225}
+                  className="w-full h-48 object-cover"
+                />
+                {post.category && (
+                  <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                    {post.category.name}
                   </span>
+                )}
+              </div>
+              <div className="p-4">
+                {post.category && (
+                  <span className="text-sm text-gray-500">{post.category.name}</span>
+                )}
+                <h3 className="text-xl font-semibold mt-2 mb-2 line-clamp-2">
+                  <a href={post.link} className="hover:text-blue-600 transition-colors">
+                    {post.title}
+                  </a>
+                </h3>
+                <p className="text-gray-600 text-sm mb-3 line-clamp-3">{post.excerpt}</p>
+                <div className="flex justify-between items-center text-sm text-gray-500">
+                  <time dateTime={post.date}>{post.date}</time>
+                  <a 
+                    href={post.link}
+                    className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  >
+                    Đọc thêm <FiArrowRight className="ml-1" />
+                  </a>
                 </div>
               </div>
-            </a>
+            </article>
           ))}
         </div>
       </div>

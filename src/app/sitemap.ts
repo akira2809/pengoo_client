@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 
 // Đảm bảo NEXT_PUBLIC_APP_URL được định nghĩa trong .env.local hoặc môi trường triển khai
 // Ví dụ: NEXT_PUBLIC_APP_URL=https://pengoo.vn
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pengoo.vn'; // Cập nhật domain thực tế ở đây!
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pengoo.store'; // Cập nhật domain thực tế ở đây!
 
 // Define types for our API responses
 interface Product {
@@ -130,7 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const res = await fetch('https://api.pengoo.vn/products', { 
+    const res = await fetch(`${baseUrl}/products`, { 
       next: { revalidate: 3600 },
       headers: {
         'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ async function getProducts(): Promise<Product[]> {
 
 async function getBlogPosts(): Promise<BlogPost[]> {
   try {
-    const res = await fetch('https://api.pengoo.vn/blogs', { 
+    const res = await fetch(`${baseUrl}/posts`, { 
       next: { revalidate: 3600 },
       headers: {
         'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ async function getBlogPosts(): Promise<BlogPost[]> {
 
 async function getCollections(): Promise<Collection[]> {
   try {
-    const res = await fetch('https://api.pengoo.vn/collections', { 
+    const res = await fetch(`${baseUrl}/collections`, { 
       next: { revalidate: 3600 },
       headers: {
         'Content-Type': 'application/json',
