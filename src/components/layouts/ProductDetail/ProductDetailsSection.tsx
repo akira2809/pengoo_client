@@ -90,9 +90,10 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
     });
   };
 
-  // Extract genres and other tags
+  // Extract genres, age, and other tags
   const genres = tags.filter(tag => tag.type === 'genre');
-  const otherTags = tags.filter(tag => tag.type !== 'genre');
+  const ageTags = tags.filter(tag => tag.type === 'age');
+  const otherTags = tags.filter(tag => tag.type !== 'genre' && tag.type !== 'age');
 
   return (
     <div className="w-full">
@@ -131,14 +132,22 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         </p>
       </div>
 
-      {/* Tags and Genres */}
-      {(genres.length > 0 || otherTags.length > 0) && (
+      {/* Tags, Genres, and Age */}
+      {(genres.length > 0 || ageTags.length > 0 || otherTags.length > 0) && (
         <div className="mb-6 flex flex-wrap gap-2">
           {genres.length > 0 && (
             <div className="flex items-center gap-1">
               <span className="text-xs font-semibold text-gray-600">Thể loại:</span>
               {genres.map(tag => (
                 <span key={tag.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">{tag.name}</span>
+              ))}
+            </div>
+          )}
+          {ageTags.length > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-semibold text-gray-600">Độ tuổi:</span>
+              {ageTags.map(tag => (
+                <span key={tag.id} className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">{tag.name}</span>
               ))}
             </div>
           )}
