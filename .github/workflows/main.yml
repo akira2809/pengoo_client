@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Deploy using SSH
+    - name: 🚀 Deploy via SSH
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
@@ -17,17 +17,20 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: 22
         script: |
+          set -e
+          
+          echo "📦 Pulling latest code..."
           cd /root/services/pengoo_client
           git fetch origin
           git checkout production
           git pull
 
-          # Stop and clean up old containers
+          echo "🧹 Cleaning old Docker containers/images..."
           docker stop pengoo_client-container 2>/dev/null || true
           docker rm pengoo_client-container 2>/dev/null || true
           docker rmi pengoo_client 2>/dev/null || true
 
-          # Build with environment variables
+          echo "🐳 Building Docker image with Firebase env vars..."
           docker build \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
@@ -37,7 +40,7 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
             -t pengoo_client .
 
-          # Run the container
+          echo "🚀 Running new container..."
           docker run -d \
             --name pengoo_client-container \
             -p 4000:3000 \
@@ -49,6 +52,8 @@ jobs:
             -e NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
             pengoo_client
 
-          # Clean up
+          echo "🧼 Docker clean-up..."
           docker image prune -af
           docker container prune -f
+
+          echo "🎉 Deploy successful! Check it out!"
