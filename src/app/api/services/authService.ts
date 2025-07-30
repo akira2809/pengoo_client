@@ -1,7 +1,7 @@
 // src/services/authService.ts
 
 // Sử dụng biến môi trường cho các URL API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const AUTH_API_BASE_URL = `${API_BASE_URL}/api/auth`;
 const USERS_API_BASE_URL = `${API_BASE_URL}/users`;
 
