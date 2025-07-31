@@ -101,7 +101,7 @@ export default function WishlistPage() {
       }
     };
     fetchWishlist();
-  }, []);
+  }, [user?.id]);
 
   const calculateFinalPrice = (originalPrice: number, discount?: number) => {
     const validDiscount = discount && discount > 0 ? discount : 0;

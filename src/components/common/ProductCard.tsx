@@ -181,34 +181,61 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   }
 
   // ✅ Xử lý click thêm vào giỏ hàng
-  const handleAddToCart = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+const handleAddToCart = (e: MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    addItem({
-      id: Number(product.id),
-      product_name: product.product_name,
-      product_price: product.product_price,
-      // product_price: Number(product.discount ? product.product_price - (product.product_price * (product.discount / 100)) : product.product_price),
-      quantity: Number(1),
-      image_url: mainImage,
-      discount: Number(product.discount) || 0,
-      slug: product.slug,
-      description: product.meta_description,
-    });
+  const stock = Number(product.quantity_stock) || 0;
 
-    toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
-      duration: 2000,
-      position: "top-center",
-      style: {
-        background: "#4CAF50",
-        color: "#fff",
-        padding: "12px 20px",
-        borderRadius: "8px",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-      },
-    });
-  };
+  if (stock <= 0) {
+    toast.error("Sản phẩm đã hết hàng.");
+    return;
+  }
+
+  // Lấy số lượng hiện tại của sản phẩm trong giỏ (nếu có)
+  const currentItem = useCartStore.getState().items.find(
+    (i) => i.id === Number(product.id)
+  );
+  const currentQty = currentItem?.quantity || 0;
+
+  // Nếu thêm 1 mà vượt kho -> báo và dừng
+  if (currentQty + 1 > stock) {
+    toast.error(`Số lượng vượt quá tồn kho. Chỉ còn ${stock} sản phẩm.`);
+    return;
+  }
+
+  // Số lượng thực sự sẽ thêm (trong trường hợp còn lại ít)
+  const quantityToAdd = Math.min(1, stock - currentQty);
+  if (quantityToAdd < 1) {
+    toast.error(`Sản phẩm chỉ còn ${stock} sản phẩm trong kho.`);
+    return;
+  }
+
+  addItem({
+    id: Number(product.id),
+    product_name: product.product_name,
+    product_price: Number(product.product_price), // ép number cho an toàn
+    quantity: quantityToAdd,
+    image_url: mainImage,
+    discount: Number(product.discount) || 0,
+    slug: product.slug,
+    description: product.meta_description,
+    quantity_stock: stock,
+  });
+
+  toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
+    duration: 2000,
+    position: "top-center",
+    style: {
+      background: "#4CAF50",
+      color: "#fff",
+      padding: "12px 20px",
+      borderRadius: "8px",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+    },
+  });
+};
+
 
   const handleAddToWishlist = async (e: MouseEvent) => {
     e.preventDefault();
