@@ -44,6 +44,49 @@ interface ChatbotConfig {
       showTitle: boolean;
       title: string;
       titleAvatarSrc: string;
+      welcomeMessage: string;
+      errorMessage: string;
+      backgroundColor: string;
+      height: number;
+      width: number;
+      fontSize: number;
+      starterPrompts: string[];
+      starterPromptFontSize: number;
+      clearChatOnReload: boolean;
+      botMessage: {
+        backgroundColor: string;
+        textColor: string;
+        showAvatar: boolean;
+        avatarSrc: string;
+      };
+      userMessage: {
+        backgroundColor: string;
+        textColor: string;
+        showAvatar: boolean;
+        avatarSrc: string;
+      };
+      textInput: {
+        placeholder: string;
+        backgroundColor: string;
+        textColor: string;
+        sendButtonColor: string;
+        maxChars: number;
+        maxCharsWarningMessage: string;
+        autoFocus: boolean;
+        borderRadius: number;
+        sendButtonBorderRadius: number;
+      };
+      uploadsConfig: {
+        enabled: boolean;
+        acceptFileTypes: string[];
+        maxFiles: number;
+        maxSizeInMB: number;
+      };
+      voiceInputConfig: {
+        enabled: boolean;
+        maxRecordingTime: number;
+        recordingNotSupportedMessage: string;
+      };
     };
   };
 }
@@ -157,7 +200,9 @@ export default function Chatbot() {
                 "Tôi cần hỗ trợ"
               ],
               "starterPromptFontSize": 14,
+              "renderMarkdown": false,
               "renderHTML": true,
+              "markdownToHtml": true,
               "clearChatOnReload": false,
               "botMessage": {
                 "backgroundColor": "#f3f4f6",
@@ -268,6 +313,6 @@ export default function Chatbot() {
     );
   }
 
-  // The chat button is rendered by the N8N Chat UI script
+  // The chat button is rendered by the n8n Chat UI script
   return null;
 }
