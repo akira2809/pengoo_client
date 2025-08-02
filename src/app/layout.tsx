@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     siteName: 'PENGOO',
     images: [
       {
-        url: 'https://pengoo.store/images/opengraph-image.jpg', // Ảnh Open Graph chung
+        url: 'https://pengoo.store/images/opengraph-image.jpg',
         width: 1200,
         height: 630,
         alt: 'PENGOO - Board Game cho Gia đình và Bạn bè',
@@ -70,7 +70,8 @@ export const metadata: Metadata = {
     images: ['https://pengoo.store/images/twitter-image.jpg'], // Ảnh Twitter Card chung
   },
   // Thêm manifest link ở đây
-  manifest: '/site.webmanifest', 
+  manifest: '/site.webmanifest',
+  // Đã chuyển cấu hình viewport và themeColor ra ngoài metadata
 };
 
 // Viewport configuration
