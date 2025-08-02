@@ -4,6 +4,7 @@ import Footer from "../components/layouts/Footer/Footer";
 import { Roboto } from "next/font/google";
 import Chatbot from '@/components/Chatbot/Chatbot';
 import { Metadata, Viewport } from "next";
+import Script from 'next/script';
 import { Toaster } from 'react-hot-toast';
 import HeaderWrapper from "@/components/layouts/Header/HeaderWrapper";
 
@@ -99,6 +100,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script 
+          src="https://www.googletagmanager.com/gtag/js?id=G-P71X7PPDKC" 
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-P71X7PPDKC');
+          `}
+        </Script>
+      </head>
       <body className={`${roboto.className} antialiased bg-background-50 text-gray-900`}>
         <HeaderWrapper noHeaderPaths={No_Header_Paths} />
         <main className="relative">
