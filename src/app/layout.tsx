@@ -1,9 +1,9 @@
 // app/layout.tsx
 import "./globals.css";
-import Footer from "../components/layouts/Footer/Footer"; // Đảm bảo đã import Footer
+import Footer from "../components/layouts/Footer/Footer";
 import { Roboto } from "next/font/google";
 import Chatbot from '@/components/Chatbot/Chatbot';
-import { Metadata, Viewport } from "next"; // Import Viewport type từ next
+import { Metadata, Viewport } from "next";
 import { Toaster } from 'react-hot-toast';
 import HeaderWrapper from "@/components/layouts/Header/HeaderWrapper";
 
@@ -16,28 +16,39 @@ const roboto = Roboto({
 // Cập nhật Metadata chung cho toàn bộ trang web của PENGOO
 export const metadata: Metadata = {
   title: {
-    template: '%s | PENGOO Board Game', // Tạo template cho tiêu đề động
-    default: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè | Trải Nghiệm Giải Trí Đỉnh Cao', // Tiêu đề mặc định cho trang chủ
+    template: '%s | PENGOO Board Game',
+    default: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè | Trải Nghiệm Giải Trí Đỉnh Cao',
   },
   icons: {
-    icon: '../../public/logoweb-01.png',
-    apple: '../../public/logoweb-01.png',
+    icon: '/logoweb-01.png',
+    apple: '/logoweb-01.png',
   },
   description: 'PENGOO chuyên cung cấp các loại board game, trò chơi gia đình và đồ chơi trí tuệ độc đáo. Khám phá ngay để có những khoảnh khắc giải trí và gắn kết tuyệt vời!',
   applicationName: 'PENGOO',
-  creator: 'Tên nhà phát triển hoặc công ty của bạn', // Thay thế
+  creator: 'PENGOO',
   publisher: 'PENGOO',
-  metadataBase: new URL('https://pengoo.store'), // Thay bằng URL cơ sở của bạn
+  metadataBase: new URL('https://pengoo.store'),
   keywords: [
     'PENGOO', 'board game', 'trò chơi board game', 'board game gia đình', 
-    'board game bạn bè', 'đồ chơi trí tuệ', 'trò chơi giải trí', 
-    'game chiến thuật', 'game giáo dục', 'mua board game', 'cửa hàng board game', 
-    'quà tặng board game', 'trò chơi nhóm', 'gắn kết gia đình'
+    'board game bạn bè', 'đồ chơi trí tuệ', 'trò chơi giải trí', 'board game Việt Nam',
+    'đồ chơi phát triển tư duy', 'game board', 'trò chơi nhập vai', 'board game nhập khẩu',
+    'board game trẻ em', 'trò chơi tập thể', 'đồ chơi giáo dục', 'board game phát triển kỹ năng'
   ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè',
-    description: 'Khám phá bộ sưu tập board game độc đáo tại PENGOO.',
-    url: 'https://pengoo.store', // URL trang chủ của bạn
+    description: 'Khám phá bộ sưu tập board game đa dạng tại PENGOO. Trải nghiệm những trò chơi thú vị dành cho gia đình và bạn bè với chất lượng tốt nhất.',
+    url: 'https://pengoo.store',
     siteName: 'PENGOO',
     images: [
       {
