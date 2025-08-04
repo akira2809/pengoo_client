@@ -30,12 +30,12 @@ export default function ScratchMinigamePopup({
             width={56}
             height={56}
             className="w-14 h-14 object-contain drop-shadow-lg"
-            unoptimized={true}
+            unoptimized={process.env.NODE_ENV !== 'production'} 
             priority
             loading="eager"
             draggable={false}
             style={{ pointerEvents: "none" }}
-            sizes="(max-width: 640px) 56px, 56px"
+            sizes="56px"
           />
         ) : (
           <svg width="40" height="40" fill="none" viewBox="0 0 24 24">

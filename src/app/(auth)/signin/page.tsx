@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth, facebookProvider } from "@/app/api/firebaseClient";
-import Image from 'next/image';
+// Firebase imports commented out as they're not currently used
+// import { auth, facebookProvider } from "@/app/api/firebaseClient";
+// import { signInWithPopup } from 'firebase/auth';
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
 import toast from 'react-hot-toast';
 
@@ -48,10 +48,6 @@ export default function SignInPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  // const [mfaStep, setMfaStep] = useState(false); // legacy MFA state
-  // const [mfaCode, setMfaCode] = useState('');    // legacy MFA state
-  // const [mfaLoading, setMfaLoading] = useState(false); // legacy MFA state
-  // const [googleEmail, setGoogleEmail] = useState(''); // legacy MFA state
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -129,213 +125,6 @@ export default function SignInPage() {
     }
   };
 
-  // Step 2: Submit MFA code (legacy, commented)
-  // const handleVerifyMfa = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setMfaLoading(true);
-  //   try {
-  //     const emailToUse = googleEmail || formData.email;
-  //     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/verify-mfa`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ email: emailToUse, code: mfaCode }),
-  //     });
-  //     const data = await res.json();
-  //     if (res.ok && data.token) {
-  //       localStorage.setItem("token", data.token);
-  //       await verifyToken(data.token);
-  //       toast.success("Đăng nhập thành công!");
-  //       router.push('/');
-  //     } else {
-  //       toast.error(data.message || "Mã xác thực không đúng hoặc đã hết hạn.");
-  //     }
-  //   } catch {
-  //     toast.error("Đã xảy ra lỗi khi xác thực mã.");
-  //   }
-  //   setMfaLoading(false);
-  // };
-
-  // Google login (now skips MFA for main site)
-  // Google login handler (commented out as it's not being used)
-  // Lấy các hàm từ auth store
-  const { verifyToken } = useAuthStore();
-  
-  // Thêm scope cho Facebook để lấy thêm thông tin
-  facebookProvider.addScope('email');
-  facebookProvider.addScope('public_profile');
-  
-  // Xử lý đăng nhập bằng Facebook
-  const handleFacebookLogin = async () => {
-    try {
-      // Bước 1: Xác thực với Facebook
-      let result;
-      try {
-        result = await signInWithPopup(auth, facebookProvider);
-      } catch (error: unknown) {
-        // Bỏ qua lỗi khi người dùng đóng popup
-        if (error && typeof error === 'object' && 'code' in error) {
-          const errorCode = (error as { code: string }).code;
-          if (errorCode === 'auth/cancelled-popup-request' || 
-              errorCode === 'auth/popup-closed-by-user') {
-            return; // Không hiển thị lỗi nếu người dùng đóng popup
-          }
-        }
-        throw error; // Ném lỗi khác để xử lý tiếp
-      }
-      
-      const idToken = await result.user.getIdToken();
-
-      console.log('Facebook ID Token:', idToken);
-
-      // Bước 2: Gửi token lên backend để xác thực
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app'}/api/auth/facebook`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          idToken,
-          skipMfa: true 
-        }),
-      });
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Facebook API Error:', errorText);
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.message || 'Đăng nhập Facebook thất bại');
-        } catch {
-          throw new Error(`Đăng nhập thất bại: ${res.status} ${res.statusText}`);
-        }
-      }
-      
-      const data = await res.json();
-      console.log('Facebook API Response:', data);
-
-      if (!data.token) {
-        throw new Error("Không nhận được token từ máy chủ");
-      }
-
-      console.log('Saving Facebook token to localStorage and verifying...');
-      localStorage.setItem("token", data.token);
-      
-      // Xác thực token bằng auth store
-      const verification = await verifyToken(data.token);
-      if (!verification.success) {
-        throw new Error(verification.message || 'Xác thực token thất bại');
-      }
-      
-      toast.success("Đăng nhập Facebook thành công!");
-      
-      // Chuyển hướng sau khi đăng nhập thành công
-      if (data.profileCompleted === false) {
-        toast("Vui lòng cập nhật thông tin tài khoản để sử dụng đầy đủ tính năng!", { icon: "⚠️" });
-        router.push('/account');
-      } else {
-        router.push(redirectTo);
-      }
-    } catch (error) {
-      console.error('Facebook login error:', error);
-      const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng nhập bằng Facebook";
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      // Bước 1: Xác thực với Google
-      const provider = new GoogleAuthProvider();
-      let result;
-      try {
-        result = await signInWithPopup(auth, provider);
-      } catch (error: unknown) {
-        // Bỏ qua lỗi khi người dùng đóng popup
-        if (error && typeof error === 'object' && 'code' in error) {
-          const errorCode = (error as { code: string }).code;
-          if (errorCode === 'auth/cancelled-popup-request' || 
-              errorCode === 'auth/popup-closed-by-user') {
-            return; // Không hiển thị lỗi nếu người dùng đóng popup
-          }
-        }
-        throw error; // Ném lỗi khác để xử lý tiếp
-      }
-      
-      const idToken = await result.user.getIdToken();
-
-      // console.log('Google ID Token:', idToken); // Log token để debug
-
-      // Bước 2: Gửi token lên backend để xác thực
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://pengoo-back-end.vercel.app'}/api/auth/google`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          idToken: idToken, // Đổi tên tham số thành 'idToken' để phù hợp với API
-          skipMfa: true 
-        }),
-      });
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('API Error Response:', errorText);
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.message || 'Đăng nhập thất bại');
-        } catch {
-          throw new Error(`Đăng nhập thất bại: ${res.status} ${res.statusText}`);
-        }
-      }
-      
-      const data = await res.json();
-      console.log('API Response Data:', data); // Log response để debug
-
-      if (!data.token) {
-        throw new Error("Không nhận được token từ máy chủ");
-      }
-
-      console.log('Saving token to localStorage and verifying...');
-      localStorage.setItem("token", data.token);
-      
-      // Xác thực token bằng auth store
-      const verification = await verifyToken(data.token);
-      if (!verification.success) {
-        throw new Error(verification.message || 'Xác thực token thất bại');
-      }
-      
-      toast.success("Đăng nhập Google thành công!");
-      
-      // Chuyển hướng sau khi đăng nhập thành công
-      if (data.profileCompleted === false) {
-        toast("Vui lòng cập nhật thông tin tài khoản để sử dụng đầy đủ tính năng!", { icon: "⚠️" });
-        router.push('/account');
-      } else {
-        router.push(redirectTo);
-      }
-    } catch (error) {
-      console.error('Google login error:', error);
-      const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng nhập bằng Google";
-      toast.error(errorMessage);
-    }
-  };
-
-  // Facebook login handler (commented out as it's not being used)
-  // const handleFacebookLogin = async () => {
-  //   try {
-  //     // Ensure FB SDK is loaded
-  //     if (!(window as any).FB) {
-  //       toast.error("Facebook SDK chưa được tải.");
-  //       return;
-  //     }
-  //     (window as any).FB.login((response: any) => {
-  //       if (response.authResponse) {
-  //         (async () => {
-  //           const accessToken = response.authResponse.accessToken;
-  //           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/facebook`, {
-  //             method: "POST",
-  //             headers: { "Content-Type": "application/json" },
-  //             body: JSON.stringify({ accessToken, skipMfa: true }),
   //           });
   //           const data = await res.json();
 
@@ -364,13 +153,9 @@ export default function SignInPage() {
       <div className="w-full md:w-1/2 h-64 md:h-screen relative">
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
           <div className="relative w-full h-full">
-            <Image 
-              src="/signin.jpg" 
-              alt="Sign In" 
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
+            <div 
+              className="w-full h-full bg-gray-200" 
+              data-cy="signin-image-placeholder"
             />
           </div>
         </div>
@@ -384,34 +169,41 @@ export default function SignInPage() {
             <p className="text-gray-600">Please sign in to your account</p>
           </div>
 
-          {/* Legacy MFA logic (commented) */}
-          {/* {!mfaStep ? ( */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                )}
-              </div>
+        {/* Legacy MFA logic (commented) */}
+        {/* {!mfaStep ? ( */}
+          <form onSubmit={handleSubmit} className="space-y-6" data-cy="login-form">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                data-cy="email-input"
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600" data-cy="email-error">
+                  {errors.email}
+                </p>
+              )}
+            </div>
 
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex items-center justify-between mb-1">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
+                  Mật khẩu
                 </label>
-                <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                <Link 
+                  href="/forgot-password" 
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                  data-cy="forgot-password-link"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -420,121 +212,49 @@ export default function SignInPage() {
                   type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
-                  className={`w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  className={`w-full pl-3 pr-10 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder="Mật khẩu"
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  data-cy="password-input"
                 />
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  data-cy="toggle-password-visibility"
                 >
-                  {showPassword ? 'Ẩn' : 'Hiện'}
-                </button>
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-                )}
-              </div>
-            </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-              </button>
-            </form>
-          {/* ) : (
-            <form onSubmit={handleVerifyMfa} className="space-y-6">
-              <div>
-                <label htmlFor="mfaCode" className="block text-sm font-medium text-gray-700 mb-1">
-                  Mã xác thực đã gửi tới email
-                </label>
-                <input
-                  type="text"
-                  id="mfaCode"
-                  name="mfaCode"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nhập mã xác thực"
-                  value={mfaCode}
-                  onChange={e => setMfaCode(e.target.value)}
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={mfaLoading}
-                className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${mfaLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {mfaLoading ? 'Đang xác thực...' : 'Xác nhận mã'}
-              </button>
-            </form>
-          )} */}
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div>
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <span className="sr-only">Sign in with Google</span>
-                  <svg className="w-5 h-5" aria-hidden="true" viewBox="0 0 24 24">
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  <span className="ml-2">Đăng nhập với Google</span>
+                  {showPassword ? '🙈' : '👁️'}
                 </button>
               </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={handleFacebookLogin}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <span className="sr-only">Sign in with Facebook</span>
-                  <svg className="w-5 h-5" aria-hidden="true" fill="#1877F2" viewBox="0 0 24 24">
-                    <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
-                  </svg>
-                  <span className="ml-2">Facebook</span>
-                </button>
-              </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600" data-cy="password-error">
+                  {errors.password}
+                </p>
+              )}
             </div>
-          </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              data-cy="login-button"
+            >
+              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            </button>
+          </form>
 
           <div className="mt-6 text-center text-sm">
             <p className="text-gray-600">
-              Chưa có tài khoản?{' '}
-              <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-                Đăng ký ngay
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/signup"
+                className="font-medium text-blue-600 hover:text-blue-500"
+                data-cy="signup-link"
+              >
+                Sign up
               </Link>
             </p>
           </div>

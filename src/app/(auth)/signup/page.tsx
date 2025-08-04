@@ -310,16 +310,24 @@ export default function SignUpPage() {
       {/* Left side - Image */}
      <div className="w-full md:w-1/2 h-64 md:h-screen relative">
              <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-               <div className="relative w-full h-full">
-                 <Image 
-                   src="/signin.jpg" 
-                   alt="Sign In" 
-                   fill
-                   className="object-cover"
-                   priority
-                   sizes="(max-width: 768px) 100vw, 50vw"
-                 />
-               </div>
+                <div className="relative w-full h-full">
+                  {process.env.NODE_ENV === 'test' ? (
+                    <div 
+                      className="w-full h-full bg-gray-200" 
+                      data-cy="signup-image-placeholder"
+                    />
+                  ) : (
+                    <Image 
+                      src="/images/signup.jpg" 
+                      alt="Sign Up" 
+                      fill
+                      className="object-cover"
+                      priority
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      data-cy="signup-image"
+                    />
+                  )}
+                </div>
              </div>
            </div>
 
@@ -333,49 +341,53 @@ export default function SignUpPage() {
           </div>
 
           {apiError && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <div className="rounded-md bg-red-50 p-4" data-cy="auth-error">
               <span className="block sm:inline">{apiError}</span>
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6" data-cy="signup-form">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
               </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                className={`w-full px-4 py-2 border ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={handleChange}
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className={`w-full px-3 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="Full Name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    data-cy="name-input"
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-600" data-cy="name-error">
+                      {errors.name}
+                    </p>
+                  )}
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className={`w-full px-4 py-2 border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    data-cy="email-input"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600" data-cy="email-error">
+                      {errors.email}
+                    </p>
+                  )}
             </div>
 
             <div>
@@ -383,17 +395,22 @@ export default function SignUpPage() {
                 Password
               </label>
               <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  className={`w-full px-4 py-2 border ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    className={`w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    data-cy="password-input"
+                  />
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600" data-cy="password-error">
+                      {errors.password}
+                    </p>
+                  )}
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -411,9 +428,6 @@ export default function SignUpPage() {
                   )}
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
             </div>
 
             <div>
@@ -421,17 +435,22 @@ export default function SignUpPage() {
                 Confirm Password
               </label>
               <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  className={`w-full px-4 py-2 border ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    className={`w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    data-cy="confirm-password-input"
+                  />
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600" data-cy="confirm-password-error">
+                      {errors.confirmPassword}
+                    </p>
+                  )}
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -449,19 +468,17 @@ export default function SignUpPage() {
                   )}
                 </button>
               </div>
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-              )}
             </div>
 
             <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Signing up...' : 'Sign Up'}
-              </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  data-cy="signup-button"
+                >
+                  {isLoading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
+                </button>
             </div>
           </form>
 
@@ -525,8 +542,9 @@ export default function SignUpPage() {
             <p className="text-center text-sm text-gray-600">
             Bạn đã có tài khoản?{' '}
             <Link 
-              href={`/signin${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} 
+              href="/signin" 
               className="font-medium text-blue-600 hover:text-blue-500"
+              data-cy="signin-link"
             >
               Đăng nhập ngay
             </Link>
