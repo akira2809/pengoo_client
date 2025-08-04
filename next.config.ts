@@ -26,14 +26,17 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'placehold.co' },
     ],
     
-    // In development, allow all domains for easier testing
+    // In development, this block will override the remotePatterns above
     ...(process.env.NODE_ENV !== 'production' && {
       remotePatterns: [
         { protocol: 'https', hostname: '**' },
       ],
     }),
+    
     contentDispositionType: "attachment",
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:",
+    
+    // IMPORTANT FIX: Updated Content Security Policy to allow image sources
+    contentSecurityPolicy: "default-src 'self'; img-src 'self' https://res.cloudinary.com https://picsum.photos https://loremflickr.com https://assets.awwwards.com https://placehold.co data:; script-src 'none'; sandbox:",
   },
   experimental: {
     scrollRestoration: true,
