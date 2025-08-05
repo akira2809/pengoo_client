@@ -82,7 +82,7 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
           <Listbox value={sortSelected} onChange={setSortSelected}>
             {({ open }) => (
               <div className="relative w-full min-w-[200px]">
-                <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500 sm:text-sm">
+                <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-background-500 sm:text-sm">
                   <span className="block truncate">{sortSelected.name}</span>
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                     <FaChevronDown
@@ -104,7 +104,7 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
                         key={option.id}
                         className={({ active }) =>
                           `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
+                            active ? 'bg-background-100 text-background-900' : 'text-gray-900'
                           }`
                         }
                         value={option}
@@ -115,7 +115,7 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
                               {option.name}
                             </span>
                             {selected ? (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-background-600">
                                 <FaCheck className="h-5 w-5" aria-hidden="true" />
                               </span>
                             ) : null}
@@ -130,10 +130,9 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
           </Listbox>
         </div>
 
-        <div className="mb-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Danh mục</h3>
+        <div className="mb-2">
           {/* Tái sử dụng CategoryFilter */}
-          <FilterDropdown title="Sản phẩm" initialOpen={false}>
+          <FilterDropdown title="Danh mục" initialOpen={false}>
             <div className="space-y-2">
               {categories.map(category => (
                 <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
@@ -152,9 +151,8 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
         </div>
 
         <div className="mb-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Tags</h3>
           {/* Tái sử dụng TagFilter */}
-          <FilterDropdown title="Sản phẩm" initialOpen={false}>
+          <FilterDropdown title="Tags" initialOpen={false}>
             <div className="space-y-2">
               {tags?.map(tag => (
                 <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
@@ -174,7 +172,6 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
         
 
         <div className="mb-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Giá</h3>
           {/* Tái sử dụng logic của PriceRangeFilter, nhưng UI có thể khác một chút do MobileFilterModal */}
           <FilterDropdown title="Giá" initialOpen={false}>
             <div className="text-gray-700 text-base">
@@ -188,7 +185,7 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
                   onChange={(e) => handlePriceChange(e, 'min')}
                   onFocus={(e) => handleFocus(e, 'min')}
                   onBlur={() => handleBlur('min')}
-                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-background-500 focus:border-background-500"
                 />
                 <span className="mx-1">-</span>
                 <input
@@ -199,7 +196,7 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
                   onChange={(e) => handlePriceChange(e, 'max')}
                   onFocus={(e) => handleFocus(e, 'max')}
                   onBlur={() => handleBlur('max')}
-                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+                  className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-background-500 focus:border-background-500"
                 />
               </div>
 
@@ -209,8 +206,8 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
                   checked={showOutOfStock}
                   onChange={(checked) => setShowOutOfStock(checked)}
                   className={`${
-                    showOutOfStock ? 'bg-amber-800' : 'bg-gray-300'
-                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2`}
+                    showOutOfStock ? 'bg-background-800' : 'bg-gray-300'
+                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-background-500 focus:ring-offset-2`}
                 >
                   <span
                     className={`${

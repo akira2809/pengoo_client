@@ -158,7 +158,7 @@ export default function SignInPage() {
   // Google login (now skips MFA for main site)
   // Google login handler (commented out as it's not being used)
   // Lấy các hàm từ auth store
-  const { verifyToken } = useAuthStore();
+  const { verifyToken, setLoginMethod } = useAuthStore();
   
   // Thêm scope cho Facebook để lấy thêm thông tin
   facebookProvider.addScope('email');
@@ -225,6 +225,9 @@ export default function SignInPage() {
       if (!verification.success) {
         throw new Error(verification.message || 'Xác thực token thất bại');
       }
+      
+      // Set login method to track how user logged in
+      setLoginMethod('google'); // Facebook login is treated as social login
       
       toast.success("Đăng nhập Facebook thành công!");
       
@@ -303,6 +306,9 @@ export default function SignInPage() {
       if (!verification.success) {
         throw new Error(verification.message || 'Xác thực token thất bại');
       }
+      
+      // Set login method to track how user logged in
+      setLoginMethod('google');
       
       toast.success("Đăng nhập Google thành công!");
       

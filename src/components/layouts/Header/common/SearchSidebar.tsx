@@ -19,7 +19,13 @@ interface SearchSidebarProps {
 }
 
 // Inner component that uses useSearchParams
-function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen: boolean }) {
+function SearchSidebarContent({
+  onClose,
+  isOpen,
+}: {
+  onClose: () => void;
+  isOpen: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<
@@ -290,7 +296,7 @@ function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen
   return (
     <div
       ref={searchPopupRef}
-      className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[999] flex flex-col overflow-hidden"
+      className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[999999999999] flex flex-col overflow-hidden"
       style={{ display: "none" }}
     >
       {/* Header */}
@@ -530,15 +536,17 @@ function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen
 export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
   return (
     <div
-      className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+      className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-[99999999999999999] ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      <Suspense fallback={
-        <div className="h-full w-full bg-white flex items-center justify-center">
-          <div className="animate-pulse">Đang tải tìm kiếm...</div>
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="h-full w-full bg-white flex items-center justify-center">
+            <div className="animate-pulse">Đang tải tìm kiếm...</div>
+          </div>
+        }
+      >
         <SearchSidebarContent onClose={onClose} isOpen={isOpen} />
       </Suspense>
     </div>

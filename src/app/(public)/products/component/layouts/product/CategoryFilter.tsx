@@ -21,7 +21,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   onCategoryChange, 
 }) => {
   return (
-    <FilterDropdown title="Sản phẩm" initialOpen={false}>
+    <FilterDropdown title="Danh mục" initialOpen={false}>
       <div className="space-y-2">
         {categories.map(category => (
           <label key={category.id} className="flex items-center text-gray-700 cursor-pointer">
