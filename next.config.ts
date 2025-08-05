@@ -6,9 +6,11 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
-    // Use custom loader for Cloudinary
-    loader: 'custom',
-    loaderFile: './src/lib/cloudinary-loader.ts',
+    // Use custom loader for Cloudinary, but only for production
+    ...(process.env.NODE_ENV === 'production' && {
+      loader: 'custom',
+      loaderFile: './src/lib/cloudinary-loader.ts',
+    }),
     
     // Image formats and settings
     formats: ["image/webp", "image/avif"],
@@ -31,6 +33,8 @@ const nextConfig: NextConfig = {
       remotePatterns: [
         { protocol: 'https', hostname: '**' },
       ],
+      // Disable image optimization in development for local images
+      unoptimized: true,
     }),
     
     contentDispositionType: "attachment",

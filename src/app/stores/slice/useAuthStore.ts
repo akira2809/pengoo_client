@@ -347,13 +347,15 @@ export const useAuthStore = create<AuthState>()(
 
             };
 
-            set({
+            set((state) => ({
               user: userData,
               isAuthenticated: true,
               token: token,
               isLoading: false,
               error: null,
-            });
+              // Preserve existing loginMethod if it exists
+              loginMethod: state.loginMethod,
+            }));
             return { success: true, user: userData, message: data.message || 'Token hợp lệ.' };
           } else {
             console.log('Token verification failed:', data.message);
@@ -421,6 +423,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        loginMethod: state.loginMethod,
       }),
     }
   )

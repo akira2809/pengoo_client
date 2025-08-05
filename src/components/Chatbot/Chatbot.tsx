@@ -88,6 +88,7 @@ interface ChatbotConfig {
         recordingNotSupportedMessage: string;
       };
     };
+    zIndex?: number; // Thêm thuộc tính zIndex
   };
 }
 
@@ -245,7 +246,8 @@ export default function Chatbot() {
                 "maxRecordingTime": 30,
                 "recordingNotSupportedMessage": "Trình duyệt của bạn không hỗ trợ ghi âm. Vui lòng sử dụng Chrome hoặc Firefox."
               }
-            }
+            },
+            "zIndex": 10 // Đặt giá trị z-index mong muốn ở đây
           }
         });
       `;
