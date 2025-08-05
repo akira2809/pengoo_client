@@ -7,10 +7,10 @@ export default function Logo() {
       <Link href="/" aria-label="Go to homepage" className="flex items-center">
         <div className="w-[300px] h-auto">
           <Image
-            src="/logo-01.svg"      // ảnh phải có trong /public
+            src="/logonav.png"      // ảnh phải có trong /public
             alt="Pengoo"
             width={300}
-            height={32}
+            height={35}
             priority                 // tối ưu LCP cho logo
             className="w-full h-auto"
           />
