@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { useAuthStore } from '@/app/stores/slice/useAuthStore';
+import { useEffect, useState, useCallback } from "react";
+import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 
 interface ChatbotConfig {
   n8nChatUrl: string;
@@ -12,8 +12,13 @@ interface ChatbotConfig {
     username: string;
     email: string;
   };
-  onBeforeSend: (message: string) => { shouldSend: boolean; errorMessage?: string };
-  onError: (error: Error | string | { message?: string; [key: string]: unknown }) => { showToUser: boolean; message: string } | void;
+  onBeforeSend: (message: string) => {
+    shouldSend: boolean;
+    errorMessage?: string;
+  };
+  onError: (
+    error: Error | string | { message?: string; [key: string]: unknown }
+  ) => { showToUser: boolean; message: string } | void;
   theme: {
     button: {
       backgroundColor: string;
@@ -101,7 +106,8 @@ declare global {
   }
 }
 
-const DEFAULT_CHAT_URL = 'https://103226109.flown8n.com/webhook/5667457e-00d0-4964-91d4-281758f82897/chat';
+const DEFAULT_CHAT_URL =
+  "https://103226109.flown8n.com/webhook/5667457e-00d0-4964-91d4-281758f82897/chat";
 
 export default function Chatbot() {
   const { isAuthenticated, user } = useAuthStore();
@@ -110,7 +116,7 @@ export default function Chatbot() {
 
   // Function to initialize the chat
   const initChat = useCallback(() => {
-    if (typeof window === 'undefined' || !isAuthenticated) return;
+    if (typeof window === "undefined" || !isAuthenticated) return;
 
     setIsLoading(true);
     setError(null);
@@ -122,8 +128,8 @@ export default function Chatbot() {
       }
 
       // Create a new script element
-      const script = document.createElement('script');
-      script.type = 'module';
+      const script = document.createElement("script");
+      script.type = "module";
       script.defer = true;
       script.innerHTML = `
         import Chatbot from "https://cdn.n8nchatui.com/v1/embed.js";
@@ -133,9 +139,9 @@ export default function Chatbot() {
           "metadata": {
             "timestamp": new Date().toISOString(),
             "version": "1.0.0",
-            "userId": "${user?.id || 'anonymous'}",
-            "username": "${user?.username || 'anonymous'}",
-            "email": "${user?.email || ''}"
+            "userId": "${user?.id || "anonymous"}",
+            "username": "${user?.username || "anonymous"}",
+            "email": "${user?.email || ""}"
           },
           "onBeforeSend": (message) => {
             const trimmedMessage = message.trim();
@@ -178,7 +184,9 @@ export default function Chatbot() {
             },
             "tooltip": {
               "showTooltip": true,
-              "tooltipMessage": "Chào ${user?.full_name || 'bạn'}! Tôi là trợ lí AI! Tôi có thể giúp gì cho bạn?",
+              "tooltipMessage": "Chào ${
+                user?.full_name || "bạn"
+              }! Tôi là trợ lí AI! Tôi có thể giúp gì cho bạn?",
               "tooltipBackgroundColor": "#4f46e5",
               "tooltipTextColor": "#ffffff",
               "tooltipFontSize": 14
@@ -188,9 +196,14 @@ export default function Chatbot() {
               "avatarBorderRadius": 25,
               "messageBorderRadius": 6,
               "showTitle": true,
-              "title": "Xin chào ${user?.full_name || ''}",
-              "titleAvatarSrc": "${user?.avatar_url || 'https://www.svgrepo.com/show/339963/chat-bot.svg'}",
-              "welcomeMessage": "Xin chào ${user?.full_name || 'bạn'}! Tôi có thể giúp gì cho bạn hôm nay?",
+              "title": "Xin chào ${user?.full_name || ""}",
+              "titleAvatarSrc": "${
+                user?.avatar_url ||
+                "https://www.svgrepo.com/show/339963/chat-bot.svg"
+              }",
+              "welcomeMessage": "Xin chào ${
+                user?.full_name || "bạn"
+              }! Tôi có thể giúp gì cho bạn hôm nay?",
               "errorMessage": "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
               "backgroundColor": "#ffffff",
               "height": 500,
@@ -215,7 +228,10 @@ export default function Chatbot() {
                 "backgroundColor": "#4f46e5",
                 "textColor": "#ffffff",
                 "showAvatar": true,
-                "avatarSrc": "${user?.avatar_url || 'https://www.svgrepo.com/show/532363/user-alt-1.svg'}"
+                "avatarSrc": "${
+                  user?.avatar_url ||
+                  "https://www.svgrepo.com/show/532363/user-alt-1.svg"
+                }"
               },
               "textInput": {
                 "placeholder": "Nhập câu hỏi của bạn...",
@@ -247,7 +263,7 @@ export default function Chatbot() {
                 "recordingNotSupportedMessage": "Trình duyệt của bạn không hỗ trợ ghi âm. Vui lòng sử dụng Chrome hoặc Firefox."
               }
             },
-            "zIndex": 10 // Đặt giá trị z-index mong muốn ở đây
+            "zIndex": 0 // Đặt z-index rất thấp để các phần khác có thể đè lên
           }
         });
       `;
@@ -257,8 +273,8 @@ export default function Chatbot() {
       };
 
       script.onerror = (err) => {
-        console.error('Failed to load chat script:', err);
-        setError('Không thể tải trò chuyện. Vui lòng thử lại sau.');
+        console.error("Failed to load chat script:", err);
+        setError("Không thể tải trò chuyện. Vui lòng thử lại sau.");
         setIsLoading(false);
       };
 
@@ -270,8 +286,8 @@ export default function Chatbot() {
         }
       };
     } catch (err) {
-      console.error('Error initializing chat:', err);
-      setError('Có lỗi xảy ra khi khởi tạo trò chuyện.');
+      console.error("Error initializing chat:", err);
+      setError("Có lỗi xảy ra khi khởi tạo trò chuyện.");
       setIsLoading(false);
     }
   }, [isAuthenticated, user]);
@@ -296,7 +312,7 @@ export default function Chatbot() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-30">
         <div className="w-14 h-14 rounded-full flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>

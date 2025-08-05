@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 import Image from "next/image";
 import { apiClient } from "@/app/api/apiClient";
+import toast from "react-hot-toast";
 import {
   UserIcon,
   ShoppingBagIcon,
@@ -87,6 +88,7 @@ export function Sidebar() {
     try {
       await logout();
       router.push("/");
+      toast.success("Đăng xuất thành công");
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
     }
