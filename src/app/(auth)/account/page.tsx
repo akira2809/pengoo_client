@@ -65,12 +65,23 @@ export default function ModernAccountPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const isValidPhoneNumber = (phone: string): boolean => {
+  const phoneRegex = /^0\d{9}$/; // Số điện thoại bắt đầu bằng 0 và có đúng 10 số
+  return phoneRegex.test(phone);
+};
+
   // Handle form submission for updating user information
   const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
     if (e) e.preventDefault();
     
     if (!accountData?.id) {
       toast.error('Không tìm thấy ID người dùng để cập nhật.');
+      return;
+    }
+
+    // Kiểm tra định dạng số điện thoại
+    if (formData.phone_number && !isValidPhoneNumber(formData.phone_number)) {
+      toast.error('Số điện thoại không hợp lệ. Vui lòng nhập đúng 10 số và bắt đầu bằng 0.');
       return;
     }
 

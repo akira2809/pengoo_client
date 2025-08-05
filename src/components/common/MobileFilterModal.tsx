@@ -60,7 +60,7 @@ export const MobileFilterModal: React.FC<MobileFilterModalProps> = ({ isOpen, on
                 <div className="mt-6 flex justify-end">
                   <button
                     type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-amber-800 px-4 py-2 text-sm font-medium text-white hover:bg-amber-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                    className="inline-flex justify-center rounded-md border border-transparent bg-background-800 px-4 py-2 text-sm font-medium text-white hover:bg-background-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-background-500 focus-visible:ring-offset-2"
                     onClick={onClose} // Đóng modal khi áp dụng (hoặc bạn có thể thêm logic áp dụng filter thực tế ở đây)
                   >
                     Áp dụng

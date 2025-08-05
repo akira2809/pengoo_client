@@ -55,7 +55,7 @@ interface BlogSectionProps {
 }
 
 export const BlogSection: React.FC<BlogSectionProps> = ({
-  title = "Blogs and News",
+  title = "Bài viết và tin tức",
   viewAllLink = "/blogs",
   posts: initialPosts = []
 }) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, MouseEvent, ComponentPropsWithoutRef  } from 'react';
+import { useEffect, useState, MouseEvent, ComponentPropsWithoutRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { wishlistService } from '@/app/api/services/wishlistService';
@@ -28,13 +28,13 @@ type WishlistItem = {
 
 // --- Helper Icons ---
 const TrashIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
 );
 const CartIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
 );
 const BrokenHeartIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.1 18.55l-.1.1-.11-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/><path d="M16 13l-4 4-4-4"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.1 18.55l-.1.1-.11-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z" /><path d="M16 13l-4 4-4-4" /></svg>
 );
 
 export default function WishlistPage() {
@@ -140,27 +140,25 @@ export default function WishlistPage() {
 
   const removeSelectedItems = async () => {
     if (!user?.id || selectedItems.length === 0) return;
-    const confirmed = await confirmRemoveSelected();
-      if (!confirmed) return;
 
-    try{
-    await Promise.all(
-      selectedItems.map(wishlistId => {
-        const item = wishlist.find(i => i.id === wishlistId);
-        if (item) {
-          return wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id));
-        }
-        return Promise.resolve();
-      })
-    );
-    setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
-    setSelectedItems([]);
-    // showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
-  } catch (error: unknown) {
-    console.error('Error removing selected items:', error);
-    // showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
-  }
-};
+    try {
+      await Promise.all(
+        selectedItems.map(wishlistId => {
+          const item = wishlist.find(i => i.id === wishlistId);
+          if (item) {
+            return wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id));
+          }
+          return Promise.resolve();
+        })
+      );
+      setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
+      setSelectedItems([]);
+      // showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
+    } catch (error: unknown) {
+      console.error('Error removing selected items:', error);
+      // showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
+    }
+  };
 
   // Remove all items functionality has been removed as it's not being used
   // and was causing ESLint warnings
@@ -196,13 +194,13 @@ export default function WishlistPage() {
 
   if (!user?.id) {
     return (
-         <div className="text-center py-20 bg-white rounded-lg shadow-sm max-w-2xl mx-auto mt-10">
-            <h3 className="text-xl font-semibold text-gray-900">Vui lòng đăng nhập</h3>
-            <p className="mt-2 text-gray-600">Bạn cần đăng nhập để xem danh sách yêu thích của mình.</p>
-            <Link href="/login" className="mt-6 inline-block bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
-                Đăng nhập
-            </Link>
-        </div>
+      <div className="text-center py-20 bg-white rounded-lg shadow-sm max-w-2xl mx-auto mt-10">
+        <h3 className="text-xl font-semibold text-gray-900">Vui lòng đăng nhập</h3>
+        <p className="mt-2 text-gray-600">Bạn cần đăng nhập để xem danh sách yêu thích của mình.</p>
+        <Link href="/login" className="mt-6 inline-block bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
+          Đăng nhập
+        </Link>
+      </div>
     );
   }
   if (loading) return <div className="text-center py-16 text-gray-600">Đang tải...</div>;
@@ -310,20 +308,20 @@ export default function WishlistPage() {
                   </div>
                   <div className="mt-4 flex justify-end gap-4 w-full">
                     <button
-                        onClick={(e) => handleAddToCart(e, product)}
-                        disabled={!product.quantity_stock || product.quantity_stock <= 0}
-                        className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-gray-300 rounded-md hover:bg-background-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <CartIcon />
-                        <span>Thêm vào giỏ</span>
+                      onClick={(e) => handleAddToCart(e, product)}
+                      disabled={!product.quantity_stock || product.quantity_stock <= 0}
+                      className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-gray-300 rounded-md hover:bg-background-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <CartIcon />
+                      <span>Thêm vào giỏ</span>
                     </button>
 
                     <button
-                        onClick={() => handleRemove(product.id)}
-                        className="flex items-center justify-center p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-md transition-colors"
-                        aria-label="Xóa"
-                      >
-                        <TrashIcon />
+                      onClick={() => handleRemove(product.id)}
+                      className="flex items-center justify-center p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-md transition-colors"
+                      aria-label="Xóa"
+                    >
+                      <TrashIcon />
                     </button>
                   </div>
                 </div>
@@ -333,17 +331,17 @@ export default function WishlistPage() {
         })}
       </div>
 
-    {/* --- Pagination --- */}
-    {wishlist.length > itemsPerPage && (
+      {/* --- Pagination --- */}
+      {wishlist.length > itemsPerPage && (
         <div className="mt-8">
-            <ProductPagination
-                currentPage={currentPage}
-                itemsPerPage={itemsPerPage}
-                totalItems={wishlist.length}
-                onPageChange={setCurrentPage}
-            />
+          <ProductPagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={wishlist.length}
+            onPageChange={setCurrentPage}
+          />
         </div>
-    )}
+      )}
     </div>
   );
 }
