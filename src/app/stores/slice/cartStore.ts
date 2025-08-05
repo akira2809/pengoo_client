@@ -102,7 +102,7 @@ if (typeof window !== 'undefined') {
   } catch {}
 }
 
-console.log('[cartStore] INIT version 3');
+// console.log('[cartStore] INIT version 3');
 
 // ========================
 // Store

@@ -179,6 +179,7 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
             slug={product.slug || String(product.id)}
             tags={product.tags || []}
             category={typeof product.category_ID === 'object' ? product.category_ID : undefined}
+            quantity_stock={product.quantity_stock}
             />
         </div>
       </div>
