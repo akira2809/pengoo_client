@@ -21,8 +21,11 @@ export const metadata: Metadata = {
     default: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè | Trải Nghiệm Giải Trí Đỉnh Cao',
   },
   icons: {
-    icon: '/logoweb-01.png',
-    apple: '/logoweb-01.png',
+    icon: [
+      { url: '/logopengoo2.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logopengoo2.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png', // Cho iPhone/iPad
   },
   description: 'PENGOO chuyên cung cấp các loại board game, trò chơi gia đình và đồ chơi trí tuệ độc đáo. Khám phá ngay để có những khoảnh khắc giải trí và gắn kết tuyệt vời!',
   applicationName: 'PENGOO',
@@ -81,12 +84,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#1A202C' },
-  ],
-  colorScheme: 'light dark', // Support both light and dark modes
+  colorScheme: 'light dark',
 };
+
+export const themeColor = [
+  { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  { media: '(prefers-color-scheme: dark)', color: '#1A202C' },
+];
+
 
 const No_Header_Paths = [
   '/checkout'
@@ -101,6 +106,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
+        <meta name="apple-mobile-web-app-title" content="Pengoo" />
         {/* Google tag (gtag.js) */}
         <Script 
           src="https://www.googletagmanager.com/gtag/js?id=G-P71X7PPDKC" 

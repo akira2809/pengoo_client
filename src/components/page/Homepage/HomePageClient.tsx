@@ -60,9 +60,9 @@ const TestimonialCarousel = dynamic(
 
 const BlogSection = dynamic(
   () => import('@/components/common/BlogSection').then((mod) => mod.BlogSection),
-  { 
+  {
     loading: () => <div className="h-[500px] w-full my-8 bg-gray-100 animate-pulse"></div>,
-    ssr: true 
+    ssr: true
   }
 );
 
@@ -111,11 +111,11 @@ function HomePage() {
       <section className="py-12 sm:py-20">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-text-900 flex items-center justify-center gap-2">
-            <span className="text-red-500 text-3xl">🔥</span> 
-            Sản phẩm nổi bật 
+            <span className="text-red-500 text-3xl">🔥</span>
+            Sản phẩm nổi bật
             <span className="text-red-500 text-3xl">🔥</span>
           </h2>
-          
+
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, index) => (
@@ -129,7 +129,7 @@ function HomePage() {
           ) : error ? (
             <div className="text-center py-10">
               <p className="text-red-500 mb-4">{error}</p>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
               >
@@ -159,38 +159,38 @@ function HomePage() {
       <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
         <BannerHotspot />
       </Suspense>
-      
+
       <Suspense fallback={<div className="h-[400px] w-full bg-gray-100 animate-pulse my-8" />}>
         <CollectionSection />
       </Suspense>
-      
+
       <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
         <BenefitsSection />
       </Suspense>
-      
+
       <Suspense fallback={<div className="h-[50px] w-full bg-gray-100 animate-pulse my-4" />}>
         <HeadlineMarquee />
       </Suspense>
-      
+
       <Suspense fallback={<div className="h-[600px] w-full bg-gray-100 animate-pulse my-8" />}>
         <SmoothScrollHero />
       </Suspense>
-      
+
       <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />}>
         <AboutMaztermindSection />
       </Suspense>
-      
+
       <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />}>
         <VideoSection />
       </Suspense>
-      
+
       <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
         <TestimonialCarousel />
       </Suspense>
-      
+
       <BlogSection />
 
-      {}
+      { }
       <ScratchMinigamePopup buttonImage="/images/minigame/greenssrb.png" />
     </>
   );
