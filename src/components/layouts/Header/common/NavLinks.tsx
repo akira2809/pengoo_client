@@ -34,7 +34,7 @@ export default function NavLinks({
             className="hover:underline block"
             onClick={onLinkClick}
           >
-            Collections
+            Bộ sưu tập
           </Link>
         )}
       </div>
@@ -43,7 +43,7 @@ export default function NavLinks({
         Giới thiệu
       </Link>
       <Link href="/blogs" className="hover:underline" onClick={onLinkClick}>
-        Blogs
+        Bài viết
       </Link>
       {isDesktop && (
         <Link href="/contact" className="hover:underline" onClick={onLinkClick}>

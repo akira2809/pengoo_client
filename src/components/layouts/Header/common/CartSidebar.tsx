@@ -161,7 +161,7 @@ function CartSidebarContent({ cartOpen, onClose }: CartSidebarProps) {
       style={{ display: cartOpen ? "flex" : "none" }}
     >
       <div className="flex justify-between items-center p-4 border-b bg-background-900 text-text-950">
-        <h3 className="text-lg font-semibold text-text-50">Shopping Cart</h3>
+        <h3 className="text-lg font-semibold text-text-50">Giỏ hàng</h3>
         <button
           onClick={onClose}
           className="text-text-50 hover:text-teal-50 p-1"
@@ -331,7 +331,7 @@ function CartSidebarContent({ cartOpen, onClose }: CartSidebarProps) {
         <div className="border-t bg-background-nav p-4">
           <div className="flex justify-between items-center mb-4">
             <span className="text-2xl font-semibold text-text-nav">
-              Total:
+              Tổng cộng:
             </span>
             <span className="text-xl font-bold text-primary">
               {formatVND(totalAmount)}
@@ -342,7 +342,7 @@ function CartSidebarContent({ cartOpen, onClose }: CartSidebarProps) {
               onClick={() => router.push('/cart')}
               className="w-full bg-background-100 text-text-900 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             >
-              View Cart
+              Xem giỏ hàng
             </button>
             <button
               onClick={() => {
