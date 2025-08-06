@@ -3,8 +3,9 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/app/stores/store';
 import { productService } from '@/app/api/services/productService';
-import { Product, ProductCategory, ProductData } from '@/app/types/product';
+import { Product, ProductCategory } from '@/app/types/product';
 import { ProductPageLayout } from './component/ProductPageLayout';
+import type { TagType } from '@/app/type/product';
 
 // Type for product images
 interface ProductImage {
@@ -269,9 +270,10 @@ function ProductsContent() {
       }
       return 0;
     });
-
   // Convert Product[] to ProductData[] to match the expected type
+
   const productData = formattedProducts.map(product => {
+    // Convert category to the expected format
     // Convert category to the expected format
     const categoryId = typeof product.category_ID === 'object' 
       ? Number(product.category_ID.id) || 0 
@@ -293,6 +295,18 @@ function ProductsContent() {
       : typeof product.updatedAt === 'string' 
         ? product.updatedAt 
         : new Date().toISOString();
+
+    // Map tags to TagType[] to match ProductData type
+    const tagsArray: TagType[] = Array.isArray(product.tags)
+      ? product.tags.map(tag => {
+          if (typeof tag === 'object' && tag !== null) {
+            // If already TagType, return as is
+            return tag as TagType;
+          }
+          // If string, wrap as TagType with name property
+          return { id: 0, name: String(tag), type: '' };
+        })
+      : [];
 
     // Create a new object with only the properties that ProductData expects
     return {
@@ -328,13 +342,13 @@ function ProductsContent() {
             updated_at: new Date().toISOString()
           }))
         : [],
-      tags: Array.isArray(product.tags) ? product.tags : [],
+      tags: tagsArray,
       meta_title: String(product.meta_title || ''),
       meta_description: String(product.meta_description || ''),
       created_at: createdAt,
       updated_at: updatedAt,
       tag_ID: Number(product.tag_ID) || 0
-    } as unknown as ProductData; // Type assertion to handle any remaining type mismatches
+    };
   });
 
   return (
