@@ -88,8 +88,8 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
       </div>
 
       {/* Logo container - chiếm hết khoảng trống còn lại */}
-      <div className="flex-1 p-4 md:p-6">
-        <svg className="w-full h-full" viewBox="0 0 1366 768" xmlns="http://www.w3.org/2000/svg">
+      <div className="flex-1 flex items-center justify-center p-2 md:p-4">
+        <svg className="w-200 h-auto mx-auto" viewBox="0 0 1366 768" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <style>{`.cls-1{fill:#fff;}.cls-1,.cls-2,.cls-3,.cls-4,.cls-5{stroke:#4d4d4d;stroke-miterlimit:10;stroke-width:2px;}.cls-2{fill:#7eacb5;}.cls-3{fill:#eba60f;}.cls-4{fill:#eba712;}`}</style>
           </defs>

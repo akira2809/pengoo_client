@@ -319,6 +319,15 @@ const handleAddToCart = (e: MouseEvent) => {
                 }}
               />
             )}
+            {/* Hiển thị HẾT HÀNG nếu sản phẩm không còn hàng */}
+            {Number(product.quantity_stock) <= 0 && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
+              <div className="bg-white text-red-600 font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-red-600">
+                Hết hàng
+              </div>
+              <p className="mt-2 text-xs text-white italic opacity-80">Sản phẩm sẽ sớm được cập nhật lại</p>
+            </div>
+          )}
           </div>
 
           <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
