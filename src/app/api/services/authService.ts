@@ -241,7 +241,7 @@ export const authService = {
       throw new Error(data.message || 'Đổi mật khẩu thất bại');
     }
 
-    return data;
+    return { status: response.status, message: data.message };
   }
 
 
