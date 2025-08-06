@@ -68,7 +68,7 @@ function PasswordInput({ label, id, ...props }: PasswordInputProps) {
 // --- Main Change Password Component ---
 function ChangePasswordContent() {
   const router = useRouter();
-  const { updatePassword, isLoading } = useAuthStore();
+  const { updatePassword, isLoading, loginMethod, isAuthenticated } = useAuthStore();
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -76,6 +76,46 @@ function ChangePasswordContent() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Redirect if user logged in with Google/social login
+  if (!isAuthenticated) {
+    router.push('/signin');
+    return null;
+  }
+
+  if (loginMethod === 'google') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-6 text-center">
+          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Không thể đổi mật khẩu</h1>
+          <p className="text-gray-600">
+            Bạn đã đăng nhập bằng tài khoản mạng xã hội (Google/Facebook). Để thay đổi mật khẩu, vui lòng truy cập tài khoản tương ứng của bạn.
+          </p>
+          <div className="flex flex-col gap-3">
+            <a
+              href="https://myaccount.google.com/security"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              Quản lý tài khoản Google
+            </a>
+            <button
+              onClick={() => router.push('/account')}
+              className="inline-flex justify-center px-4 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              Quay lại trang tài khoản
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

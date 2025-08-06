@@ -126,6 +126,8 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
     setScratchedPercent(0);
     setResult(null);
     setPlaying(false);
+    // Preserve the latest points before new game starts
+    setDisplayedUserPoints(result?.userPoints ?? displayedUserPoints);
     try {
       const res = await apiClient.post<ScratchResult>("/minigame/play-scratch", {});
       if (!res.success) throw new Error(res.error || "Không thể kết nối minigame backend");
@@ -372,7 +374,6 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
               scratched={scratched}
               setScratched={setScratched}
               scratchedPercent={scratchedPercent}
-              setScratchedPercent={setScratchedPercent}
               loading={loading}
               error={error}
               result={result}

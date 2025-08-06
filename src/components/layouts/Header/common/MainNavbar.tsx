@@ -11,6 +11,7 @@ import Logo from './Logo';
 import CollectionsDropdown from './CollectionsDropdown';
 import { useRouter } from "next/navigation";
 import { useAuthStore } from '@/app/stores/slice/useAuthStore';
+import Image from "next/image";
 
 interface MainNavbarProps {
   onMenuToggle: () => void;
@@ -28,7 +29,7 @@ export default function MainNavbar({
   menuOpen,
 }: MainNavbarProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -87,13 +88,13 @@ export default function MainNavbar({
 
     const updateScrollDirection = () => {
       const scrollY = window.scrollY;
-      
+
       if (scrollY > 50) { // Navbar becomes sticky after scrolling 50px
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
-      
+
       ticking = false;
     };
 
@@ -120,16 +121,16 @@ export default function MainNavbar({
     <>
       {/* Spacer div - creates space when navbar becomes fixed */}
       {isScrolled && <div className="h-[60px] md:h-[65px] lg:h-[73px]" />}
-      
-      <div 
+
+      <div
         className={`
           bg-background-900 text-text-50 
           px-4 py-3 md:py-4 lg:py-5 
           flex justify-between items-center 
           md:px-6 lg:px-12
           transition-all duration-300 ease-in-out
-          ${isScrolled 
-            ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95' 
+          ${isScrolled
+            ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95'
             : 'relative'
           }
         `}
@@ -142,7 +143,7 @@ export default function MainNavbar({
             onClick={onMenuToggle}
             aria-label="Toggle menu"
           >
-            <MenuIcon className="text-text-50"/>
+            <MenuIcon className="text-text-50" />
           </button>
 
           {/* Desktop/Tablet Left Menu: hidden on small screens, flex on md (tablets) and larger */}
@@ -166,21 +167,41 @@ export default function MainNavbar({
             aria-label="Search"
             onClick={onSearchToggle}
           >
-            <SearchIcon className="text-text-50"/>
+            <SearchIcon className="text-text-50" />
           </IconButton>
           <IconButton
             className="text-gray-700 hover:text-gray-900"
             aria-label={isAuthenticated ? 'Tài khoản' : 'Đăng nhập'}
             onClick={() => router.push(isAuthenticated ? '/account' : '/signin')}
           >
-            <UserIcon className="text-text-50" />
+            {
+              isAuthenticated ?
+                (user?.avatar_url ? (
+                  <Image
+                    src={user.avatar_url}
+                    alt="Ảnh đại diện"
+                    width={32}
+                    height={32}
+                    className="w-[28px] h-[28px] object-cover rounded-full transition-transform duration-300 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-[32px] h-[32px] bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center rounded-full">
+                    <span className="text-1xl font-bold text-white">
+                      {user.username?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  </div>
+                ))
+                : (<UserIcon className="text-text-50" />)
+
+            }
+            {/* <Image src="https://res.cloudinary.com/do6lj4onq/image/upload/v1753768911/products/file_w9dtns.webp" alt="" /> */}
           </IconButton>
           <IconButton
             className="!text-text-nav relative"
             aria-label="Shopping bag"
             onClick={onCartToggle}
           >
-            <ShoppingBagIcon className="text-text-50"/>
+            <ShoppingBagIcon className="text-text-50" />
             {cartItemCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {cartItemCount}

@@ -22,10 +22,22 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/favicon.ico', rel: 'icon' },
       { url: '/logopengoo2.png', sizes: '32x32', type: 'image/png' },
       { url: '/logopengoo2.png', sizes: '16x16', type: 'image/png' },
+      { url: '/logopengoo2.png', sizes: '192x192', type: 'image/png' },
+      { url: '/logopengoo2.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/apple-icon.png', // Cho iPhone/iPad
+    apple: [
+      { url: '/logopengoo2.png' }
+    ],
+    shortcut: ['/favicon.ico'],
+    other: [
+      {
+        rel: 'apple-touch-icon',
+        url: '/logopengoo2.png',
+      },
+    ],
   },
   description: 'PENGOO chuyên cung cấp các loại board game, trò chơi gia đình và đồ chơi trí tuệ độc đáo. Khám phá ngay để có những khoảnh khắc giải trí và gắn kết tuyệt vời!',
   applicationName: 'PENGOO',
