@@ -45,7 +45,6 @@ export default function TicketEarningActions({
   // Helper to get random detail page using current backend
   const getRandomDetailHref = async (type: TicketEarningType) => {
     if (type === "product") {
-      // Fetch all products, pick a random one
       const res = await apiClient.get<{ data: Product[] }>("/products?limit=100");
       const products = res.data?.data || [];
       if (products.length > 0) {
@@ -55,7 +54,6 @@ export default function TicketEarningActions({
       return "/products";
     }
     if (type === "post") {
-      // Fetch all posts, pick a random one
       const res = await apiClient.get<{ data: Post[] }>("/posts");
       const posts = res.data?.data || [];
       if (posts.length > 0) {
@@ -65,7 +63,8 @@ export default function TicketEarningActions({
       return "/blogs";
     }
     if (type === "social") {
-      return "https://facebook.com/sharer/sharer.php?u=https://pengoo.vn";
+      // Use the correct sharing link
+      return `https://facebook.com/sharer/sharer.php?u=https://pengoo.store/`;
     }
     return "/";
   };
@@ -77,7 +76,6 @@ export default function TicketEarningActions({
     setMessages((prev) => ({ ...prev, [type]: "" }));
 
     try {
-      // Generate a random refId for demo (in real use, use actual post/product/social id)
       const refId = Math.random().toString(36).slice(2, 10);
       const res = await apiClient.post<{ message: string; tickets: number }>(
         "/minigame/earn-ticket",
@@ -89,23 +87,24 @@ export default function TicketEarningActions({
         [type]: msg,
       }));
       if (res.data?.tickets !== undefined) {
-        if (onEarn) onEarn(type, res.data.tickets); // This will trigger parent's refresh
-      }
-      // Show toast only if actually earned
-      if (msg.includes("earned") || msg.includes("Đã nhận vé")) {
-        toast.success(msg);
-      } else {
-        toast(msg, { icon: "ℹ️" });
+        if (onEarn) onEarn(type, res.data.tickets);
       }
 
-      // Navigate after success (except for social)
       const href = await getRandomDetailHref(type);
+
+      // Navigate first, then show toast after navigation
       if (type === "social") {
         window.open(href, "_blank", "noopener,noreferrer");
+        setTimeout(() => {
+          toast.success(msg);
+        }, 500);
       } else {
         setTimeout(() => {
           router.push(href);
-        }, 500);
+          setTimeout(() => {
+            toast.success(msg);
+          }, 600); // Show toast after navigation
+        }, 300);
       }
     } catch (error) {
       const errorMessage = error instanceof Error
