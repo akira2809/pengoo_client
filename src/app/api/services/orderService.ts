@@ -96,6 +96,10 @@ export const orderService = {
 
   async getDeliveryMethod() {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
+  },
 
+  // Lấy đơn hàng của người dùng
+  async getUserOrders() {
+    return apiClient.get<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.USER_ORDERS);
   },
 };
