@@ -103,4 +103,17 @@ export const orderService = {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
 
   },
+
+  // Gửi lại hóa đơn qua email (manual only)
+  async resendInvoice(orderId: number | string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/resend-invoice`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      return data;
+    } catch {
+      return { success: false, error: "Có lỗi xảy ra khi gửi lại hóa đơn" };
+    }
+  },
 };

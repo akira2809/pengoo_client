@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { apiClient } from "@/app/api/apiClient";
 
 type TicketEarningType = "post" | "product" | "social";
+
 const TICKET_EARNING_OPTIONS: {
   type: TicketEarningType;
   label: string;
@@ -31,6 +32,7 @@ export default function TicketEarningActions({
   onEarn,
 }: {
   isAuthenticated: boolean;
+  earnLoading: TicketEarningType | null;
   earnMsg: Record<TicketEarningType, string>;
   onEarn: (type: TicketEarningType, tickets?: number) => void;
 }) {

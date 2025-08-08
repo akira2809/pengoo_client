@@ -56,6 +56,7 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimMsg, setClaimMsg] = useState<string | null>(null);
   const [milestoneCoupons, setMilestoneCoupons] = useState<MilestoneCoupon[]>([]);
+  const [dailyClaimed, setDailyClaimed] = useState(false);
   // Remove unused nextCoupon state since it's not used in the component
   // Use type assertion to match the expected type in ScratchCardArea
   const canvasRef = useRef<HTMLCanvasElement>(null) as React.MutableRefObject<HTMLCanvasElement | null>;
@@ -196,6 +197,16 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
       );
       setClaimMsg(res.data?.message || "Đã nhận vé miễn phí!");
       setTickets(res.data?.tickets ?? tickets);
+
+      // Disable the button if already claimed today
+      if (
+        res.data?.message?.includes("đã nhận vé miễn phí hôm nay") ||
+        res.data?.message?.toLowerCase().includes("reached ticket earning limit")
+      ) {
+        setDailyClaimed(true);
+      } else {
+        setDailyClaimed(false);
+      }
     } catch (err) {
       const error = err as Error;
       setClaimMsg(error.message || "Không thể nhận vé miễn phí.");
@@ -287,6 +298,24 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
     return "*".repeat(code.length - 4) + code.slice(-4);
   }
 
+  // Check daily claim status on mount
+  useEffect(() => {
+    const checkDailyClaim = async () => {
+      if (!isAuthenticated) return;
+      const res = await apiClient.post<{ message: string; tickets: number }>(
+        "/minigame/claim-daily-ticket",
+        {}
+      );
+      if (
+        res.data?.message?.includes("đã nhận vé miễn phí hôm nay") ||
+        res.data?.message?.toLowerCase().includes("reached ticket earning limit")
+      ) {
+        setDailyClaimed(true);
+      }
+    };
+    checkDailyClaim();
+  }, [isAuthenticated]);
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-3xl shadow-2xl w-full max-w-3xl relative p-0 border-4 border-yellow-300 flex flex-col ring-8 ring-yellow-200/40">
@@ -344,6 +373,9 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
               isAuthenticated={isAuthenticated}
               earnLoading={earnLoading}
               earnMsg={earnMsg}
+              claimLoading={claimLoading}
+              claimMsg={claimMsg}
+              dailyClaimed={dailyClaimed}
               onEarn={async (type: TicketEarningType, ticketsEarned?: number) => {
                 try {
                   // Call the earnTicket function with the type
@@ -358,8 +390,6 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
                   console.error('Error earning ticket:', error);
                 }
               }}
-              claimLoading={claimLoading}
-              claimMsg={claimMsg}
               onClaim={claimDailyTicket}
               onPlay={useTicketToPlay}
               loading={loading}
