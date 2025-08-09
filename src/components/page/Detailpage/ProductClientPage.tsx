@@ -160,7 +160,11 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
             product={{
               ...product,
               images: cms?.sliderImages?.length
-                ? cms.sliderImages.map((url, i) => ({ url, name: `gallery-${i}` }))
+                ? cms.sliderImages.map((url, i) => ({
+                    id: i, // Assign a unique id for each image
+                    url,
+                    name: `gallery-${i}`
+                  }))
                 : product.images
             }}
           />
@@ -173,14 +177,17 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
             discount={product.discount || 0}
             description={cms?.detailsContent || product.description || ''}
             features={product.features?.map(f => f.title) || []}
-            warranty={cms?.warranty || product.warranty || 'Không có thông tin bảo hành'}
-            shippingInfo={cms?.shippingInfo || product.shipping_info || 'Vận chuyển toàn quốc'}
+            warranty={product.warranty || 'Không có thông tin bảo hành'}
+            shippingInfo={product.shipping_info || 'Vận chuyển toàn quốc'}
             image_url={product.images?.[0]?.url || ''}
             slug={product.slug || String(product.id)}
-            tags={product.tags || []}
+            tags={Array.isArray(product.tags) ? product.tags.map(tag => ({
+              ...tag,
+              id: typeof tag.id === "string" ? Number(tag.id) : tag.id,
+              type: typeof tag.type === "string" ? tag.type : ""
+            })) : []}
             category={typeof product.category_ID === 'object' ? product.category_ID : undefined}
-            quantity_stock={product.quantity_stock}
-            />
+            quantity_stock={typeof product.quantity_stock === "number" ? product.quantity_stock : 0} productPrice={0}          />
         </div>
       </div>
 
@@ -217,9 +224,9 @@ const ProductClientPage: React.FC<ProductClientPageProps> = ({
       <ProductReviewsSection productId={product.id} />
       {/* Move ProductsYouMayLike here, under reviews */}
       <ProductsYouMayLike
-        currentProductId={product.id}
-        categoryId={typeof product.category_ID === "object" ? product.category_ID.id : undefined}
-        tagIds={Array.isArray(product.tags) ? product.tags.map(tag => tag.id) : undefined}
+        currentProductId={typeof product.id === "string" ? Number(product.id) : product.id}
+        categoryId={typeof product.category_ID === "object" ? product.category_ID.id as number : undefined}
+        tagIds={Array.isArray(product.tags) ? product.tags.map(tag => typeof tag.id === "string" ? Number(tag.id) : tag.id) : undefined}
       />
       {/* Blog and posts section below */}
       <BlogSection />

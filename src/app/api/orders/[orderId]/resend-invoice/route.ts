@@ -5,6 +5,9 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
   const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`;
   const res = await fetch(apiUrl);
 
+  if (res.status === 403) {
+    return new NextResponse("Hóa đơn chỉ có thể tải sau khi thanh toán COD được xác nhận.", { status: 403 });
+  }
   if (!res.ok) {
     return new NextResponse("Không tìm thấy hóa đơn", { status: 404 });
   }

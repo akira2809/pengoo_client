@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { apiClient } from "@/app/api/apiClient";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 import TicketCountBadge from "../TicketCountBadge";
-import ScratchPlayActions from "./ScratchPlayActions";
+import TicketEarningActions from "../TicketEarningActions";
 import ScratchCardArea from "./ScratchCardArea";
 
 const CARD_WIDTH = 320;
@@ -47,16 +47,16 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [tickets, setTickets] = useState<number>(0);
-  const [earnLoading, setEarnLoading] = useState<TicketEarningType | null>(null);
+  const [, setEarnLoading] = useState<TicketEarningType | null>(null);
   const [earnMsg, setEarnMsg] = useState<Record<TicketEarningType, string>>({
     post: "",
     product: "",
     social: "",
   });
-  const [claimLoading, setClaimLoading] = useState(false);
-  const [claimMsg, setClaimMsg] = useState<string | null>(null);
+  const [] = useState(false);
+  const [] = useState<string | null>(null);
   const [milestoneCoupons, setMilestoneCoupons] = useState<MilestoneCoupon[]>([]);
-  const [dailyClaimed, setDailyClaimed] = useState(false);
+  const [, setDailyClaimed] = useState(false);
   // Remove unused nextCoupon state since it's not used in the component
   // Use type assertion to match the expected type in ScratchCardArea
   const canvasRef = useRef<HTMLCanvasElement>(null) as React.MutableRefObject<HTMLCanvasElement | null>;
@@ -182,38 +182,6 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   window.__earnTicket = earnTicket;
 
   // Claim daily ticket
-  const claimDailyTicket = async () => {
-    setClaimLoading(true);
-    setClaimMsg(null);
-    try {
-      if (!isAuthenticated) {
-        handleSetError(new Error("Bạn cần đăng nhập để chơi!"));
-        setClaimLoading(false);
-        return;
-      }
-      const res = await apiClient.post<{ message: string; tickets: number }>(
-        "/minigame/claim-daily-ticket",
-        {}
-      );
-      setClaimMsg(res.data?.message || "Đã nhận vé miễn phí!");
-      setTickets(res.data?.tickets ?? tickets);
-
-      // Disable the button if already claimed today
-      if (
-        res.data?.message?.includes("đã nhận vé miễn phí hôm nay") ||
-        res.data?.message?.toLowerCase().includes("reached ticket earning limit")
-      ) {
-        setDailyClaimed(true);
-      } else {
-        setDailyClaimed(false);
-      }
-    } catch (err) {
-      const error = err as Error;
-      setClaimMsg(error.message || "Không thể nhận vé miễn phí.");
-    } finally {
-      setClaimLoading(false);
-    }
-  };
 
   // Fetch milestone coupons on mount
   useEffect(() => {
@@ -368,32 +336,21 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
           </div>
           <TicketCountBadge tickets={tickets} />
           {!playing && (
-            <ScratchPlayActions
-              tickets={tickets}
+            <TicketEarningActions
               isAuthenticated={isAuthenticated}
-              earnLoading={earnLoading}
+              earnLoading={null}
               earnMsg={earnMsg}
-              claimLoading={claimLoading}
-              claimMsg={claimMsg}
-              dailyClaimed={dailyClaimed}
               onEarn={async (type: TicketEarningType, ticketsEarned?: number) => {
                 try {
-                  // Call the earnTicket function with the type
                   await earnTicket(type);
-                  // If ticketsEarned is provided, update the ticket count optimistically
                   if (typeof ticketsEarned === "number") {
                     setTickets(prev => prev + ticketsEarned);
                   }
-                  // Always refresh from backend for accuracy
                   await fetchTickets();
                 } catch (error) {
                   console.error('Error earning ticket:', error);
                 }
               }}
-              onClaim={claimDailyTicket}
-              onPlay={useTicketToPlay}
-              loading={loading}
-              playing={playing}
             />
           )}
           {playing && (
