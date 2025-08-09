@@ -20,7 +20,7 @@ jobs:
           echo "📦 Pulling latest code..."
           cd /root/services/pengoo_client
           git fetch origin
-          git checkout productions
+          git checkout production
           git pull
 
           echo "🧹 Cleaning up old Docker stuff..."
