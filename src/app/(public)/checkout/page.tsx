@@ -15,6 +15,21 @@ import Link from "next/link";
 
 //
 
+interface DeliveryMethod {
+  id: number;
+  name: string;
+  fee: number;
+  description?: string;
+}
+interface Voucher {
+  id?: number;
+  coupon: {
+    code: string;
+    description?: string;
+  };
+  active?: boolean;
+  discount?: number;
+}
 interface FormData {
   email: string;
   country: string;
@@ -44,11 +59,11 @@ const CheckoutPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isCartReady, setIsCartReady] = useState(false);
-  const [listVouchers, setListVouchers] = useState([]);
+  const [delivery, setDelivery] = useState<DeliveryMethod[]>([]);
+  const [listVouchers, setListVouchers] = useState<Voucher[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
     {}
   );
-  const [delivery, setDelivery] = useState([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [shippingCost, setShippingCost] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
@@ -92,14 +107,6 @@ const CheckoutPage: React.FC = () => {
     user?.phone_number,
   ]);
 
-  // Define delivery method type
-  interface DeliveryMethod {
-    id: number;
-    name: string;
-    fee: number;
-    description?: string;
-  }
-
   // Gọi API lấy mã giảm giá và phương thức vận chuyển
   useEffect(() => {
     if (user?.id) {
@@ -109,8 +116,15 @@ const CheckoutPage: React.FC = () => {
 
           const deliveryMethod = await orderService.getDeliveryMethod();
           if (deliveryMethod?.data && Array.isArray(deliveryMethod.data)) {
-            setDelivery(deliveryMethod.data as DeliveryMethod[]);
-            setShippingCost(deliveryMethod.data[0].fee)
+            // Map to DeliveryMethod[]
+            const mappedDelivery = deliveryMethod.data.map((item: any, idx: number) => ({
+              id: item.id ?? idx + 1,
+              name: item.name ?? `Phương thức vận chuyển ${idx + 1}`,
+              fee: item.fee ?? 25000,
+              description: item.description ?? "",
+            }));
+            setDelivery(mappedDelivery);
+            setShippingCost(mappedDelivery[0].fee);
           } else {
             console.error(
               "Invalid delivery method data format:",
@@ -153,9 +167,6 @@ const CheckoutPage: React.FC = () => {
       item.product_price * item.quantity * (1 - (item.discount || 0) / 100),
     0
   );
-
-  // Calculate shipping cost
-  // const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
 
   // Calculate total
   const total = subtotal - shippingCost - discountAmount;
@@ -209,10 +220,9 @@ const CheckoutPage: React.FC = () => {
     authChecked,
     getTotalItems,
   ]);
-  const changeShipFee = (id: number) =>{
-    const data:{fee:number} = delivery.find(item => id === item.id)
-    console.log(data)
-    return data ? data.fee : 25000
+  const changeShipFee = (id: number) => {
+    const data = delivery.find(item => id === item.id);
+    return data ? data.fee : 25000;
   }
   // Show loading state while checking auth or cart
   if (isAuthLoading || !authChecked || !isCartReady) {
@@ -613,7 +623,7 @@ const CheckoutPage: React.FC = () => {
                 // icon={<CashIcon />}
                 /> */}
                 {Array.isArray(delivery) && delivery.length > 0 ? (
-                  delivery.map((item: unknown) => (
+                  delivery.map((item: DeliveryMethod) => (
                     <RadioButton
                       key={item.id}
                       id={`delivery-${item.id}`}
@@ -627,7 +637,7 @@ const CheckoutPage: React.FC = () => {
                     />
                   ))
                 ) : (
-                  // Fallback options if no delivery methods are available
+                  // fallback...
                   <>
                     <RadioButton
                       id="localHCM"
@@ -816,7 +826,7 @@ const CheckoutPage: React.FC = () => {
                 />
                 {showCouponList && listVouchers.length > 0 && (
                   <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
-                    {listVouchers.map((uc) => (
+                    {listVouchers.map((uc: Voucher) => (
                       <li
                         key={uc.id}
                         onClick={() => {
@@ -889,3 +899,4 @@ const CheckoutPage: React.FC = () => {
 };
 
 export default CheckoutPage;
+

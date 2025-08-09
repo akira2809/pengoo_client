@@ -49,6 +49,14 @@ export default function ScratchRewardPanel({ result }: { result: ScratchResult }
         {couponGranted && couponCode && (
           <div className="mt-3 text-yellow-700 font-bold text-base bg-yellow-100 px-3 py-2 rounded shadow text-center">
             🎁 Coupon: <span className="underline">{couponCode}</span>
+            <a
+              href={`/account/voucher?code=${couponCode}`}
+              className="ml-3 bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium shadow hover:bg-blue-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Đổi coupon
+            </a>
           </div>
         )}
       </div>

@@ -21,7 +21,7 @@ const OrderCancelClient = dynamic(
               <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mt-2"></div>
             </div>
           </div>
-        </div>
+        </div> emai
       </div>
     )
   }

@@ -5,10 +5,11 @@ import ScratchGrid from "../ScratchGrid";
 import ScratchRewardPanel from "./ScratchRewardPanel";
 
 interface ScratchCardAreaProps {
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  canvasRef: React.RefObject<HTMLCanvasElement> | React.MutableRefObject<HTMLCanvasElement | null>;
   scratching: boolean;
-  setScratching: (scratching: boolean) => void;
+  setScratching: (v: boolean) => void;
   scratched: boolean;
+  setScratched: (v: boolean) => void;
   scratchedPercent: number;
   loading: boolean;
   error: Error | null;
@@ -22,7 +23,6 @@ interface ScratchCardAreaProps {
     };
   } | null;
   handleScratch: (e: React.MouseEvent | React.TouchEvent) => void;
-  setScratched: (scratched: boolean) => void;
   onPlayAgain: () => void;
   tickets: number;
 }
