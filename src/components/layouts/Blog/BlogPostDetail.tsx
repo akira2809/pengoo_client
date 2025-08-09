@@ -98,7 +98,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post }) => {
               img: ({ ...props }) => (
                 <span className="block my-8 rounded-xl overflow-hidden shadow">
                   <Image
-                    src={props.src || ''}
+                    src={typeof props.src === 'string' ? props.src : ''}
                     alt={props.alt || ''}
                     width={900}
                     height={500}

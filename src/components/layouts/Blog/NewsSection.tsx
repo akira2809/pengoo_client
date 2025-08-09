@@ -11,7 +11,7 @@ const NewsSection: React.FC = () => {
   return (
     <div className="flex items-center justify-center w-full h-48 bg-gray-200">
       <h1 className="text-5xl font-extrabold text-gray-800 tracking-tight">
-        News
+        Tin tức
       </h1>
     </div>
   );

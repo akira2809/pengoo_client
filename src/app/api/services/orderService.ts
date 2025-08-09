@@ -29,7 +29,11 @@ export const orderService = {
         order_id: data.id,
         order_code: data.order_code || String(data.id),
         payment_url: data.checkout_url, // This is the PayOS payment URL
-        message: 'Đơn hàng đã được tạo thành công'
+        message: 'Đơn hàng đã được tạo thành công',
+        id: data.id,
+        details: data.details || [],
+        total_price: data.total_price || orderData.total_price,
+        productStatus: data.productStatus || 'pending'
       };
     } catch (error) {
       console.error('Error creating order:', error);
@@ -37,13 +41,14 @@ export const orderService = {
     }
   },
 
-  mapCartItemsToOrderItems(cartItems: CartItem[]): OrderItemDetail[] {
+  mapCartItemsToOrderItems(cartItems: CartItem[], orderId: number = 0): OrderItemDetail[] {
     return cartItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
       price: typeof item.product_price === 'string'
         ? parseFloat(item.product_price)
-        : item.product_price
+        : item.product_price,
+      orderId: orderId
     }));
   },
 
@@ -97,5 +102,18 @@ export const orderService = {
   async getDeliveryMethod() {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
 
+  },
+
+  // Gửi lại hóa đơn qua email (manual only)
+  async resendInvoice(orderId: number | string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/resend-invoice`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      return data;
+    } catch {
+      return { success: false, error: "Có lỗi xảy ra khi gửi lại hóa đơn" };
+    }
   },
 };

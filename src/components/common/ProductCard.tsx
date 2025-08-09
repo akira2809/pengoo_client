@@ -37,7 +37,7 @@ const formatPrice = (price: number | string): string => {
 const calculateFinalPrice = (originalPrice: number | string, discount?: number | string): { finalPrice: number; discountPercentage: number } => {
   const numericPrice = typeof originalPrice === 'string' ? parseFloat(originalPrice) : originalPrice;
   const numericDiscount = typeof discount === 'string' ? parseFloat(discount) : discount || 0;
-  
+
   const hasDiscount = numericDiscount > 0;
   let finalPrice = numericPrice;
   let discountPercentage = 0;
@@ -55,7 +55,7 @@ const calculateFinalPrice = (originalPrice: number | string, discount?: number |
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   // Calculate final price and discount
-  const { finalPrice, discountPercentage } = useMemo(() => 
+  const { finalPrice, discountPercentage } = useMemo(() =>
     calculateFinalPrice(product.product_price, product.discount),
     [product.product_price, product.discount]
   );
@@ -88,21 +88,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
 
     // Kiểm tra sản phẩm có trong wishlist không (nếu đã đăng nhập)
-    const fetchWishlist = async () => {
-      if (!user || !user.id) return;
+    // const fetchWishlist = async () => {
+    //   if (!user || !user.id) return;
 
-      try {
-        const wishlistRes = await wishlistService.getWishlistByUserId(Number(user.id));
-        const wishlistArr = wishlistRes.data || [];
-        const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: Pick<ProductData, 'id'>) => item.id === product.id);
-        setIsWishlisted(exists);
-      } catch (error) {
-        console.error("Lỗi khi kiểm tra wishlist:", error);
-      }
-    };
+    //   try {
+    //     const wishlistRes = await wishlistService.getWishlistByUserId(Number(user.id));
+    //     const wishlistArr = wishlistRes.data || [];
+    //     const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: Pick<ProductData, 'id'>) => item.id === product.id);
+    //     setIsWishlisted(exists);
+    //   } catch (error) {
+    //     console.error("Lỗi khi kiểm tra wishlist:", error);
+    //   }
+    // };
 
-    fetchWishlist();
-  },  [product.id, user, userId]);
+    // fetchWishlist();
+  }, [product.id, user, userId]);
 
   // Helper function to validate and normalize image URL
   const getValidImageUrl = (url: string | undefined | null): string | null => {
@@ -129,7 +129,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const mainImage = (() => {
     // Try to get image from different possible locations
     let imgSrc = '';
-    
+
     // Check if there are images in the images array
     if (Array.isArray(product.images) && product.images.length > 0) {
       // Try to find the main image first
@@ -143,17 +143,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           imgSrc = firstImage.url;
         }
       }
-    } 
-    
+    }
+
     // Fallback to image_url if no images in array
     if (!imgSrc && product.image_url) {
       imgSrc = product.image_url;
     }
-    
+
     // Normalize the URL
     const normalized = getValidImageUrl(imgSrc);
     console.log('Main image source:', { imgSrc, normalized });
-    
+
     return normalized || 'https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image';
   })();
 
@@ -164,7 +164,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const hoverImg = product.images.find(
       img => 'name' in img && (img.name === 'detail' || img.name === 'featured') && img.url && img.url !== mainImage
     );
-    
+
     if (hoverImg && hoverImg.url) {
       hoverImage = getValidImageUrl(hoverImg.url);
     } else {
@@ -176,39 +176,66 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         hoverImage = getValidImageUrl(otherImage.url);
       }
     }
-    
+
     console.log('Hover image:', hoverImage);
   }
 
   // ✅ Xử lý click thêm vào giỏ hàng
-  const handleAddToCart = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    addItem({
-      id: Number(product.id),
-      product_name: product.product_name,
-      product_price: product.product_price,
-      // product_price: Number(product.discount ? product.product_price - (product.product_price * (product.discount / 100)) : product.product_price),
-      quantity: Number(1),
-      image_url: mainImage,
-      discount: Number(product.discount) || 0,
-      slug: product.slug,
-      description: product.meta_description,
-    });
+const handleAddToCart = (e: MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
-      duration: 2000,
-      position: "top-center",
-      style: {
-        background: "#4CAF50",
-        color: "#fff",
-        padding: "12px 20px",
-        borderRadius: "8px",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-      },
-    });
-  };
+  const stock = Number(product.quantity_stock) || 0;
+
+  if (stock <= 0) {
+    toast.error("Sản phẩm đã hết hàng.");
+    return;
+  }
+
+  // Lấy số lượng hiện tại của sản phẩm trong giỏ (nếu có)
+  const currentItem = useCartStore.getState().items.find(
+    (i) => i.id === Number(product.id)
+  );
+  const currentQty = currentItem?.quantity || 0;
+
+  // Nếu thêm 1 mà vượt kho -> báo và dừng
+  if (currentQty + 1 > stock) {
+    toast.error(`Số lượng vượt quá tồn kho. Chỉ còn ${stock} sản phẩm.`);
+    return;
+  }
+
+  // Số lượng thực sự sẽ thêm (trong trường hợp còn lại ít)
+  const quantityToAdd = Math.min(1, stock - currentQty);
+  if (quantityToAdd < 1) {
+    toast.error(`Sản phẩm chỉ còn ${stock} sản phẩm trong kho.`);
+    return;
+  }
+
+  addItem({
+    id: Number(product.id),
+    product_name: product.product_name,
+    product_price: Number(product.product_price), // ép number cho an toàn
+    quantity: quantityToAdd,
+    image_url: mainImage,
+    discount: Number(product.discount) || 0,
+    slug: product.slug,
+    description: product.meta_description,
+    quantity_stock: stock,
+  });
+
+  toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
+    duration: 2000,
+    position: "top-center",
+    style: {
+      background: "#4CAF50",
+      color: "#fff",
+      padding: "12px 20px",
+      borderRadius: "8px",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+    },
+  });
+};
+
 
   const handleAddToWishlist = async (e: MouseEvent) => {
     e.preventDefault();
@@ -346,7 +373,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <div className="flex justify-between text-xs mt-1">
                   <div className="text-green-600">
                     Tiết kiệm: {formatPrice(Number(product.product_price) - finalPrice)}
-                  </div>         
+                  </div>
                   <div className="text-gray-500">
                     Đã bán: {product.quantity_sold ?? 0}
                   </div>
@@ -354,26 +381,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             ) : (
               // Display when there's no discount
-            <div className="flex flex-col gap-1 mt-2">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-800 font-semibold text-base">
-                  {formatPrice(product.product_price)}
-                </span>
-                
-              </div>
-              <div className="flex justify-between text-xs mt-1">
-                <div className="text-xs text-green-600">
-                  (Đã bao gồm VAT)
+              <div className="flex flex-col gap-1 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-800 font-semibold text-base">
+                    {formatPrice(product.product_price)}
+                  </span>
+
                 </div>
-                <div className="text-gray-500">
-                  Đã bán: {product.quantity_sold ?? 0}
+                <div className="flex justify-between text-xs mt-1">
+                  <div className="text-xs text-green-600">
+                    (Đã bao gồm VAT)
+                  </div>
+                  <div className="text-gray-500">
+                    Đã bán: {product.quantity_sold ?? 0}
+                  </div>
                 </div>
               </div>
-            </div>
             )}
           </div>
         </div>
-            
+
 
         {/* Hiển thị các tag */}
         {/* {Array.isArray(product.tags) && product.tags.length > 0 && (
