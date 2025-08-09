@@ -38,7 +38,7 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
             .
 
-          echo "🚀 Running new container...."
+          echo "🚀 Running new container..."
           docker run -d \
             --name pengoo_client-container \
             -p 4000:3000 \
