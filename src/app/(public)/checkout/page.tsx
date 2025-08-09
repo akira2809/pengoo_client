@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCartStore } from '@/app/stores/slice/cartStore';
-import { useAuthStore } from '@/app/stores/slice/useAuthStore';
-import { orderService } from '@/app/api/services/orderService';
-import InputField from '../../(public)/checkout/component/InputField';
-import RadioButton from '../../(public)/checkout/component/RadioButton';
-import Image from 'next/image';
-import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
-import { useStore } from '@/app/stores/store';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/app/stores/slice/cartStore";
+import { useAuthStore } from "@/app/stores/slice/useAuthStore";
+import { orderService } from "@/app/api/services/orderService";
+import InputField from "../../(public)/checkout/component/InputField";
+import RadioButton from "../../(public)/checkout/component/RadioButton";
+import Image from "next/image";
+import {
+  showSuccessToast,
+  showErrorToast,
+} from "@/components/common/UI/toastHelper";
+import { useStore } from "@/app/stores/store";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 
@@ -19,6 +22,13 @@ interface DeliveryMethod {
   id: number;
   name: string;
   fee: number;
+  description?: string;
+}
+
+interface DeliveryMethodApiResponse {
+  id?: number;
+  name?: string;
+  fee?: number;
   description?: string;
 }
 interface Voucher {
@@ -117,12 +127,14 @@ const CheckoutPage: React.FC = () => {
           const deliveryMethod = await orderService.getDeliveryMethod();
           if (deliveryMethod?.data && Array.isArray(deliveryMethod.data)) {
             // Map to DeliveryMethod[]
-            const mappedDelivery = deliveryMethod.data.map((item: any, idx: number) => ({
-              id: item.id ?? idx + 1,
-              name: item.name ?? `Phương thức vận chuyển ${idx + 1}`,
-              fee: item.fee ?? 25000,
-              description: item.description ?? "",
-            }));
+            const mappedDelivery = deliveryMethod.data.map(
+              (item: DeliveryMethodApiResponse, idx: number) => ({
+                id: item.id ?? idx + 1,
+                name: item.name ?? `Phương thức vận chuyển ${idx + 1}`,
+                fee: item.fee ?? 25000,
+                description: item.description ?? "",
+              })
+            );
             setDelivery(mappedDelivery);
             setShippingCost(mappedDelivery[0].fee);
           } else {
@@ -190,8 +202,10 @@ const CheckoutPage: React.FC = () => {
     const checkAuthAndCart = async () => {
       // Check if cart is empty using getTotalItems to ensure we have the latest count
       if (getTotalItems() === 0) {
-        showErrorToast('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
-        router.push('/');
+        showErrorToast(
+          "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ."
+        );
+        router.push("/");
         return;
       }
 
@@ -221,9 +235,9 @@ const CheckoutPage: React.FC = () => {
     getTotalItems,
   ]);
   const changeShipFee = (id: number) => {
-    const data = delivery.find(item => id === item.id);
+    const data = delivery.find((item) => id === item.id);
     return data ? data.fee : 25000;
-  }
+  };
   // Show loading state while checking auth or cart
   if (isAuthLoading || !authChecked || !isCartReady) {
     return (
@@ -254,13 +268,13 @@ const CheckoutPage: React.FC = () => {
     console.log(formData);
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    if(name == "delivery_id"){
-      setShippingCost(changeShipFee(Number(value)))
+    if (name == "delivery_id") {
+      setShippingCost(changeShipFee(Number(value)));
     }
     console.log(formData);
     // setShippingCost()
@@ -296,7 +310,7 @@ const CheckoutPage: React.FC = () => {
     const code = formData.couponCode?.trim();
 
     if (!code) {
-      showErrorToast('Vui lòng nhập mã giảm giá.');
+      showErrorToast("Vui lòng nhập mã giảm giá.");
       return;
     }
     const data = await applyVoucher(code, subtotal);
@@ -304,7 +318,7 @@ const CheckoutPage: React.FC = () => {
     if (!data) {
       showErrorToast(`Mã khuyến mãi không hợp lệ hoặc đã hết hạn.`);
       setDiscountAmount(0);
-      setIsCouponApplied(false)
+      setIsCouponApplied(false);
       return;
     } else {
       setDiscountAmount(data.discount);
@@ -346,7 +360,7 @@ const CheckoutPage: React.FC = () => {
 
     // Validate cart has items
     if (cartItems.length === 0) {
-      showErrorToast('Giỏ hàng của bạn đang trống.');
+      showErrorToast("Giỏ hàng của bạn đang trống.");
       return;
     }
 
@@ -899,4 +913,3 @@ const CheckoutPage: React.FC = () => {
 };
 
 export default CheckoutPage;
-
