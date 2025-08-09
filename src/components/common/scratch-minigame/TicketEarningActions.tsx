@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { apiClient } from "@/app/api/apiClient";
+import { productService } from "@/app/api/services/productService";
+import { fetchAllPosts } from "@/app/api/services/blogApi";
 
 type TicketEarningType = "post" | "product" | "social";
 
@@ -15,16 +17,6 @@ const TICKET_EARNING_OPTIONS: {
   { type: "product", label: "Xem sản phẩm", tickets: 1, color: "green" },
   { type: "social", label: "Chia sẻ mạng xã hội", tickets: 2, color: "pink" },
 ];
-
-interface Product {
-  slug: string;
-  [key: string]: unknown;
-}
-
-interface Post {
-  canonical: string;
-  [key: string]: unknown;
-}
 
 export default function TicketEarningActions({
   isAuthenticated,
@@ -42,13 +34,15 @@ export default function TicketEarningActions({
     product: "",
     social: "",
   });
+  const [limitReached, setLimitReached] = useState(false);
   const router = useRouter();
 
-  // Helper to get random detail page using current backend
+  // Helper to get random detail page using correct slug/canonical
   const getRandomDetailHref = async (type: TicketEarningType) => {
     if (type === "product") {
-      const res = await apiClient.get<{ data: Product[] }>("/products?limit=100");
-      const products = res.data?.data || [];
+      // Use productService to get products with slug
+      const res = await productService.getProducts({ limit: 100 });
+      const products = res.data || [];
       if (products.length > 0) {
         const random = products[Math.floor(Math.random() * products.length)];
         return `/products/${random.slug}`;
@@ -56,24 +50,22 @@ export default function TicketEarningActions({
       return "/products";
     }
     if (type === "post") {
-      const res = await apiClient.get<{ data: Post[] }>("/posts");
-      const posts = res.data?.data || [];
+      // Use blogApi to get posts with canonical
+      const posts = await fetchAllPosts();
       if (posts.length > 0) {
         const random = posts[Math.floor(Math.random() * posts.length)];
-        return `/blogs/${random.canonical}`;
+        return `/blogs/${random.canonical || random.id}`;
       }
       return "/blogs";
     }
     if (type === "social") {
-      // Use the correct sharing link
       return `https://facebook.com/sharer/sharer.php?u=https://pengoo.store/`;
     }
     return "/";
   };
 
-  // Call backend to earn ticket and prevent duplicate claims
   const handleEarn = async (type: TicketEarningType) => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || limitReached) return;
     setLoading(type);
     setMessages((prev) => ({ ...prev, [type]: "" }));
 
@@ -92,9 +84,14 @@ export default function TicketEarningActions({
         if (onEarn) onEarn(type, res.data.tickets);
       }
 
+      if (msg.includes("limit for today")) {
+        setLimitReached(true);
+        toast.error("Bạn đã đạt giới hạn nhận vé hôm nay.");
+        return;
+      }
+
       const href = await getRandomDetailHref(type);
 
-      // Navigate first, then show toast after navigation
       if (type === "social") {
         window.open(href, "_blank", "noopener,noreferrer");
         setTimeout(() => {
@@ -105,7 +102,7 @@ export default function TicketEarningActions({
           router.push(href);
           setTimeout(() => {
             toast.success(msg);
-          }, 600); // Show toast after navigation
+          }, 600);
         }, 300);
       }
     } catch (error) {
@@ -128,7 +125,7 @@ export default function TicketEarningActions({
         <div key={opt.type} className="flex items-center gap-2 justify-center">
           <button
             className={`bg-${opt.color}-100 text-${opt.color}-700 px-3 py-1 rounded shadow text-xs font-medium hover:bg-${opt.color}-200`}
-            disabled={loading === opt.type || !isAuthenticated}
+            disabled={loading === opt.type || !isAuthenticated || limitReached}
             onClick={() => handleEarn(opt.type)}
           >
             {loading === opt.type ? "Đang nhận..." : opt.label}
@@ -141,6 +138,11 @@ export default function TicketEarningActions({
           )}
         </div>
       ))}
+      {limitReached && (
+        <div className="text-xs text-red-600 text-center mt-2">
+          Bạn đã đạt giới hạn nhận vé minigame hôm nay. Hãy quay lại vào ngày mai!
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,7 @@
 interface CartItem {
+  discount: number;
+  image_url: string;
+  product_name: string;
   id: number;
   productId: mumber;
   quantity: number;
@@ -8,6 +11,9 @@ interface CartItem {
 
 // Define form data interface for checkout
 interface CheckoutFormData {
+  name: string;
+  fee: number;
+  description: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -31,6 +37,10 @@ export interface OrderItemDetail {
 }
 
 export interface CreateOrderRequest {
+  id: number;
+  name: string;
+  fee: number;
+  description: string;
   userId?: number | null;
   delivery_id: number;
   payment_type: 'cod' | 'payos';

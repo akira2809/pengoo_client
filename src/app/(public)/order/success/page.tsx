@@ -5,23 +5,29 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, Suspense, useState } from 'react';
 import { orderService } from '@/app/api/services/orderService';
 
+// Define the order type for type safety
+type Order = {
+  id: number;
+  payment_type: string;
+  payment_status: string;
+  [key: string]: unknown;
+};
+
 function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id') || searchParams.get('orderCode');
+  const [order, setOrder] = useState<Order | null>(null);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    // Track successful order conversion
-    if (orderId && window.gtag) {
-      window.gtag('event', 'purchase', {
-        transaction_id: orderId,
-        // Add other relevant e-commerce tracking data here
-      });
-    }
     if (orderId) {
-      setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
+      orderService.getOrderById(orderId).then(res => {
+        setOrder(res.data as unknown as Order);
+        setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
+      });
     }
   }, [orderId]);
 
@@ -37,6 +43,34 @@ function OrderSuccessContentInner() {
     }
     setResending(false);
   };
+
+  const handleDownloadInvoice = async () => {
+    if (!orderId) return;
+    setDownloading(true);
+    try {
+      const blob = await orderService.downloadInvoice(orderId);
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${orderId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Có lỗi xảy ra khi tải hóa đơn.");
+      }
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  if (!order) return <div>Đang tải...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -54,26 +88,44 @@ function OrderSuccessContentInner() {
           </p>
           {invoiceUrl && (
             <div className="mt-4">
-              <a
-                href={invoiceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              >
-                Tải hóa đơn PDF
-              </a>
-              <div className="mt-2 text-gray-500 text-sm">
-                Nếu bạn không nhận được email, hãy kiểm tra thư mục spam hoặc tải hóa đơn trực tiếp tại đây.
-              </div>
-              <button
-                onClick={handleResendInvoice}
-                disabled={resending}
-                className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
-              >
-                {resending ? "Đang gửi lại..." : "Gửi lại hóa đơn qua email"}
-              </button>
-              {resendStatus && (
-                <div className="mt-1 text-sm text-green-600">{resendStatus}</div>
+              {/* Only show download/resend if allowed */}
+              {(order.payment_type !== 'cod' || order.payment_status === 'paid') && (
+                <>
+                  <a
+                    href={invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
+                    Tải hóa đơn PDF
+                  </a>
+                  <button
+                    onClick={handleDownloadInvoice}
+                    disabled={downloading}
+                    className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                  >
+                    {downloading ? "Đang tải..." : "Tải hóa đơn"}
+                  </button>
+                  <button
+                    onClick={handleResendInvoice}
+                    disabled={resending}
+                    className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+                  >
+                    {resending ? "Đang gửi lại..." : "Gửi lại hóa đơn qua email"}
+                  </button>
+                  <div className="mt-2 text-gray-500 text-sm">
+                    Nếu bạn không nhận được email, hãy kiểm tra thư mục spam hoặc tải hóa đơn trực tiếp tại đây.
+                  </div>
+                  {resendStatus && (
+                    <div className="mt-1 text-sm text-green-600">{resendStatus}</div>
+                  )}
+                </>
+              )}
+              {/* Show warning for COD not paid */}
+              {order.payment_type === 'cod' && order.payment_status !== 'paid' && (
+                <div className="mt-2 text-warning">
+                  Hóa đơn sẽ được gửi và có thể tải sau khi thanh toán COD được xác nhận.
+                </div>
               )}
             </div>
           )}
