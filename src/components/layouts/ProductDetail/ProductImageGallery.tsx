@@ -113,9 +113,20 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ product }) =>
           ) : (
             <div className="flex items-center justify-center w-full h-full text-gray-400">Không có ảnh</div>
           )}
+
+          {/* Hiển thị overlay nếu hết hàng */}
+          {(product.quantity_stock ?? 0) <= 0 && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+              <span className="bg-white text-red-600 font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-red-600">
+                Hết hàng
+              </span>
+              <p className="mt-2 text-xs text-white italic opacity-80">Sản phẩm sẽ sớm được cập nhật lại</p>
+            </div>
+          )}
+
           {/* Modal open button */}
           <button 
-            className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-blue-50 transition-colors border border-gray-200"
+            className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-blue-50 transition-colors border border-gray-200 z-20"
             aria-label="Xem ảnh lớn"
             onClick={() => setShowModal(true)}
           >

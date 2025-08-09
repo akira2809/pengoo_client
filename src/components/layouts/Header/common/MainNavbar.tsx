@@ -139,7 +139,7 @@ export default function MainNavbar({
         <div className="flex items-center">
           {/* Menu Icon: visible on small screens, hidden on md (tablets) and larger */}
           <button
-            className={`lg:hidden z-20 ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200`}
+            className={`lg:hidden z-20 ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200 mr-4`}
             onClick={onMenuToggle}
             aria-label="Toggle menu"
           >
@@ -160,7 +160,7 @@ export default function MainNavbar({
         <Logo />
 
         {/* Right Icons (Always visible) */}
-        <div className="flex items-center space-x-2 md:space-x-4 text-sm z-10">
+        <div className="ml-auto flex items-center space-x-1 md:space-x-2 text-sm z-10">
           {/* Language và USD chỉ hiển thị trên desktop/tablet lớn hơn */}
           <IconButton
             className="text-gray-700 hover:text-gray-900"

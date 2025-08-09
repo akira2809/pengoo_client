@@ -47,7 +47,7 @@ export const PriceRangeFilter: React.FC<PriceRangeFilterProps> = ({
             onChange={(e) => handlePriceChange(e, 'min')}
             onFocus={(e) => handleFocus(e, 'min')}
             onBlur={() => handleBlur('min')}
-            className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+            className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-background-900 focus:border-background-900"
           />
           <span className="mx-1">-</span>
           <input
@@ -58,7 +58,7 @@ export const PriceRangeFilter: React.FC<PriceRangeFilterProps> = ({
             onChange={(e) => handlePriceChange(e, 'max')}
             onFocus={(e) => handleFocus(e, 'max')}
             onBlur={() => handleBlur('max')}
-            className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+            className="w-5/12 p-2 border border-gray-300 rounded-md focus:ring-background-900 focus:border-background-900"
           />
         </div>
 
@@ -68,8 +68,8 @@ export const PriceRangeFilter: React.FC<PriceRangeFilterProps> = ({
             checked={showOutOfStock}
             onChange={(checked) => setShowOutOfStock(checked)}
             className={`${
-              showOutOfStock ? 'bg-amber-800' : 'bg-gray-300'
-            } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2`}
+              showOutOfStock ? 'bg-background-800' : 'bg-gray-300'
+            } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-background-900 focus:ring-offset-2`}
           >
             <span
               className={`${
