@@ -147,7 +147,7 @@ export default function OrderCancelContent() {
                         <span className="font-medium text-gray-900">
                           Mã đơn hàng:
                         </span>{" "}
-                        #{orderData.id}
+                        #{orderData.order_code}
                       </p>
                       <p className="text-sm text-gray-600">
                         <span className="font-medium text-gray-900">
