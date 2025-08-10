@@ -31,35 +31,48 @@ export default function ScratchGrid({
   };
 
   return (
-    <div className="grid grid-cols-3 gap-4 w-full max-w-[360px] mx-auto my-4">
+    <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-[360px] mx-auto my-4">
       {grid.map((row, rowIdx) =>
-        row.map((symbol, colIdx) => (
-          <div
-            key={`${rowIdx}-${colIdx}`}
-            className={`flex items-center justify-center text-3xl sm:text-4xl h-24 w-24 rounded-xl border-2 transition
-              ${isWinningCell(rowIdx, colIdx)
-                ? "bg-yellow-200 border-yellow-500 shadow-xl scale-105"
-                : "bg-white border-gray-200"
-              }
-            `}
-            style={{
-              boxShadow: isWinningCell(rowIdx, colIdx)
-                ? "0 0 12px 4px #fde68a"
-                : undefined,
-            }}
-          >
-            {symbol && (
-              <Image
-                src={IMAGE_MAP[symbol] || "/images/minigame/ssrb.png"}
-                alt={symbol}
-                width={72}
-                height={72}
-                className="w-16 h-16"
-                unoptimized
-              />
-            )}
-          </div>
-        ))
+        row.map((symbol, colIdx) => {
+          const win = isWinningCell(rowIdx, colIdx);
+          return (
+            <div
+              key={`${rowIdx}-${colIdx}`}
+              className={`
+                flex items-center justify-center h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border-4 transition-all duration-200
+                relative overflow-hidden
+                ${win
+                  ? "bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-50 border-yellow-400 shadow-[0_0_24px_6px_rgba(253,230,138,0.7)] scale-105 z-10"
+                  : "bg-white/90 border-gray-200 shadow"
+                }
+                hover:scale-105
+              `}
+              style={{
+                boxShadow: win
+                  ? "0 0 24px 6px #fde68a, 0 2px 8px 0 rgba(0,0,0,0.08)"
+                  : "0 2px 8px 0 rgba(0,0,0,0.06)",
+                transition: "box-shadow 0.2s, transform 0.2s",
+              }}
+            >
+              {symbol && (
+                <Image
+                  src={IMAGE_MAP[symbol] || "/images/minigame/ssrb.png"}
+                  alt={symbol}
+                  width={72}
+                  height={72}
+                  className={`w-14 h-14 sm:w-16 sm:h-16 drop-shadow-lg transition-all duration-200
+                    ${win ? "scale-110 saturate-150" : "opacity-80"}
+                  `}
+                  unoptimized
+                  draggable={false}
+                />
+              )}
+              {win && (
+                <div className="absolute inset-0 rounded-2xl pointer-events-none border-4 border-yellow-400 animate-pulse" />
+              )}
+            </div>
+          );
+        })
       )}
     </div>
   );
