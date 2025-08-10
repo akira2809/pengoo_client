@@ -208,7 +208,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Gửi id của user cùng với các thông tin cập nhật
           // Loại bỏ mfaCode nếu nó là null hoặc undefined để tránh lỗi kiểu
-          const { mfaCode, ...restUserData } = userDataToUpdate;
+          const {  ...restUserData } = userDataToUpdate;  // xoa mfacode do k sai never used
           const result = await authService.updateUser({ ...restUserData, id: user.id }, token);
 
           if (result.success && result.user) {
