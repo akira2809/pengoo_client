@@ -173,6 +173,10 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
               content: f.content || '',
               image: f.image || ''
             }))
+          : [],
+        // Ensure tags is always an array of strings
+        tags: Array.isArray(item.tags)
+          ? item.tags.map(tag => typeof tag === 'string' ? tag : String(tag))
           : []
       }));
 
@@ -308,6 +312,10 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
               content: f.content || '',
               image: f.image || ''
             }))
+          : [],
+        // Ensure tags is always an array of strings
+        tags: Array.isArray(response.data.tags)
+          ? response.data.tags.map(tag => typeof tag === 'string' ? tag : String(tag))
           : []
       };
 
@@ -354,7 +362,12 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       const response = await productService.getProductBySlug(slug);
       if (!response?.data) return null;
 
-      const product = mapApiProductToProduct(response.data);
+      const product = mapApiProductToProduct({
+        ...response.data,
+        tags: Array.isArray(response.data.tags)
+          ? response.data.tags.map(tag => typeof tag === 'string' ? tag : String(tag))
+          : []
+      });
 
       // Add to products array if not already present
       set(state => ({

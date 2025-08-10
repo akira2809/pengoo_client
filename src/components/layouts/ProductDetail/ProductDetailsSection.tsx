@@ -219,15 +219,17 @@ const handleBuyNow = () => {
           variant="primary"
           className="flex-1 justify-center py-3 text-sm font-medium bg-background-900 hover:bg-background-800 text-white"
           onClick={handleAddToCart}
+          disabled={quantity_stock <= 0}
         >
-          Thêm vào giỏ hàng
+          {quantity_stock <= 0 ? "Hết hàng" : "Thêm vào giỏ hàng"}
         </Button>
         <Button
           variant="secondary"
           className="flex-1 justify-center py-3 text-sm font-medium border border-background-900 text-background-900 hover:bg-background-50"
           onClick={handleBuyNow}
+          disabled={quantity_stock <= 0}
         >
-          Mua ngay
+          {quantity_stock <= 0 ? "Hết hàng" : "Mua ngay"}
         </Button>
       </div>
 

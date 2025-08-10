@@ -6,20 +6,8 @@ import { useStore } from '@/app/stores/store'; // Assuming this is a Zustand sto
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
 import { apiClient } from '@/app/api/apiClient';
 
-// --- Type Definitions (assuming from store) ---
-type Coupon = {
-    id: number;
-    code: string;
-    description?: string;
-    discountPercent: number;
-    milestonePoints: number;
-};
-
-type UserCoupon = {
-    id: number;
-    redeemed: boolean;
-    coupon: Coupon;
-};
+// --- Type Definitions (imported from central type file) ---
+import type { UserCoupon } from '@/app/type/coupon';
 
 // --- Helper Icons ---
 const TicketIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
@@ -157,7 +145,7 @@ export default function CouponsPage() {
                                             <p className="text-sm text-gray-600 mt-1 line-clamp-2">{uc.coupon.description || 'Áp dụng cho tất cả sản phẩm.'}</p>
                                         </div>
                                         <div className="flex justify-between items-end mt-2">
-                                            <p className="text-xs text-gray-500">Cần: {uc.coupon.milestonePoints} điểm</p>
+                                            <p className="text-xs text-gray-500">Cần: {uc.coupon.milestonePoints ?? 0} điểm</p>
                                             {uc.redeemed ? (
                                                 <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded-full">Đã sử dụng</span>
                                             ) : (
