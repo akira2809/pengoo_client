@@ -140,10 +140,10 @@ export default function MainNavbar({
   };
   const closeCollections = () => setCollectionsOpen(false);
 
-  const handleUserDropdownToggle = () => {
-    setUserDropdownOpen(!userDropdownOpen);
-    setCollectionsOpen(false); // Close collections when user dropdown opens
-  };
+  // const handleUserDropdownToggle = () => {
+  //   setUserDropdownOpen(!userDropdownOpen);
+  //   setCollectionsOpen(false); // Close collections when user dropdown opens
+  // };
   const closeUserDropdown = () => setUserDropdownOpen(false);
 
   return (
