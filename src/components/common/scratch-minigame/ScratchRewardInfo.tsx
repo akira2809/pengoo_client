@@ -1,8 +1,10 @@
 import ScratchGrid from "./ScratchGrid";
 
+type WinLine = { type: "row" | "col" | "diag"; index: number };
+
 type ScratchResult = {
   grid: string[][];
-  winLines: string[];
+  winLines: WinLine[];
   bonus: number;
   gridScore: number;
   totalPoints: number;

@@ -21,7 +21,7 @@ export default function ScratchPlayActions({
   isAuthenticated: boolean;
   earnLoading: TicketEarningType | null;
   earnMsg: Record<TicketEarningType, string>;
-  onEarn: (type: TicketEarningType, tickets?: number) => void;
+  onEarn: (type: TicketEarningType, tickets?: number) => Promise<void>;
   claimLoading: boolean;
   claimMsg: string | null;
   onClaim: () => void;

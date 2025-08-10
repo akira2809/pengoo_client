@@ -207,7 +207,9 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           // Gửi id của user cùng với các thông tin cập nhật
-          const result = await authService.updateUser({ ...userDataToUpdate, id: user.id }, token);
+          // Loại bỏ mfaCode nếu nó là null hoặc undefined để tránh lỗi kiểu
+          const { mfaCode, ...restUserData } = userDataToUpdate;
+          const result = await authService.updateUser({ ...restUserData, id: user.id }, token);
 
           if (result.success && result.user) {
             // Chuyển đổi result.user về kiểu User nếu cần thiết
@@ -301,7 +303,7 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false });
 
           return {
-            status: result.status,
+            success: result.status === 200,
             message: result.message || 'Cập nhật mật khẩu thành công.',
           };
         } catch (error: unknown) {
