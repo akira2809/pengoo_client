@@ -17,6 +17,7 @@ export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
   };
   details?: OrderItemDetail[];
   order_date?: string;
+  order_code?: string;
   total_price: number;
   productStatus?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   [key: string]: unknown;
@@ -167,11 +168,14 @@ export function OrdersContent() {
             const status = STATUS_CONFIG[order.productStatus as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.default;
             return (
               // Cải tiến: Sử dụng card với shadow và divide-y
-              <div key={order.order_code} className="bg-white rounded-lg shadow-md overflow-hidden divide-y divide-gray-200">
+              <div key={order.id} className="bg-white rounded-lg shadow-md overflow-hidden divide-y divide-gray-200">
                 {/* --- Order Header --- */}
                 <div className="p-4 sm:p-5 flex justify-between items-center">
                   <div>
-                    <h3 className="font-semibold text-gray-900">Mã đơn hàng: #{order.order_code}</h3>
+                    <h3 className="font-semibold text-gray-900">Mã đơn hàng: #{order.id}</h3>
+                    {order.order_code && (
+                      <p className="text-sm text-gray-600">Order Code: {order.order_code}</p>
+                    )}
                     <p className="text-sm text-gray-500">Ngày đặt: {formatOrderDate(order.order_date)}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status.style}`}>

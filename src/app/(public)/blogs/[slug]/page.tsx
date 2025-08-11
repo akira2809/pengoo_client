@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${post.name} | Blog PENGOO`, // Tiêu đề bài viết
     description: post.description || `Đọc thêm về ${post.name} trên Blog PENGOO.`, // Mô tả bài viết
-    keywords: post.keywords ? post.keywords.split(',').map(k => k.trim()) : [
+    keywords: post.keywords ? post.keywords.split(',').map((k: string) => k.trim()) : [
       'blog board game', 'tin tức board game', 'hướng dẫn board game',
       post.name.toLowerCase(), // Thêm tên bài viết làm từ khóa
     ], // Từ khóa động từ bài viết hoặc mặc định
@@ -92,7 +92,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   }
 
   const baseUrl = 'https://pengoo.store';
-  const postUrl = `${baseUrl}/blogs/${post.canonical || params.slug}`;
+  const postUrl = `${baseUrl}/blogs/${post.canonical || (await params).slug}`;
 
   const mappedPost = {
     id: post.id.toString(),

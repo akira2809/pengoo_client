@@ -44,6 +44,7 @@ interface VerifyDecodedData {
 }
 
 interface VerifyResponse {
+  mfaCode: null;
   isValid: boolean;
   decoded?: VerifyDecodedData;
   user?: UserApiData; // Nếu API verify trả về trực tiếp user object thay vì chỉ decoded token
@@ -242,19 +243,26 @@ export const authService = {
     }
 
     return { status: response.status, message: data.message };
-  }
-
-
-  // async updatePassword( newPassword: string, token: string) {
-  //   return apiClient.patch(`${USERS_API_BASE_URL}/updatePassword`);
-  // },
-
+  },
 
 
   /**
  * Người dùng nhập mã khuyến mãi để đổi voucher (dựa trên điểm)
  * Endpoint: POST /coupons/verify-voucher
  */
-
-
+  verifyVoucherByUserPoint: async (voucherCode: string, token: string) => {
+    // Example implementation, adjust endpoint and logic as needed
+    const response = await fetch('/api/voucher/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ voucherCode }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to verify voucher');
+    }
+    return response.json();
+  },
 };

@@ -136,9 +136,9 @@ export async function generateMetadata({
         .map((f) => f.title)
         .filter(Boolean)
         .map((f) => f.toLowerCase()),
-      ...(product.tags || [])
-        .filter((t): t is string => typeof t === "string" && t.trim() !== "")
-        .map((t) => t.toLowerCase()),
+      ...((product.tags as unknown as string[] || [])
+        .filter((t) => typeof t === "string" && t.trim() !== "")
+        .map((t) => t.toLowerCase())),
     ]
       .filter(Boolean)
       .slice(0, 10);

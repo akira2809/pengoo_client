@@ -9,66 +9,79 @@ export type TabSection = {
   title: string;
   content: string | JSX.Element;
   images?: string[];
+  references?: { title: string; link: string }[];
 };
 
 function getFixedTabs(tabs: TabSection[]): TabSection[] {
-  // Always return these three, in this order
   const getTab = (title: string): TabSection =>
     tabs.find(
       (t) => t.title.trim().toLowerCase() === title.toLowerCase()
-    ) || { title, content: "", images: [] };
+    ) || (title === "Reference"
+      ? { title, content: "", references: [] }
+      : { title, content: "", images: [] });
   return [
     getTab("Specifications"),
     getTab("How To Play"),
-    getTab("Contents"),
+    getTab("Reference"),
   ];
-}
-
-function renderHowToPlay(content: string) {
-  if (!content) return <span className="text-gray-400 italic">No video link provided.</span>;
-  const isYoutube =
-    content.includes("youtube.com") || content.includes("youtu.be");
-  const isVimeo = content.includes("vimeo.com");
-  let embedUrl = content;
-  if (isYoutube) {
-    if (content.includes("watch?v=")) {
-      embedUrl = content.replace("watch?v=", "embed/");
-    } else if (content.includes("youtu.be/")) {
-      embedUrl = content.replace("youtu.be/", "youtube.com/embed/");
-    }
-  }
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <a
-        href={content}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 underline break-all"
-      >
-        {content}
-      </a>
-      {(isYoutube || isVimeo) && (
-        <div className="w-full flex justify-center">
-          <iframe
-            width="560"
-            height="315"
-            src={embedUrl}
-            title="How To Play Video"
-            frameBorder={0}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="rounded-xl border shadow w-full max-w-2xl aspect-video"
-          />
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function ProductTabs({ tabs = [] }: { tabs: TabSection[] }) {
   const fixedTabs = getFixedTabs(tabs);
   const [activeTab, setActiveTab] = useState(0);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  // Reference tab display
+  function renderReferenceTab(tab: TabSection) {
+    if (!tab.references || tab.references.length === 0) {
+      return <span className="text-gray-400 italic">No references provided.</span>;
+    }
+    return (
+      <ul className="list-disc pl-6 space-y-2 text-left">
+        {tab.references.map((ref: { title: string; link: string }, idx: number) =>
+          ref.title && ref.link ? (
+            <li key={idx}>
+              <a href={ref.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                {ref.title}
+              </a>
+            </li>
+          ) : null
+        )}
+      </ul>
+    );
+  }
+
+  // How To Play tab display (only embed, no raw link)
+  function renderHowToPlay(content: string) {
+    if (!content) return <span className="text-gray-400 italic">No video link provided.</span>;
+    const isYoutube =
+      content.includes("youtube.com") || content.includes("youtu.be");
+    const isVimeo = content.includes("vimeo.com");
+    let embedUrl = content;
+    if (isYoutube) {
+      if (content.includes("watch?v=")) {
+        embedUrl = content.replace("watch?v=", "embed/");
+      } else if (content.includes("youtu.be/")) {
+        embedUrl = content.replace("youtu.be/", "youtube.com/embed/");
+      }
+    }
+    return (isYoutube || isVimeo) ? (
+      <div className="w-full flex justify-center">
+        <iframe
+          width="560"
+          height="315"
+          src={embedUrl}
+          title="How To Play Video"
+          frameBorder={0}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="rounded-xl border shadow w-full max-w-2xl aspect-video"
+        />
+      </div>
+    ) : (
+      <span className="text-gray-400 italic">Invalid video link.</span>
+    );
+  }
 
   const toggleAccordion = (index: number) => {
     setExpandedIndex((prev) => (prev === index ? null : index));
@@ -99,6 +112,8 @@ export default function ProductTabs({ tabs = [] }: { tabs: TabSection[] }) {
       <div className="hidden md:block mt-8 text-gray-800 text-sm sm:text-base text-center">
         {activeTab === 1 ? (
           renderHowToPlay(fixedTabs[1].content as string)
+        ) : activeTab === 2 ? (
+          renderReferenceTab(fixedTabs[2])
         ) : (
           <>
             <div className="prose max-w-none mx-auto text-left">
@@ -201,6 +216,8 @@ export default function ProductTabs({ tabs = [] }: { tabs: TabSection[] }) {
               <div className="pb-4 text-gray-700 text-sm">
                 {index === 1 ? (
                   renderHowToPlay(tab.content as string)
+                ) : index === 2 ? (
+                  renderReferenceTab(tab)
                 ) : (
                   <>
                     <div className="prose max-w-none mx-auto text-left">

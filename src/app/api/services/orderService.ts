@@ -61,6 +61,10 @@ export const orderService = {
     const isPayOS = formData.paymentMethod === 'payos';
 
     return {
+      id: 0, // or generate/set appropriate id if available
+      name: formData.name || '', // assuming name is in formData, otherwise set default
+      fee: formData.fee || 0, // assuming fee is in formData, otherwise set default
+      description: formData.description || '', // assuming description is in formData, otherwise set default
       userId: userId || null,
       delivery_id: formData.delivery_id,
       payment_type: isPayOS ? 'payos' : 'cod',
@@ -101,6 +105,41 @@ export const orderService = {
 
   async getDeliveryMethod() {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
+  },
 
+  // Lấy đơn hàng của người dùng
+  async getUserOrders() {
+    return apiClient.get<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.USER_ORDERS);
+  },
+
+  // Gửi lại hóa đơn qua email (manual only)
+  async resendInvoice(orderId: number | string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/resend-invoice`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      return data;
+    } catch {
+      return { success: false, error: "Có lỗi xảy ra khi gửi lại hóa đơn" };
+    }
+  },
+
+  // Tải hóa đơn (download)
+  async downloadInvoice(orderId: number | string): Promise<Blob | null> {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/resend-invoice`, {
+        method: "GET",
+      });
+      if (res.status === 403) {
+        throw new Error("Hóa đơn chỉ có thể tải sau khi thanh toán COD được xác nhận.");
+      }
+      if (!res.ok) {
+        throw new Error("Không tìm thấy hóa đơn.");
+      }
+      return await res.blob();
+    } catch (error) {
+      throw error;
+    }
   },
 };

@@ -2,6 +2,7 @@
 import { ProductData } from './product'; // Nếu tag có chứa danh sách sản phẩm
 
 export interface TagData {
+  [x: string]: string;
   id: number;
   name: string;
   slug: string;

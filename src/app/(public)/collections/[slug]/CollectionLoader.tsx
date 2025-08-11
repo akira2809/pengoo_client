@@ -195,8 +195,7 @@ export default function CollectionLoader({
           id: String(t.id),
           name: t.name,
           type: t.type,
-        }))}
-        // @todo: Thêm các prop bổ sung khi cần thiết
+        }))} collections={[]}        // @todo: Thêm các prop bổ sung khi cần thiết
       />
     </div>
   );

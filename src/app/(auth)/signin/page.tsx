@@ -213,15 +213,12 @@ export default function SignInPage() {
       const data = await res.json();
       console.log('Facebook API Response:', data);
 
-      if (!data.token) {
+      const token = data.access_token || data.token;
+      if (!token) {
         throw new Error("Không nhận được token từ máy chủ");
       }
-
-      console.log('Saving Facebook token to localStorage and verifying...');
-      localStorage.setItem("token", data.token);
-      
-      // Xác thực token bằng auth store
-      const verification = await verifyToken(data.token);
+      localStorage.setItem("token", token);
+      const verification = await verifyToken(token);
       if (!verification.success) {
         throw new Error(verification.message || 'Xác thực token thất bại');
       }
@@ -294,15 +291,12 @@ export default function SignInPage() {
       const data = await res.json();
       console.log('API Response Data:', data); // Log response để debug
 
-      if (!data.token) {
+      const token = data.access_token || data.token;
+      if (!token) {
         throw new Error("Không nhận được token từ máy chủ");
       }
-
-      console.log('Saving token to localStorage and verifying...');
-      localStorage.setItem("token", data.token);
-      
-      // Xác thực token bằng auth store
-      const verification = await verifyToken(data.token);
+      localStorage.setItem("token", token);
+      const verification = await verifyToken(token);
       if (!verification.success) {
         throw new Error(verification.message || 'Xác thực token thất bại');
       }
