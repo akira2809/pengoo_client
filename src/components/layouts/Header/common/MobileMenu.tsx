@@ -89,7 +89,7 @@ export default function MobileMenu({ menuOpen, onClose }: MobileMenuProps) {
     {/* Logo container - chiếm toàn bộ phần còn lại */}
     <div className="flex-1 relative">
       <Image
-        src="/logonav.png"
+        src="/logoMenuMobile.png"
         alt="Pengoo"
         fill
         priority
