@@ -26,17 +26,24 @@ interface ProductCardProps {
 }
 
 const formatPrice = (price: number | string): string => {
-  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
+  const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
     minimumFractionDigits: 0,
   }).format(numPrice);
 };
 
-const calculateFinalPrice = (originalPrice: number | string, discount?: number | string): { finalPrice: number; discountPercentage: number } => {
-  const numericPrice = typeof originalPrice === 'string' ? parseFloat(originalPrice) : originalPrice;
-  const numericDiscount = typeof discount === 'string' ? parseFloat(discount) : discount || 0;
+const calculateFinalPrice = (
+  originalPrice: number | string,
+  discount?: number | string
+): { finalPrice: number; discountPercentage: number } => {
+  const numericPrice =
+    typeof originalPrice === "string"
+      ? parseFloat(originalPrice)
+      : originalPrice;
+  const numericDiscount =
+    typeof discount === "string" ? parseFloat(discount) : discount || 0;
 
   const hasDiscount = numericDiscount > 0;
   let finalPrice = numericPrice;
@@ -55,8 +62,8 @@ const calculateFinalPrice = (originalPrice: number | string, discount?: number |
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   // Calculate final price and discount
-  const { finalPrice, discountPercentage } = useMemo(() =>
-    calculateFinalPrice(product.product_price, product.discount),
+  const { finalPrice, discountPercentage } = useMemo(
+    () => calculateFinalPrice(product.product_price, product.discount),
     [product.product_price, product.discount]
   );
   const hasDiscount = discountPercentage > 0;
@@ -106,136 +113,131 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   // Helper function to validate and normalize image URL
   const getValidImageUrl = (url: string | undefined | null): string | null => {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
+    if (!url || typeof url !== "string" || url.trim() === "") {
       return null;
     }
     // If it's already a full URL or starts with /, return as is
-    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) {
+    if (
+      url.startsWith("http") ||
+      url.startsWith("/") ||
+      url.startsWith("data:image")
+    ) {
       return url;
     }
     // Otherwise, assume it's a relative path
-    return `/${url.replace(/^\//, '')}`; // Ensure single leading slash
+    return `/${url.replace(/^\//, "")}`; // Ensure single leading slash
   };
 
   // Debug product data
-  console.log('Product data:', {
+  console.log("ProductCard - Product data:", {
     id: product.id,
     name: product.product_name,
     images: product.images,
-    image_url: product.image_url
+    image_url: product.image_url,
+    source: "ProductCard"
   });
 
-  // Get main image with fallback
+  // Simplified approach: Always use first image as main, second image as hover
   const mainImage = (() => {
-    // Try to get image from different possible locations
-    let imgSrc = '';
-
-    // Check if there are images in the images array
+    // Try to get first image from images array
     if (Array.isArray(product.images) && product.images.length > 0) {
-      // Try to find the main image first
-      const mainImg = product.images.find(img => 'name' in img && img.name === 'main');
-      if (mainImg && mainImg.url) {
-        imgSrc = mainImg.url;
-      } else {
-        // Fallback to the first image with a URL
-        const firstImage = product.images[0];
-        if (firstImage && firstImage.url) {
-          imgSrc = firstImage.url;
-        }
+      const firstImage = product.images[0];
+      if (firstImage && firstImage.url) {
+        const normalized = getValidImageUrl(firstImage.url);
+        console.log("ProductCard - Using FIRST image as main:", {
+          productId: product.id,
+          productName: product.product_name,
+          imageUrl: firstImage.url.substring(0, 50) + "...",
+          source: "First-Image-Main"
+        });
+        return normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
       }
     }
 
-    // Fallback to image_url if no images in array
-    if (!imgSrc && product.image_url) {
-      imgSrc = product.image_url;
+    // Fallback to image_url
+    if (product.image_url) {
+      const normalized = getValidImageUrl(product.image_url);
+      console.log("ProductCard - Using image_url as fallback:", {
+        productId: product.id,
+        productName: product.product_name,
+        imageUrl: product.image_url.substring(0, 50) + "...",
+        source: "ImageUrl-Fallback"
+      });
+      return normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
     }
 
-    // Normalize the URL
-    const normalized = getValidImageUrl(imgSrc);
-    console.log('Main image source:', { imgSrc, normalized });
-
-    return normalized || 'https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image';
+    return "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
   })();
 
-  // Get hover image if available and different from main image
+  // Get hover image (second image in array)
   let hoverImage: string | null = null;
   if (Array.isArray(product.images) && product.images.length > 1) {
-    // Try to find a detail or featured image for hover
-    const hoverImg = product.images.find(
-      img => 'name' in img && (img.name === 'detail' || img.name === 'featured') && img.url && img.url !== mainImage
-    );
-
-    if (hoverImg && hoverImg.url) {
-      hoverImage = getValidImageUrl(hoverImg.url);
-    } else {
-      // Fallback to any other image that's not the main one
-      const otherImage = product.images.find(
-        img => img.url && img.url !== mainImage
-      );
-      if (otherImage && otherImage.url) {
-        hoverImage = getValidImageUrl(otherImage.url);
-      }
+    const secondImage = product.images[1];
+    if (secondImage && secondImage.url) {
+      hoverImage = getValidImageUrl(secondImage.url);
+      console.log("ProductCard - Using SECOND image as hover:", {
+        productId: product.id,
+        imageUrl: secondImage.url.substring(0, 50) + "...",
+        source: "Second-Image-Hover"
+      });
     }
-
-    console.log('Hover image:', hoverImage);
   }
 
   // ✅ Xử lý click thêm vào giỏ hàng
-const handleAddToCart = (e: MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
+  const handleAddToCart = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  const stock = Number(product.quantity_stock) || 0;
+    const stock = Number(product.quantity_stock) || 0;
 
-  if (stock <= 0) {
-    toast.error("Sản phẩm đã hết hàng.");
-    return;
-  }
+    if (stock <= 0) {
+      toast.error("Sản phẩm đã hết hàng.");
+      return;
+    }
 
-  // Lấy số lượng hiện tại của sản phẩm trong giỏ (nếu có)
-  const currentItem = useCartStore.getState().items.find(
-    (i) => i.id === Number(product.id)
-  );
-  const currentQty = currentItem?.quantity || 0;
+    // Lấy số lượng hiện tại của sản phẩm trong giỏ (nếu có)
+    const currentItem = useCartStore
+      .getState()
+      .items.find((i) => i.id === Number(product.id));
+    const currentQty = currentItem?.quantity || 0;
 
-  // Nếu thêm 1 mà vượt kho -> báo và dừng
-  if (currentQty + 1 > stock) {
-    toast.error(`Số lượng vượt quá tồn kho. Chỉ còn ${stock} sản phẩm.`);
-    return;
-  }
+    // Nếu thêm 1 mà vượt kho -> báo và dừng
+    if (currentQty + 1 > stock) {
+      toast.error(`Số lượng vượt quá tồn kho. Chỉ còn ${stock} sản phẩm.`);
+      return;
+    }
 
-  // Số lượng thực sự sẽ thêm (trong trường hợp còn lại ít)
-  const quantityToAdd = Math.min(1, stock - currentQty);
-  if (quantityToAdd < 1) {
-    toast.error(`Sản phẩm chỉ còn ${stock} sản phẩm trong kho.`);
-    return;
-  }
+    // Số lượng thực sự sẽ thêm (trong trường hợp còn lại ít)
+    const quantityToAdd = Math.min(1, stock - currentQty);
+    if (quantityToAdd < 1) {
+      toast.error(`Sản phẩm chỉ còn ${stock} sản phẩm trong kho.`);
+      return;
+    }
 
-  addItem({
-    id: Number(product.id),
-    product_name: product.product_name,
-    product_price: Number(product.product_price), // ép number cho an toàn
-    quantity: quantityToAdd,
-    image_url: mainImage,
-    discount: Number(product.discount) || 0,
-    slug: product.slug,
-    description: product.meta_description,
-    quantity_stock: stock,
-  });
+    addItem({
+      id: Number(product.id),
+      product_name: product.product_name,
+      product_price: Number(product.product_price), // ép number cho an toàn
+      quantity: quantityToAdd,
+      image_url: mainImage,
+      discount: Number(product.discount) || 0,
+      slug: product.slug,
+      description: product.meta_description,
+      quantity_stock: stock,
+    });
 
-  toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
-    duration: 2000,
-    position: "top-center",
-    style: {
-      background: "#4CAF50",
-      color: "#fff",
-      padding: "12px 20px",
-      borderRadius: "8px",
-      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-    },
-  });
-};
-
+    toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
+      duration: 2000,
+      position: "top-center",
+      style: {
+        background: "#4CAF50",
+        color: "#fff",
+        padding: "12px 20px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+      },
+    });
+  };
 
   const handleAddToWishlist = async (e: MouseEvent) => {
     e.preventDefault();
@@ -249,23 +251,33 @@ const handleAddToCart = (e: MouseEvent) => {
 
     try {
       if (!isWishlisted) {
-        await wishlistService.addToWishlist(Number(user.id), Number(product.id));
-        toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích`);
+        await wishlistService.addToWishlist(
+          Number(user.id),
+          Number(product.id)
+        );
+        toast.success(
+          `Đã thêm "${product.product_name}" vào danh sách yêu thích`
+        );
         setIsWishlisted(true);
       } else {
-        await wishlistService.removeFromWishlist(Number(user.id), Number(product.id));
-        toast.success(`Đã xóa "${product.product_name}" khỏi danh sách yêu thích`);
+        await wishlistService.removeFromWishlist(
+          Number(user.id),
+          Number(product.id)
+        );
+        toast.success(
+          `Đã xóa "${product.product_name}" khỏi danh sách yêu thích`
+        );
         setIsWishlisted(false);
       }
     } catch (error: unknown) {
       // Only show error if not a duplicate add
       if (!isWishlisted) {
-        const errorMessage = error instanceof Error ? error.message : "Lỗi xử lý yêu thích.";
+        const errorMessage =
+          error instanceof Error ? error.message : "Lỗi xử lý yêu thích.";
         toast.error(errorMessage);
       }
     }
   };
-
 
   return (
     <Link href={`/products/${product.slug}`} className="block group" passHref>
@@ -302,7 +314,8 @@ const handleAddToCart = (e: MouseEvent) => {
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.onerror = null;
-                target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image';
+                target.src =
+                  "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
               }}
             />
             {hoverImage && (
@@ -315,19 +328,21 @@ const handleAddToCart = (e: MouseEvent) => {
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.onerror = null;
-                  target.style.display = 'none';
+                  target.style.display = "none";
                 }}
               />
             )}
             {/* Hiển thị HẾT HÀNG nếu sản phẩm không còn hàng */}
             {Number(product.quantity_stock) <= 0 && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
-              <div className="bg-white text-red-600 font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-red-600">
-                Hết hàng
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
+                <div className="bg-white text-red-600 font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-red-600">
+                  Hết hàng
+                </div>
+                <p className="mt-2 text-xs text-white italic opacity-80">
+                  Sản phẩm sẽ sớm được cập nhật lại
+                </p>
               </div>
-              <p className="mt-2 text-xs text-white italic opacity-80">Sản phẩm sẽ sớm được cập nhật lại</p>
-            </div>
-          )}
+            )}
           </div>
 
           <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -335,13 +350,17 @@ const handleAddToCart = (e: MouseEvent) => {
             <button
               onClick={handleAddToWishlist}
               className={`p-2 rounded-full shadow hover:bg-background-50 border transition-colors duration-200
-                ${isWishlisted ? 'bg-red-500 border-red-500' : 'bg-white border-gray-300'}`}
+                ${
+                  isWishlisted
+                    ? "bg-red-500 border-red-500"
+                    : "bg-white border-gray-300"
+                }`}
               aria-label="Yêu thích"
             >
               <Heart
                 className={`w-5 h-5 transition-colors duration-200
-                  ${isWishlisted ? 'text-white fill-white' : 'text-gray-500'}`}
-                fill={isWishlisted ? '#ef4444' : 'none'}
+                  ${isWishlisted ? "text-white fill-white" : "text-gray-500"}`}
+                fill={isWishlisted ? "#ef4444" : "none"}
               />
             </button>
 
@@ -357,7 +376,12 @@ const handleAddToCart = (e: MouseEvent) => {
         </div>
 
         {/* Thông tin sản phẩm */}
-        <div className="flex flex-col flex-1 px-2 overflow-hidden mt-2 pb-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+        <div
+          className="flex flex-col flex-1 px-2 overflow-hidden mt-2 pb-2"
+          itemProp="offers"
+          itemScope
+          itemType="https://schema.org/Offer"
+        >
           <h2
             className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
             itemProp="name"
@@ -381,7 +405,8 @@ const handleAddToCart = (e: MouseEvent) => {
                 </div>
                 <div className="flex justify-between text-xs mt-1">
                   <div className="text-green-600">
-                    Tiết kiệm: {formatPrice(Number(product.product_price) - finalPrice)}
+                    Tiết kiệm:{" "}
+                    {formatPrice(Number(product.product_price) - finalPrice)}
                   </div>
                   <div className="text-gray-500">
                     Đã bán: {product.quantity_sold ?? 0}
@@ -395,12 +420,9 @@ const handleAddToCart = (e: MouseEvent) => {
                   <span className="text-gray-800 font-semibold text-base">
                     {formatPrice(product.product_price)}
                   </span>
-
                 </div>
                 <div className="flex justify-between text-xs mt-1">
-                  <div className="text-xs text-green-600">
-                    (Đã bao gồm VAT)
-                  </div>
+                  <div className="text-xs text-green-600">(Đã bao gồm VAT)</div>
                   <div className="text-gray-500">
                     Đã bán: {product.quantity_sold ?? 0}
                   </div>
@@ -409,7 +431,6 @@ const handleAddToCart = (e: MouseEvent) => {
             )}
           </div>
         </div>
-
 
         {/* Hiển thị các tag */}
         {/* {Array.isArray(product.tags) && product.tags.length > 0 && (

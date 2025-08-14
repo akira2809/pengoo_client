@@ -7,11 +7,7 @@ import { Product, ProductCategory } from '@/app/types/product';
 import { ProductPageLayout } from './component/ProductPageLayout';
 import type { TagType } from '@/app/type/product';
 
-// Type for product images
-interface ProductImage {
-  id: number;
-  url: string;
-}
+
 
 // Utility functions for type-safe property access
 const getStringProperty = (obj: Record<string, unknown>, key: string): string => {
@@ -237,7 +233,7 @@ function ProductsContent() {
       product_name: productName,
       image: productImage,
       image_url: productImage,
-      images: Array.isArray(productObj.images) ? productObj.images as unknown as ProductImage[] : [],
+      images: Array.isArray(productObj.images) ? productObj.images : [],
       category: getCategoryName(productObj.category_ID),
       category_ID: getCategoryId(productObj.category_ID),
       publisher_ID: getNumberProperty(productObj, 'publisher_ID') || 0,
@@ -319,7 +315,7 @@ function ProductsContent() {
       product_name: product.product_name || product.name || '',
       image: product.image || '',
       image_url: product.image_url || product.image || '',
-      images: Array.isArray(product.images) ? product.images : [],
+      images: product.images || [],
       category: categoryName,
       category_ID: categoryId,
       publisher_ID: Number(product.publisher_ID) || 0,
