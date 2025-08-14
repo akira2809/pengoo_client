@@ -12,7 +12,7 @@ async function fetchProducts(): Promise<ProductData[]> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pengoo-back-end.vercel.app'
     const response = await fetch(`${apiUrl}/products`, {
-      cache: 'no-store'
+      next: { revalidate: 3600 } // Cache for 1 hour
     })
     
     if (!response.ok) {
