@@ -13,7 +13,7 @@ export default function OldCollectionPage({ params }: Props) {
 }
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata() {
   return {
     title: 'Redirecting...',
     robots: {

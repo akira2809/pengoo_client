@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { productService } from "@/app/api/services/productService";
 import { ProductData } from "@/app/type/product";
 import ProductLoader from "./ProductLoader";
-import { notFound } from "next/navigation";
+
 // Define types that are used in the product data
 interface CategoryType {
   id: number;
@@ -95,7 +95,9 @@ export async function generateMetadata({
 
     if (!product) {
       console.warn(
-        `Không tìm thấy sản phẩm với slug: ${slug}. Lỗi: ${error || "Không rõ."}`
+        `Không tìm thấy sản phẩm với slug: ${slug}. Lỗi: ${
+          error || "Không rõ."
+        }`
       );
       return {
         title: "Sản phẩm không tồn tại - PENGOO",
@@ -136,9 +138,9 @@ export async function generateMetadata({
         .map((f) => f.title)
         .filter(Boolean)
         .map((f) => f.toLowerCase()),
-      ...((product.tags as unknown as string[] || [])
+      ...((product.tags as unknown as string[]) || [])
         .filter((t) => typeof t === "string" && t.trim() !== "")
-        .map((t) => t.toLowerCase())),
+        .map((t) => t.toLowerCase()),
     ]
       .filter(Boolean)
       .slice(0, 10);
@@ -250,9 +252,14 @@ export default async function ProductPage({
     console.error("Error in ProductPage:", error);
     return (
       <div className="container mx-auto p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Lỗi! </strong>
-          <span className="block sm:inline">Đã xảy ra lỗi khi tải thông tin sản phẩm.</span>
+          <span className="block sm:inline">
+            Đã xảy ra lỗi khi tải thông tin sản phẩm.
+          </span>
         </div>
       </div>
     );
