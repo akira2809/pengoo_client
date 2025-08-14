@@ -187,7 +187,7 @@ export function OrdersContent() {
                   {renderOrderItems(order)}
                 </div>
 
-                <div className="p-4 sm:p-5 flex justify-between items-center bg-gray-50">
+                <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center bg-gray-50 gap-3 sm:gap-0">
                   <div className="font-semibold text-lg text-gray-900">
                     <span>Tổng tiền: </span>
                     <span>{formatPrice(order.total_price)}</span>
