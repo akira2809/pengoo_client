@@ -273,9 +273,9 @@ export default function ModernAccountPage() {
           <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-8 py-12">
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="relative flex flex-col sm:flex-row items-center justify-between">
-              <div className="flex items-center space-x-6 mb-6 sm:mb-0">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                 {/* Avatar with glow effect */}
-                <div className="relative group">
+                <div className="relative group shrink-0">
                   <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 to-purple-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
                   <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl">
                     {formData.avatar_url ? (
@@ -320,7 +320,7 @@ export default function ModernAccountPage() {
                 </div>
 
                 <div className="text-center sm:text-left">
-                  <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                  <h1 className="text-lg sm:text-2xl font-bold text-white mb-2 drop-shadow-lg">
                     {accountData.full_name || accountData.username}
                   </h1>
                   <p className="text-indigo-100 text-lg mb-2">
@@ -435,18 +435,14 @@ export default function ModernAccountPage() {
                 </div>
 
                 {/* Email Field (Read-only) */}
-                <div className="group">
+                <div className="group w-full">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
                     <EnvelopeIcon className="w-4 h-4" />
                     <span>Email</span>
                   </label>
                   <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                    <p className="text-gray-900 font-medium">
-                      {accountData.email}
-                    </p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Email không thể thay đổi
-                    </p>
+                    <p className="text-gray-900 font-medium break-all">{accountData.email}</p>
+                    <p className="text-xs text-blue-600 mt-1">Email không thể thay đổi</p>
                   </div>
                 </div>
               </div>
@@ -487,14 +483,14 @@ export default function ModernAccountPage() {
                 </div>
 
                 {/* Static Info Cards */}
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-1  gap-4">
+                  <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                    <h3 className="text-sm font-semibold text-purple-700 mb-1">Vai trò</h3>
+                    <p className="text-purple-900 font-bold">{accountData.role}</p>
+                  </div>
                   <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
-                    <h3 className="text-sm font-semibold text-orange-700 mb-1">
-                      Tên đăng nhập
-                    </h3>
-                    <p className="text-orange-900 font-bold">
-                      @{accountData.username}
-                    </p>
+                    <h3 className="text-sm font-semibold text-orange-700 mb-1">Tên đăng nhập</h3>
+                    <p className="text-orange-900 font-bold break-all">@{accountData.username}</p>
                   </div>
                 </div>
 
