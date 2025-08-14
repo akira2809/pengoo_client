@@ -97,12 +97,11 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   colorScheme: 'light dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#1A202C' },
+  ],
 };
-
-export const themeColor = [
-  { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-  { media: '(prefers-color-scheme: dark)', color: '#1A202C' },
-];
 
 
 const No_Header_Paths = [
