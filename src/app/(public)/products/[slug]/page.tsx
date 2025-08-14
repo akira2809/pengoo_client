@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { productService } from "@/app/api/services/productService";
 import { ProductData } from "@/app/type/product";
 import ProductLoader from "./ProductLoader";
-
+import { notFound } from "next/navigation";
 // Define types that are used in the product data
 interface CategoryType {
   id: number;
@@ -150,7 +150,7 @@ export async function generateMetadata({
       openGraph: {
         title: `${productName} | Board Game Chính Hãng tại PENGOO`,
         description: productDescription,
-        url: `https://pengoo.store/product/${product.slug}`,
+        url: `https://pengoo.store/products/${product.slug}`,
         siteName: "PENGOO",
         images: [
           {
@@ -171,7 +171,7 @@ export async function generateMetadata({
         images: [productImageUrl],
       },
       alternates: {
-        canonical: `https://pengoo.store/product/${product.slug}`,
+        canonical: `https://pengoo.store/products/${product.slug}`,
       },
     };
   } catch (error) {
@@ -217,7 +217,7 @@ export default async function ProductPage({
           },
           offers: {
             "@type": "Offer",
-            url: `https://pengoo.store/product/${product.slug}`,
+            url: `https://pengoo.store/products/${product.slug}`,
             priceCurrency: "VND",
             price: product.product_price || 0,
             itemCondition: "https://schema.org/NewCondition",

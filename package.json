@@ -7,7 +7,17 @@
     "build": "next build",
     "start": "next start",
     "analyze": "cross-env ANALYZE=true next build",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sitemap:validate": "node scripts/validate-sitemap.js",
+    "sitemap:submit": "node scripts/update-sitemap.js",
+    "sitemap:all": "npm run sitemap:validate && npm run sitemap:submit",
+    "seo:check-old-urls": "node scripts/check-old-urls.js",
+    "seo:test-redirects": "node scripts/test-redirects.js",
+    "seo:monitor": "node scripts/seo-monitor.js",
+    "seo:test-api": "node scripts/test-api.js",
+    "seo:debug": "node scripts/quick-debug.js",
+    "seo:monitor-local": "node scripts/seo-monitor-local.js",
+    "seo:full-check": "npm run seo:test-api && npm run seo:monitor && npm run sitemap:all"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
