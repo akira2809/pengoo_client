@@ -8,12 +8,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 🚀 Deploy to VPS via SSH
+      - name: Deploy using SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.PASSWORD  }} # ⚠️ Góp ý: Sử dụng SSH Key thay cho Password để bảo mật
+          password: ${{ secrets.PASSWORD }}
           port: 22
           script: |
             # ➡️ Bước 1: Di chuyển đến thư mục dự án và cập nhật mã nguồn
