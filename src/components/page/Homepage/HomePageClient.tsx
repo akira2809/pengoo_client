@@ -7,6 +7,7 @@ import { productService } from '@/app/api/services/productService';
 import { ProductData } from '@/app/type/product';
 import { Skeleton } from '@/components/common/UI/Skeleton';
 import ScratchMinigamePopup from '@/components/common/scratch-minigame/ScratchMinigamePopup';
+
 // Tạo một component fallback mặc định
 const Fallback = ({ className = '' }: { className?: string }) => (
   <div className={`bg-gray-100 animate-pulse ${className}`}></div>
@@ -87,6 +88,8 @@ function HomePage() {
         const products = Array.isArray(response) ? response : response?.data;
 
         if (products && Array.isArray(products)) {
+          // Debug log for comparison
+          console.log("HomePage - Raw products:", products.slice(0, 2));
           setFeaturedProducts(products.slice(0, 8));
         } else {
           throw new Error('Invalid response format');
