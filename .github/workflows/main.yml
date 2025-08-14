@@ -7,62 +7,51 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Deploy using SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: 22
-          script: |
-            # ➡️ Bước 1: Di chuyển đến thư mục dự án và cập nhật mã nguồn
-            echo "📦 Pulling latest code..."
-            cd /root/services/pengoo_client
-            git fetch origin
-            git checkout main
-            git pull
+    - name: Deploy using SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          echo "📦 Pulling latest code..."
+          cd /root/services/pengoo_client
+          git fetch origin
+          git checkout main
+          git pull
 
-            # ➡️ Bước 2: Kiểm tra và dừng/xóa container cũ (nếu có)
-            echo "🔍 Checking for existing container..."
-            if [ "$(docker ps -q -f name=pengoo_client-container)" ]; then
-              echo "🧹 Stopping and removing old container..."
-              docker stop pengoo_client-container
-              docker rm pengoo_client-container
-              # Xóa image cũ để đảm bảo build image mới
-              docker rmi pengoo_client || true 
-            else
-              echo "Container 'pengoo_client-container' not found. Creating a new one."
-            fi
+          echo "🧹 Cleaning up old Docker stuff..."
+          docker stop pengoo_client-container || true
+          docker rm pengoo_client-container || true
+          docker rmi pengoo_client || true
 
-            # ➡️ Bước 3: Xây dựng Docker image mới
-            echo "🐳 Building new Docker image..."
-            docker build -t pengoo_client \
-              --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
-              --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
-              --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
-              --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" \
-              --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" \
-              --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
-              .
+          echo "🐳 Building Docker image..."
+          docker build -t pengoo_client \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
+            .
 
-            # ➡️ Bước 4: Chạy container mới
-            echo "🚀 Running new container..."
-            docker run -d \
-              --name pengoo_client-container \
-              -p 4000:3000 \
-              --restart always \
-              -e NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
-              -e NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
-              -e NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
-              -e NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" \
-              -e NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" \
-              -e NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
-              pengoo_client
-              
-            # ➡️ Bước 5: Dọn dẹp các tài nguyên Docker không dùng đến
-            echo "🧼 Pruning old images and containers..."
-            docker image prune -af
-            docker container prune -f
+          echo "🚀 Running new container..."
+          docker run -d \
+            --name pengoo_client-container \
+            -p 4000:3000 \
+            -e NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
+            -e NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
+            -e NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
+            -e NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" \
+            -e NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" \
+            -e NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
+            pengoo_client
 
-            echo "✅ Deployment successful!"
+          echo "🧼 Pruning..."
+          docker image prune -af
+          docker container prune -f
+
+          echo "✅ Done!"
