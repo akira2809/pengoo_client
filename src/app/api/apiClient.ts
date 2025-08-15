@@ -6,7 +6,7 @@ class ApiClient {
   private defaultHeaders: Record<string, string>;
 
   private constructor() {
-    this.baseUrl = API_CONFIG.BASE_URL;
+    this.baseUrl = API_CONFIG.BASE_URL ?? '';
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

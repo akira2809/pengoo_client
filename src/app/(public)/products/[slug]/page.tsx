@@ -95,7 +95,9 @@ export async function generateMetadata({
 
     if (!product) {
       console.warn(
-        `Không tìm thấy sản phẩm với slug: ${slug}. Lỗi: ${error || "Không rõ."}`
+        `Không tìm thấy sản phẩm với slug: ${slug}. Lỗi: ${
+          error || "Không rõ."
+        }`
       );
       return {
         title: "Sản phẩm không tồn tại - PENGOO",
@@ -136,8 +138,8 @@ export async function generateMetadata({
         .map((f) => f.title)
         .filter(Boolean)
         .map((f) => f.toLowerCase()),
-      ...(product.tags || [])
-        .filter((t): t is string => typeof t === "string" && t.trim() !== "")
+      ...((product.tags as unknown as string[]) || [])
+        .filter((t) => typeof t === "string" && t.trim() !== "")
         .map((t) => t.toLowerCase()),
     ]
       .filter(Boolean)
@@ -150,7 +152,7 @@ export async function generateMetadata({
       openGraph: {
         title: `${productName} | Board Game Chính Hãng tại PENGOO`,
         description: productDescription,
-        url: `https://pengoo.store/product/${product.slug}`,
+        url: `https://pengoo.store/products/${product.slug}`,
         siteName: "PENGOO",
         images: [
           {
@@ -171,7 +173,7 @@ export async function generateMetadata({
         images: [productImageUrl],
       },
       alternates: {
-        canonical: `https://pengoo.store/product/${product.slug}`,
+        canonical: `https://pengoo.store/products/${product.slug}`,
       },
     };
   } catch (error) {
@@ -217,7 +219,7 @@ export default async function ProductPage({
           },
           offers: {
             "@type": "Offer",
-            url: `https://pengoo.store/product/${product.slug}`,
+            url: `https://pengoo.store/products/${product.slug}`,
             priceCurrency: "VND",
             price: product.product_price || 0,
             itemCondition: "https://schema.org/NewCondition",
@@ -250,9 +252,14 @@ export default async function ProductPage({
     console.error("Error in ProductPage:", error);
     return (
       <div className="container mx-auto p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Lỗi! </strong>
-          <span className="block sm:inline">Đã xảy ra lỗi khi tải thông tin sản phẩm.</span>
+          <span className="block sm:inline">
+            Đã xảy ra lỗi khi tải thông tin sản phẩm.
+          </span>
         </div>
       </div>
     );

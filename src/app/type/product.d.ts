@@ -66,6 +66,7 @@ export interface ProductData {
   meta_title: string;
   meta_description: string;
   quantity_sold: number;
+  category: Category | number; 
   category_ID: Category | number;
   tag_ID: string | number;
   publisher_ID: Publisher | number;
@@ -77,6 +78,7 @@ export interface ProductData {
   warranty?: string;
   shipping_info?: string;
   quantity_stock?: number;
+  originalPrice: number;
   cmsContent?: CmsContent; // <-- Add this for CMS integration
 }
 

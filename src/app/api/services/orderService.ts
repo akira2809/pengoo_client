@@ -29,7 +29,11 @@ export const orderService = {
         order_id: data.id,
         order_code: data.order_code || String(data.id),
         payment_url: data.checkout_url, // This is the PayOS payment URL
-        message: 'Đơn hàng đã được tạo thành công'
+        message: 'Đơn hàng đã được tạo thành công',
+        id: data.id,
+        details: data.details || [],
+        total_price: data.total_price || orderData.total_price,
+        productStatus: data.productStatus || 'pending'
       };
     } catch (error) {
       console.error('Error creating order:', error);
@@ -37,13 +41,14 @@ export const orderService = {
     }
   },
 
-  mapCartItemsToOrderItems(cartItems: CartItem[]): OrderItemDetail[] {
+  mapCartItemsToOrderItems(cartItems: CartItem[], orderId: number = 0): OrderItemDetail[] {
     return cartItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
       price: typeof item.product_price === 'string'
         ? parseFloat(item.product_price)
-        : item.product_price
+        : item.product_price,
+      orderId: orderId
     }));
   },
 
@@ -56,6 +61,10 @@ export const orderService = {
     const isPayOS = formData.paymentMethod === 'payos';
 
     return {
+      id: 0, // or generate/set appropriate id if available
+      name: formData.name || '', // assuming name is in formData, otherwise set default
+      fee: formData.fee || 0, // assuming fee is in formData, otherwise set default
+      description: formData.description || '', // assuming description is in formData, otherwise set default
       userId: userId || null,
       delivery_id: formData.delivery_id,
       payment_type: isPayOS ? 'payos' : 'cod',
@@ -102,8 +111,10 @@ export const orderService = {
   async getUserOrders() {
     return apiClient.get<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.USER_ORDERS);
   },
+
   //hủy thanh toán
   async cancelPayment(orderCoder: number) {
     return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.CANCEL_PAYMENT(orderCoder));
+
   },
 };

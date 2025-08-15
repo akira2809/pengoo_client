@@ -3,6 +3,7 @@ import { orderService } from '@/app/api/services/orderService';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+
 import { useEffect, Suspense } from 'react';
 function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
@@ -15,9 +16,51 @@ function OrderSuccessContentInner() {
       window.gtag('event', 'purchase', {
         transaction_id: orderId,
         // Add other relevant e-commerce tracking data here
+
       });
     }
   }, [orderId]);
+
+  const handleResendInvoice = async () => {
+    if (!orderId) return;
+    setResending(true);
+    setResendStatus(null);
+    const result = await orderService.resendInvoice(orderId);
+    if (result.success) {
+      setResendStatus("Hóa đơn đã được gửi lại email của bạn.");
+    } else {
+      setResendStatus(result.error || "Không thể gửi lại hóa đơn.");
+    }
+    setResending(false);
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!orderId) return;
+    setDownloading(true);
+    try {
+      const blob = await orderService.downloadInvoice(orderId);
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${orderId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Có lỗi xảy ra khi tải hóa đơn.");
+      }
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  if (!order) return <div>Đang tải...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -31,9 +74,8 @@ function OrderSuccessContentInner() {
             Cảm ơn bạn đã đặt hàng
           </p>
           <p className="mt-2 text-gray-600">
-            Chúng tôi đã gửi email xác nhận đơn hàng đến địa chỉ email của bạn.
+            Chúng tôi đã gửi email xác nhận đơn hàng và hóa đơn đến địa chỉ email của bạn.
           </p>
-
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/"
@@ -48,6 +90,8 @@ function OrderSuccessContentInner() {
               Xem đơn hàng
             </Link>
           </div>
+
+
 
           <div className="mt-8 border-t border-gray-200 pt-8">
             <h2 className="text-lg font-medium text-gray-900">Bạn cần hỗ trợ?</h2>

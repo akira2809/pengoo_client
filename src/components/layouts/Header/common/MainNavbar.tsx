@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { IconButton } from "@mui/material";
 import UserIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import MenuIcon from "@mui/icons-material/Menu";
-import NavLinks from './NavLinks';
-import Logo from './Logo';
-import CollectionsDropdown from './CollectionsDropdown';
+import NavLinks from "./NavLinks";
+import Logo from "./Logo";
+import CollectionsDropdown from "./CollectionsDropdown";
+import UserDropdown from "./UserDropdown";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from '@/app/stores/slice/useAuthStore';
+import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 import Image from "next/image";
 
 interface MainNavbarProps {
@@ -31,7 +32,19 @@ export default function MainNavbar({
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const userIconRef = useRef<HTMLButtonElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Sample collections data
   const collections = [
@@ -39,57 +52,64 @@ export default function MainNavbar({
       id: 1,
       name: "Summer Collection",
       description: "Light & breezy styles",
-      image: "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
-      itemCount: 24
+      image:
+        "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
+      itemCount: 24,
     },
     {
       id: 2,
       name: "Winter Essentials",
       description: "Cozy & warm pieces",
-      image: "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
-      itemCount: 18
+      image:
+        "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
+      itemCount: 18,
     },
     {
       id: 3,
       name: "Business Casual",
       description: "Professional attire",
-      image: "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
-      itemCount: 32
+      image:
+        "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
+      itemCount: 32,
     },
     {
       id: 4,
       name: "Weekend Wear",
       description: "Comfortable & stylish",
-      image: "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
-      itemCount: 28
+      image:
+        "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
+      itemCount: 28,
     },
     {
       id: 5,
       name: "Evening Glam",
       description: "Special occasion pieces",
-      image: "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
-      itemCount: 15
+      image:
+        "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
+      itemCount: 15,
     },
     {
       id: 6,
       name: "Active Lifestyle",
       description: "Sportswear & activewear",
-      image: "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
-      itemCount: 21
-    }
+      image:
+        "https://www.drinkcollider.com/cdn/shop/files/collider-fc-home-shirt-2024-219393.jpg?crop=center&height=200&v=1743936608&width=200",
+      itemCount: 21,
+    },
   ];
 
   // Handle scroll event with Next.js optimization
   useEffect(() => {
     // Early return if running on server
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     let ticking = false;
 
     const updateScrollDirection = () => {
       const scrollY = window.scrollY;
 
-      if (scrollY > 50) { // Navbar becomes sticky after scrolling 50px
+      if (scrollY > 50) {
+        // Navbar becomes sticky after scrolling 50px
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -106,16 +126,25 @@ export default function MainNavbar({
     };
 
     // Add passive listener for better performance
-    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     // Set initial scroll position
     updateScrollDirection();
 
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleCollectionsToggle = () => setCollectionsOpen(!collectionsOpen);
+  const handleCollectionsToggle = () => {
+    setCollectionsOpen(!collectionsOpen);
+    setUserDropdownOpen(false); // Close user dropdown when collections opens
+  };
   const closeCollections = () => setCollectionsOpen(false);
+
+  // const handleUserDropdownToggle = () => {
+  //   setUserDropdownOpen(!userDropdownOpen);
+  //   setCollectionsOpen(false); // Close collections when user dropdown opens
+  // };
+  const closeUserDropdown = () => setUserDropdownOpen(false);
 
   return (
     <>
@@ -129,9 +158,10 @@ export default function MainNavbar({
           flex justify-between items-center 
           md:px-6 lg:px-12
           transition-all duration-300 ease-in-out
-          ${isScrolled
-            ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95'
-            : 'relative'
+          ${
+            isScrolled
+              ? "fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-background-300/95"
+              : "relative"
           }
         `}
       >
@@ -139,7 +169,9 @@ export default function MainNavbar({
         <div className="flex items-center">
           {/* Menu Icon: visible on small screens, hidden on md (tablets) and larger */}
           <button
-            className={`lg:hidden z-20 ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200`}
+            className={`lg:hidden z-20 ${
+              menuOpen ? "opacity-0 pointer-events-none" : "opacity-100"
+            } transition-opacity duration-200 mr-4`}
             onClick={onMenuToggle}
             aria-label="Toggle menu"
           >
@@ -160,7 +192,7 @@ export default function MainNavbar({
         <Logo />
 
         {/* Right Icons (Always visible) */}
-        <div className="flex items-center space-x-2 md:space-x-4 text-sm z-10">
+        <div className="ml-auto flex items-center space-x-1 md:space-x-2 text-sm z-10">
           {/* Language và USD chỉ hiển thị trên desktop/tablet lớn hơn */}
           <IconButton
             className="text-gray-700 hover:text-gray-900"
@@ -169,33 +201,71 @@ export default function MainNavbar({
           >
             <SearchIcon className="text-text-50" />
           </IconButton>
-          <IconButton
-            className="text-gray-700 hover:text-gray-900"
-            aria-label={isAuthenticated ? 'Tài khoản' : 'Đăng nhập'}
-            onClick={() => router.push(isAuthenticated ? '/account' : '/signin')}
-          >
-            {
-              isAuthenticated ?
-                (user?.avatar_url ? (
-                  <Image
-                    src={user.avatar_url}
-                    alt="Ảnh đại diện"
-                    width={32}
-                    height={32}
-                    className="w-[28px] h-[28px] object-cover rounded-full transition-transform duration-300 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="w-[32px] h-[32px] bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center rounded-full">
-                    <span className="text-1xl font-bold text-white">
-                      {user.username?.charAt(0).toUpperCase() || "U"}
-                    </span>
-                  </div>
-                ))
-                : (<UserIcon className="text-text-50" />)
+          <div className="relative">
+            {isAuthenticated ? (
+              <div
+                className="relative"
+                onMouseEnter={() => {
+                  if (hoverTimeoutRef.current) {
+                    clearTimeout(hoverTimeoutRef.current);
+                  }
+                  setUserDropdownOpen(true);
+                }}
+                onMouseLeave={() => {
+                  hoverTimeoutRef.current = setTimeout(() => {
+                    setUserDropdownOpen(false);
+                  }, 200);
+                }}
+              >
+                <IconButton
+                  ref={userIconRef}
+                  className="text-gray-700 hover:text-gray-900"
+                  aria-label="Tài khoản"
+                  onClick={() => router.push('/account')}
+                >
+                  {user?.avatar_url ? (
+                    <Image
+                      src={user.avatar_url}
+                      alt="Ảnh đại diện"
+                      width={32}
+                      height={32}
+                      className="w-[28px] h-[28px] object-cover rounded-full transition-transform duration-300 hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-[32px] h-[32px] bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center rounded-full transition-transform duration-300 hover:scale-110">
+                      <span className="text-1xl font-bold text-white">
+                        {user.username?.charAt(0).toUpperCase() || "U"}
+                      </span>
+                    </div>
+                  )}
+                </IconButton>
 
-            }
-            {/* <Image src="https://res.cloudinary.com/do6lj4onq/image/upload/v1753768911/products/file_w9dtns.webp" alt="" /> */}
-          </IconButton>
+                <UserDropdown
+                  isOpen={userDropdownOpen}
+                  onClose={closeUserDropdown}
+                  triggerRef={userIconRef}
+                  onMouseEnter={() => {
+                    if (hoverTimeoutRef.current) {
+                      clearTimeout(hoverTimeoutRef.current);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    hoverTimeoutRef.current = setTimeout(() => {
+                      setUserDropdownOpen(false);
+                    }, 200);
+                  }}
+                />
+              </div>
+            ) : (
+              <IconButton
+                className="text-gray-700 hover:text-gray-900"
+                aria-label="Đăng nhập"
+                onClick={() => router.push("/signin")}
+              >
+                <UserIcon className="text-text-50" />
+              </IconButton>
+            )}
+          </div>
           <IconButton
             className="!text-text-nav relative"
             aria-label="Shopping bag"

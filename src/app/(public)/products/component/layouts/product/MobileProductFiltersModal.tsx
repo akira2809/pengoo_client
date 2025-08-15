@@ -151,26 +151,75 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
         </div>
 
         <div className="mb-6">
-          {/* Tái sử dụng TagFilter */}
           <FilterDropdown title="Tags" initialOpen={false}>
-            <div className="space-y-2">
-              {tags?.map(tag => (
-                <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    value={String(tag.id)}
-                    checked={selectedTags.includes(String(tag.id))}
-                    onChange={onTagChange}
-                    className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
-                  />
-                  <span className="ml-2 text-base">{tag.name}</span>
-                </label>
-              ))}
+            <div className="space-y-6">
+              {/* Thể loại */}
+              {tags.some(tag => tag.type === 'genre') && (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-gray-600">Thể loại</p>
+                  {tags
+                    .filter(tag => tag.type === 'genre')
+                    .map(tag => (
+                      <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          value={String(tag.id)}
+                          checked={selectedTags.includes(String(tag.id))}
+                          onChange={onTagChange}
+                          className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
+                        />
+                        <span className="ml-2 text-base">{tag.name}</span>
+                      </label>
+                    ))}
+                </div>
+              )}
+
+              {/* Độ tuổi */}
+              {tags.some(tag => tag.type === 'age') && (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-gray-600">Độ tuổi</p>
+                  {tags
+                    .filter(tag => tag.type === 'age')
+                    .map(tag => (
+                      <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          value={String(tag.id)}
+                          checked={selectedTags.includes(String(tag.id))}
+                          onChange={onTagChange}
+                          className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
+                        />
+                        <span className="ml-2 text-base">{tag.name}</span>
+                      </label>
+                    ))}
+                </div>
+              )}
+
+              {/* Tag khác */}
+              {tags.some(tag => tag.type !== 'genre' && tag.type !== 'age') && (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-gray-600">Khác</p>
+                  {tags
+                    .filter(tag => tag.type !== 'genre' && tag.type !== 'age')
+                    .map(tag => (
+                      <label key={tag.id} className="flex items-center text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          value={String(tag.id)}
+                          checked={selectedTags.includes(String(tag.id))}
+                          onChange={onTagChange}
+                          className="form-checkbox h-4 w-4 text-text-900 rounded focus:ring-text-900"
+                        />
+                        <span className="ml-2 text-base">{tag.name}</span>
+                      </label>
+                    ))}
+                </div>
+              )}
             </div>
           </FilterDropdown>
         </div>
-        
 
+        {/* Price Range Filter */}
         <div className="mb-6">
           {/* Tái sử dụng logic của PriceRangeFilter, nhưng UI có thể khác một chút do MobileFilterModal */}
           <FilterDropdown title="Giá" initialOpen={false}>

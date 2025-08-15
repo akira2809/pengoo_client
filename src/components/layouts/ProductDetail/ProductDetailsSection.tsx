@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import PriceDisplay from './component/PriceDisplay';
@@ -6,6 +7,7 @@ import QuantitySelector from './component/QuantitySelector';
 import Button from './component/Button';
 import InfoItem from './component/InfoItem';
 import { useCartStore } from '@/app/stores/slice/cartStore';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface Tag {
@@ -29,13 +31,14 @@ interface ProductDetailsSectionProps {
   tags?: Tag[];
   category?: { id: number; name: string };
   quantity_stock: number;
+  productPrice: number; 
 }
 
 const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   productId,
   productName,
   originalPrice,
-  discount,
+  discount = 0,
   description,
   warranty,
   shippingInfo,
@@ -47,22 +50,37 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const addItem = useCartStore(state => state.addItem);
+  const cartItems = useCartStore(state => state.items);
+  const router = useRouter();
 
-  const calculatedDiscountedPrice = discount && discount > 0
-    ? originalPrice * (1 - discount / 100)
-    : originalPrice;
+
+
 
   const handleAddToCart = () => {
+    const existingItem = cartItems.find(item => item.id === Number(productId));
+    const currentQty = existingItem?.quantity || 0;
+    const totalAfterAdd = currentQty + quantity;
+
+    if (totalAfterAdd > quantity_stock) {
+      toast.error(`Chỉ còn ${quantity_stock} sản phẩm trong kho`, {
+        duration: 3000,
+        position: 'top-center',
+      });
+      return;
+    }
+
     addItem({
       id: Number(productId),
       product_name: productName,
-      product_price: calculatedDiscountedPrice,
+      product_price: originalPrice,
       quantity: quantity,
-      image_url: image_url,
-      slug: slug,
-      description: description,
-      discount: 0
+      image_url,
+      slug,
+      description,
+      discount,
+      quantity_stock
     });
+
     toast.success(`Đã thêm ${quantity} sản phẩm "${productName}" vào giỏ hàng!`, {
       duration: 3000,
       position: 'top-center',
@@ -76,22 +94,36 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
     });
   };
 
-  const handleBuyNow = () => {
-    handleAddToCart();
-    toast.success(`Đang tiến hành mua ${quantity} sản phẩm "${productName}"!`, {
+const handleBuyNow = () => {
+  const existingItem = cartItems.find(item => item.id === Number(productId));
+  const currentQty = existingItem?.quantity || 0;
+  const totalAfterAdd = currentQty + quantity;
+
+  if (totalAfterAdd > quantity_stock) {
+    toast.error(`Chỉ còn ${quantity_stock - currentQty} sản phẩm trong kho`, {
       duration: 3000,
       position: 'top-center',
-      style: {
-        background: '#4CAF50',
-        color: '#fff',
-        padding: '12px 20px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-      }
     });
-  };
+    return;
+  }
 
-  // Extract genres, age, and other tags
+  addItem({
+    id: Number(productId),
+    product_name: productName,
+    product_price: originalPrice,
+    quantity,
+    image_url,
+    slug,
+    description,
+    discount,
+    quantity_stock
+  });
+
+  router.push('/checkout');
+};
+
+
+  // Filter tags
   const genres = tags.filter(tag => tag.type === 'genre');
   const ageTags = tags.filter(tag => tag.type === 'age');
   const otherTags = tags.filter(tag => tag.type !== 'genre' && tag.type !== 'age');
@@ -113,19 +145,16 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         <span className="text-[#4B3C2D] font-medium">{productName}</span>
       </div>
 
-      {/* Product Title */}
+      {/* Title */}
       <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
         {productName}
       </h1>
-      
+
       {/* Price */}
       <div className="mb-6">
-        <PriceDisplay 
-          originalPrice={originalPrice} 
-          percentageDiscount={discount}
-        />
+        <PriceDisplay originalPrice={originalPrice} percentageDiscount={discount} />
       </div>
-      
+
       {/* Description */}
       <div className="mb-6">
         <p className="text-gray-700 leading-relaxed text-sm">
@@ -133,7 +162,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         </p>
       </div>
 
-      {/* Tags, Genres, and Age */}
+      {/* Tags */}
       {(genres.length > 0 || ageTags.length > 0 || otherTags.length > 0) ? (
         <div className="mb-6 flex flex-wrap gap-2">
           {genres.length > 0 && (
@@ -141,7 +170,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
               <span className="text-xs font-semibold text-gray-600">Thể loại:</span>
               {genres.map(tag => (
                 <span key={tag.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs whitespace-nowrap">
-                  {tag?.name || 'N/A'}
+                  {tag.name}
                 </span>
               ))}
             </div>
@@ -159,7 +188,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
               <span className="text-xs font-semibold text-gray-600">Tags:</span>
               {otherTags.map(tag => (
                 <span key={tag.id} className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs whitespace-nowrap">
-                  {tag?.name || 'N/A'}
+                  {tag.name}
                 </span>
               ))}
             </div>
@@ -170,64 +199,66 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
           Không có tags nào cho sản phẩm này.
         </div>
       )}
-      
-      {/* Quantity Selector */}
+
+      {/* Quantity */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Số lượng</span>
-          <QuantitySelector 
-            quantity={quantity} 
+          <QuantitySelector
+            quantity={quantity}
             onQuantityChange={setQuantity}
             max={quantity_stock}
             className="w-36"
           />
         </div>
       </div>
-      
-      {/* Action Buttons */}
+
+      {/* Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           className="flex-1 justify-center py-3 text-sm font-medium bg-background-900 hover:bg-background-800 text-white"
           onClick={handleAddToCart}
+          disabled={quantity_stock <= 0}
         >
-          Thêm vào giỏ hàng
+          {quantity_stock <= 0 ? "Hết hàng" : "Thêm vào giỏ hàng"}
         </Button>
-        <Button 
-          variant="secondary" 
+        <Button
+          variant="secondary"
           className="flex-1 justify-center py-3 text-sm font-medium border border-background-900 text-background-900 hover:bg-background-50"
           onClick={handleBuyNow}
+          disabled={quantity_stock <= 0}
         >
-          Mua ngay
+          {quantity_stock <= 0 ? "Hết hàng" : "Mua ngay"}
         </Button>
       </div>
-      
+
       {/* Warranty & Shipping */}
       <div className="space-y-3 mb-6">
-        <InfoItem 
+        <InfoItem
           icon={
-            <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-          } 
+          }
           text={warranty}
           className="text-sm"
         />
-        <InfoItem 
+        <InfoItem
           icon={
-            <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
             </svg>
-          } 
+          }
           text={shippingInfo}
           className="text-sm"
         />
       </div>
-      
-      {/* Guarantee */}
+
+      {/* Payment guarantee */}
       <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex items-start">
-        <svg className="w-5 h-5 text-amber-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-amber-500 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
         <div>

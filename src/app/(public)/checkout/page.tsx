@@ -1,20 +1,39 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCartStore } from '@/app/stores/slice/cartStore';
-import { useAuthStore } from '@/app/stores/slice/useAuthStore';
-import { orderService } from '@/app/api/services/orderService';
-import InputField from '../../(public)/checkout/component/InputField';
-import RadioButton from '../../(public)/checkout/component/RadioButton';
-import Image from 'next/image';
-import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
-import { useStore } from '@/app/stores/store';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/app/stores/slice/cartStore";
+import { useAuthStore } from "@/app/stores/slice/useAuthStore";
+import { orderService } from "@/app/api/services/orderService";
+import InputField from "../../(public)/checkout/component/InputField";
+import RadioButton from "../../(public)/checkout/component/RadioButton";
+import Image from "next/image";
+import {
+  showSuccessToast,
+  showErrorToast,
+} from "@/components/common/UI/toastHelper";
+import { useStore } from "@/app/stores/store";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import type { CheckoutFormData as ImportedCheckoutFormData } from "@/app/type/order";
+import type { CartItem as ImportedCartItem } from "@/app/type/order";
 
-//
+interface DeliveryMethod {
+  id: number;
+  name: string;
+  fee: number;
+  description?: string;
+}
 
+interface Voucher {
+  id?: number;
+  coupon: {
+    code: string;
+    description?: string;
+  };
+  active?: boolean;
+  discount?: number;
+}
 interface FormData {
   email: string;
   country: string;
@@ -33,22 +52,29 @@ interface FormData {
   couponCode?: string;
 }
 
+
+// Helper to map delivery_id to shippingMethod string
+const getShippingMethodString = (id: number): "localHCM" | "outsideHCM" => {
+  if (id === 1) return "localHCM";
+  return "outsideHCM";
+};
+
 const CheckoutPage: React.FC = () => {
   const myVouchers = useStore((state) => state.myVouchers);
   const fetchMyVouchers = useStore((state) => state.fetchMyVouchers);
   const applyVoucher = useStore((state) => state.applyVoucher);
-  const [showCouponList, setShowCouponList] = useState(false); // Dropdown toggle
+  const [showCouponList, setShowCouponList] = useState(false);
   const router = useRouter();
   const { items: cartItems, clearCart, getTotalItems } = useCartStore();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isCartReady, setIsCartReady] = useState(false);
-  const [listVouchers, setListVouchers] = useState([]);
+  const [delivery, setDelivery] = useState<DeliveryMethod[]>([]);
+  const [listVouchers, setListVouchers] = useState<Voucher[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
     {}
   );
-  const [delivery, setDelivery] = useState([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [shippingCost, setShippingCost] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
@@ -92,25 +118,26 @@ const CheckoutPage: React.FC = () => {
     user?.phone_number,
   ]);
 
-  // Define delivery method type
-  interface DeliveryMethod {
-    id: number;
-    name: string;
-    fee: number;
-    description?: string;
-  }
-
   // Gọi API lấy mã giảm giá và phương thức vận chuyển
   useEffect(() => {
     if (user?.id) {
       const fetchData = async () => {
         try {
-          await fetchMyVouchers(); // gọi API lấy voucher
+          await fetchMyVouchers(); // don't check for truthiness
 
           const deliveryMethod = await orderService.getDeliveryMethod();
           if (deliveryMethod?.data && Array.isArray(deliveryMethod.data)) {
-            setDelivery(deliveryMethod.data as DeliveryMethod[]);
-            setShippingCost(deliveryMethod.data[0].fee)
+            // Map to DeliveryMethod[]
+            const mappedDelivery = deliveryMethod.data.map(
+              (item, idx: number) => ({
+                id: item.id ?? idx + 1,
+                name: item.name ?? `Phương thức vận chuyển ${idx + 1}`,
+                fee: item.fee ?? 25000,
+                description: item.description ?? "",
+              })
+            );
+            setDelivery(mappedDelivery);
+            setShippingCost(mappedDelivery[0].fee);
           } else {
             console.error(
               "Invalid delivery method data format:",
@@ -146,19 +173,19 @@ const CheckoutPage: React.FC = () => {
     );
   };
 
+  // Explicitly type cartItems as ImportedCartItem[]
+  const typedCartItems: ImportedCartItem[] = cartItems as ImportedCartItem[];
+
   // Calculate subtotal
-  const subtotal = cartItems.reduce(
+  const subtotal = typedCartItems.reduce(
     (sum, item) =>
       sum +
       item.product_price * item.quantity * (1 - (item.discount || 0) / 100),
     0
   );
 
-  // Calculate shipping cost
-  // const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
-
   // Calculate total
-  const total = subtotal - shippingCost - discountAmount;
+  const total = subtotal - discountAmount + shippingCost;
 
   // Handle cart initialization
   useEffect(() => {
@@ -179,8 +206,10 @@ const CheckoutPage: React.FC = () => {
     const checkAuthAndCart = async () => {
       // Check if cart is empty using getTotalItems to ensure we have the latest count
       if (getTotalItems() === 0) {
-        showErrorToast('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
-        router.push('/');
+        showErrorToast(
+          "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ."
+        );
+        router.push("/");
         return;
       }
 
@@ -209,11 +238,10 @@ const CheckoutPage: React.FC = () => {
     authChecked,
     getTotalItems,
   ]);
-  const changeShipFee = (id: number) =>{
-    const data:{fee:number} = delivery.find(item => id === item.id)
-    console.log(data)
-    return data ? data.fee : 25000
-  }
+  const changeShipFee = (id: number) => {
+    const data = delivery.find((item) => id === item.id);
+    return data ? data.fee : 25000;
+  };
   // Show loading state while checking auth or cart
   if (isAuthLoading || !authChecked || !isCartReady) {
     return (
@@ -224,7 +252,7 @@ const CheckoutPage: React.FC = () => {
   }
 
   // Show empty cart message if no items after loading
-  if (cartItems.length === 0) {
+  if (typedCartItems.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -241,77 +269,53 @@ const CheckoutPage: React.FC = () => {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => {
-    console.log(formData);
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    if(name == "delivery_id"){
-      setShippingCost(changeShipFee(Number(value)))
+    if (name == "delivery_id") {
+      setShippingCost(changeShipFee(Number(value)));
     }
-    console.log(formData);
-    // setShippingCost()
-    setErrors((prev) => ({ ...prev, [name]: undefined })); // Clear error on change
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
-  const handleShowCouponList = async () => {
-    interface Voucher {
-      coupon: {
-        code: string;
-      };
-      active?: boolean;
-    }
 
+  const handleShowCouponList = async () => {
     const result = await Promise.all(
       myVouchers.map(async (voucher: Voucher) => {
         const data = await applyVoucher(voucher.coupon.code, subtotal);
-        return data
+        return data !== undefined && data !== null
           ? { ...voucher, active: true }
           : { ...voucher, active: false };
       })
     );
-    result.sort((a, b) => {
-      if (a.active && !b.active) return -1; // a is active, b is not
-      if (!a.active && b.active) return 1; // b is active, a is not
-      return 0; // both are either active or inactive
+    result.sort((a: Voucher, b: Voucher) => {
+      if (a.active && !b.active) return -1;
+      if (!a.active && b.active) return 1;
+      return 0;
     });
     setListVouchers(result);
-    console.log("Fetching vouchers...", result);
     setShowCouponList(true);
   };
 
   const handleApplyCoupon = async () => {
     const code = formData.couponCode?.trim();
-
     if (!code) {
-      showErrorToast('Vui lòng nhập mã giảm giá.');
+      showErrorToast("Vui lòng nhập mã giảm giá.");
       return;
     }
-    const data = await applyVoucher(code, subtotal);
-    // console.log('Coupon data:', data);
-    if (!data) {
+    const data = await applyVoucher(code, subtotal) as { discount: number; coupon: { code: string } } | null | undefined;
+    if (data === undefined || data === null) {
       showErrorToast(`Mã khuyến mãi không hợp lệ hoặc đã hết hạn.`);
       setDiscountAmount(0);
-      setIsCouponApplied(false)
+      setIsCouponApplied(false);
       return;
     } else {
       setDiscountAmount(data.discount);
       setIsCouponApplied(true);
       showSuccessToast(`Áp dụng mã khuyến mãi ${data.coupon.code} thành công!`);
     }
-    // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
-    // if (code === 'SAVE10') {
-    //   const discount = subtotal * 0.1;
-    //   setDiscountAmount(discount);
-    //   setIsCouponApplied(true);
-    //   toast.success('Áp dụng mã giảm giá thành công!');
-    // } else {
-    //   setDiscountAmount(0);
-    //   setIsCouponApplied(false);
-    //   toast.error('Mã giảm giá không hợp lệ.');
-    // }
   };
 
   const validateForm = () => {
@@ -333,51 +337,36 @@ const CheckoutPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Validate cart has items
-    if (cartItems.length === 0) {
-      showErrorToast('Giỏ hàng của bạn đang trống.');
+    if (typedCartItems.length === 0) {
+      showErrorToast("Giỏ hàng của bạn đang trống.");
       return;
     }
-
-    // Validate form
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-
     try {
-      // Prepare order data using the service helper
-      const orderData = orderService.prepareOrderData(
-        {
-          ...formData,
-          total,
-          couponCode: formData.couponCode || "", // ✅ Gửi mã
-        },
-        cartItems,
+      const orderData: ImportedCheckoutFormData = {
+        ...formData,
+        total,
+        shippingMethod: getShippingMethodString(Number(formData.delivery_id)),
+        name: "",
+        fee: 0,
+        description: ""
+      };
+      const preparedOrder = orderService.prepareOrderData(
+        orderData,
+        typedCartItems,
         user?.id ? parseInt(user.id.toString(), 10) : undefined
       );
-
-      console.log("Submitting order:", orderData);
-
-      // Create order
-      const response = await orderService.createOrder(orderData);
-      console.log("Order created:", response);
-
-      // Handle payment URL redirection if exists
+      const response = await orderService.createOrder(preparedOrder);
       if (response.payment_url) {
-        console.log("Redirecting to payment URL:", response.payment_url);
-        // Redirect to PayOS payment page
         window.location.href = response.payment_url;
         return;
       }
-
-      // If no payment URL (e.g., COD), clear cart and redirect to success page
       clearCart();
       router.push(`/order/success?order_id=${response.order_id}`);
     } catch (error) {
-      console.error("Error creating order:", error);
       toast.error(
         error instanceof Error ? error.message : "Có lỗi xảy ra khi đặt hàng"
       );
@@ -613,7 +602,7 @@ const CheckoutPage: React.FC = () => {
                 // icon={<CashIcon />}
                 /> */}
                 {Array.isArray(delivery) && delivery.length > 0 ? (
-                  delivery.map((item: unknown) => (
+                  delivery.map((item: DeliveryMethod) => (
                     <RadioButton
                       key={item.id}
                       id={`delivery-${item.id}`}
@@ -627,7 +616,7 @@ const CheckoutPage: React.FC = () => {
                     />
                   ))
                 ) : (
-                  // Fallback options if no delivery methods are available
+                  // fallback...
                   <>
                     <RadioButton
                       id="localHCM"
@@ -756,18 +745,16 @@ const CheckoutPage: React.FC = () => {
               <div className="px-4 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">
                   <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-200 text-sm font-bold mr-2">
-                    {cartItems.length}
+                    {typedCartItems.length}
                   </span>
                 </h3>
               </div>
               <div className="p-4">
-                {cartItems.map((item) => (
+                {typedCartItems.map((item: ImportedCartItem) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between text-sm text-gray-700 mb-2 last:mb-0"
                   >
-                    {" "}
-                    {/* Added mb-2 and last:mb-0 for spacing */}
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 relative overflow-hidden rounded-md border border-gray-200">
                         <Image
@@ -789,7 +776,7 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <span className="text-gray-900">
                       {formatCurrency(
-                        item.product_price *
+                        (item.price ?? item.product_price) *
                           item.quantity *
                           (1 - (item.discount || 0) / 100)
                       )}
@@ -797,15 +784,13 @@ const CheckoutPage: React.FC = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Mã giảm giá */}
               <div className="px-4 py-4 border-t border-gray-200 relative">
                 <input
                   type="text"
                   placeholder="Mã giảm giá"
                   value={formData.couponCode}
                   onFocus={() => handleShowCouponList()}
-                  onBlur={() => setTimeout(() => setShowCouponList(false), 150)} // delay để chọn được
+                  onBlur={() => setTimeout(() => setShowCouponList(false), 150)}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -816,7 +801,7 @@ const CheckoutPage: React.FC = () => {
                 />
                 {showCouponList && listVouchers.length > 0 && (
                   <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
-                    {listVouchers.map((uc) => (
+                    {listVouchers.map((uc: Voucher) => (
                       <li
                         key={uc.id}
                         onClick={() => {
@@ -850,8 +835,6 @@ const CheckoutPage: React.FC = () => {
                   Áp dụng
                 </button>
               </div>
-
-              {/* Tổng kết */}
               <div className="px-4 py-4 border-t border-gray-200 text-sm">
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Tổng phụ</span>
@@ -866,14 +849,12 @@ const CheckoutPage: React.FC = () => {
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Vận chuyển</span>
                   <span>
-                    -{" "}
                     {shippingCost === 0
                       ? "Miễn phí"
                       : formatCurrency(shippingCost)}
                   </span>
                 </div>
               </div>
-
               <div className="px-4 py-4 border-t border-gray-200 flex justify-between items-center">
                 <span className="font-bold text-base text-gray-900">Tổng</span>
                 <span className="text-xl font-bold text-brown-700">
