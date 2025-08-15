@@ -14,7 +14,10 @@ interface GetProductsParams {
 export const productService = {
   // Get all products
   async getProducts(params?: GetProductsParams) {
-    return apiClient.get<ProductData[]>(API_CONFIG.ENDPOINTS.PRODUCTS.BASE, params);
+    return apiClient.get<ProductData[]>(
+      API_CONFIG.ENDPOINTS.PRODUCTS.BASE,
+      params as Record<string, string | number | boolean | (string | number | boolean)[] | undefined>
+    );
   },
 
   // Get a single product by ID (includes cmsContent)

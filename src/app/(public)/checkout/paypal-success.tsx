@@ -6,8 +6,8 @@ import { toast } from "react-hot-toast";
 const PaypalSuccessPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const paypalOrderId = searchParams.get("token");
-  const orderId = searchParams.get("orderId");
+  const paypalOrderId = searchParams ? searchParams.get("token") : null;
+  const orderId = searchParams ? searchParams.get("orderId") : null;
   const [status, setStatus] = useState("Đang xác nhận thanh toán PayPal...");
   const [loading, setLoading] = useState(true);
 
