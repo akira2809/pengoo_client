@@ -26,7 +26,7 @@ const PromotionContent: React.FC = () => {
         </li>
       </ul>
       <Image 
-        src="/images/promotion-banner.jpg" 
+        src="/BannerSPD.avif" 
         alt="Khuyến mãi Pengoo" 
         width={800}
         height={400}

@@ -46,7 +46,7 @@ export default function SignatureBanner() {
   return (
     <div className="relative w-full h-auto">
       <Image
-        src="/sig_coll_desk.png"
+        src="/Banner1.webp"
         alt="BST Signature"
         width={1920}
         height={768}
