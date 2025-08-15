@@ -1,14 +1,15 @@
 'use client';
+import { orderService } from '@/app/api/services/orderService';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
-
 function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id');
-
+  const orderCode = searchParams.get('orderCode') || searchParams.get('code');
   useEffect(() => {
+    orderService.successPayment(Number(orderCode))
     // Track successful order conversion
     if (orderId && window.gtag) {
       window.gtag('event', 'purchase', {
@@ -32,7 +33,7 @@ function OrderSuccessContentInner() {
           <p className="mt-2 text-gray-600">
             Chúng tôi đã gửi email xác nhận đơn hàng đến địa chỉ email của bạn.
           </p>
-          
+
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/"
@@ -47,7 +48,7 @@ function OrderSuccessContentInner() {
               Xem đơn hàng
             </Link>
           </div>
-          
+
           <div className="mt-8 border-t border-gray-200 pt-8">
             <h2 className="text-lg font-medium text-gray-900">Bạn cần hỗ trợ?</h2>
             <p className="mt-2 text-gray-600">

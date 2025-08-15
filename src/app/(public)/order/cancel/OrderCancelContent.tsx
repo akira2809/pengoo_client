@@ -1,4 +1,5 @@
 'use client';
+import { orderService } from '@/app/api/services/orderService';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -10,28 +11,33 @@ declare global {
     gtag?: (event: string, eventName: string, params: Record<string, unknown>) => void;
   }
 }
-
 export default function OrderCancelContent() {
   const searchParams = useSearchParams();
   // Get all relevant parameters from the URL
-  const orderCode = searchParams.get('orderCode') || searchParams.get('code');
+  const orderCode = searchParams.get('orderCode');
+  const code = searchParams.get('code');
   const transactionId = searchParams.get('id');
   const status = searchParams.get('status');
   const isCancelled = searchParams.get('cancel') === 'true';
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState<string>('');
 
   useEffect(() => {
     const handleOrderCancellation = async () => {
-      if (!orderCode) {
-        setIsLoading(false);
-        setError('Mã đơn hàng không hợp lệ');
-        return;
-      }
+      // if (!orderCode) {
+      //   setIsLoading(false);
+      //   setError('Mã đơn hàng không hợp lệ');
+      //   return;
+      // }
 
       try {
+        const res = await orderService.cancelPayment(Number(orderCode));
+        // if (!res.success) {
+        //   throw new Error('Không thể cập nhật trạng thái đơn hàng');
+        // }
+
         // Determine cancellation reason based on status
         let reason = 'Đơn hàng đã bị hủy';
         if (status === 'CANCELLED') {
@@ -46,7 +52,7 @@ export default function OrderCancelContent() {
         // Track order cancellation in analytics
         if (typeof window !== 'undefined' && window.gtag) {
           window.gtag('event', 'order_cancelled', {
-            transaction_id: orderCode,
+            transaction_id: code,
             transaction_status: status || 'cancelled',
             transaction_cancelled: isCancelled,
             payment_gateway: 'payos',
@@ -74,7 +80,7 @@ export default function OrderCancelContent() {
           <h1 className="mt-4 text-2xl font-bold text-gray-900">
             {isLoading ? 'Đang xử lý...' : cancellationReason || 'Đơn hàng đã bị hủy'}
           </h1>
-          
+
           {isLoading ? (
             <div className="mt-4 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>

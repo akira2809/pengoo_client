@@ -1,3 +1,5 @@
+import { CANCELLED } from "dns";
+
 // Base API configuration
 export const API_CONFIG = {
   // Base URL for all API requests
@@ -34,6 +36,8 @@ export const API_CONFIG = {
       PAYOS_SUCCESS: '/orders/payos/order-success',
       PAYOS_CANCEL: '/orders/payos/order-cancel',
       DELIVERY: '/orders/delivery',
+      CANCEL_PAYMENT: (orderCoder: number) => `/orders/payos/order-cancel?orderCode=${orderCoder}`,
+      SUCCESS_PAYMENT: (orderCoder: number) => `/orders/payos/order-success?orderCode=${orderCoder}`,
     },
 
     // User endpoints

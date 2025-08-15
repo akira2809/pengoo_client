@@ -102,4 +102,8 @@ export const orderService = {
   async getUserOrders() {
     return apiClient.get<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.USER_ORDERS);
   },
+  //hủy thanh toán
+  async cancelPayment(orderCoder: number) {
+    return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.CANCEL_PAYMENT(orderCoder));
+  },
 };
