@@ -25,6 +25,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   showOutOfStock,
   categories,
 }) => {
+  console.log("ProductGrid - Products:", products);
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {products.length > 0 ? (
@@ -58,9 +59,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                 <span className="font-medium text-right">
                   {selectedCategories.length > 0
                     ? categories
-                        .filter((cat) => selectedCategories.includes(cat.id))
-                        .map((cat) => cat.name)
-                        .join(", ")
+                      .filter((cat) => selectedCategories.includes(cat.id))
+                      .map((cat) => cat.name)
+                      .join(", ")
                     : "Tất cả"}
                 </span>
               </li>

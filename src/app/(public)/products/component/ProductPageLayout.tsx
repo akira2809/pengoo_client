@@ -43,9 +43,9 @@ interface ProductPageLayoutProps {
     productCount: number;
   }>;
   tags: Array<{
-    id: string; 
+    id: string;
     name: string;
-    type: string; 
+    type: string;
   }>;
 }
 
@@ -99,19 +99,19 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   //     e.preventDefault();
   //     e.stopPropagation();
   //     const categoryId = e.target.value;
-  
+
   //     setSelectedCategories((prev) => {
   //       const newSelectedCategories = prev.includes(categoryId)
   //         ? prev.filter((id) => id !== categoryId)
   //         : [...prev, categoryId];
   //       return newSelectedCategories;
   //     });
-  
+
   //     // Move setFilters outside of setSelectedCategories
   //     const newSelectedCategories = selectedCategories.includes(categoryId)
   //       ? selectedCategories.filter((id) => id !== categoryId)
   //       : [...selectedCategories, categoryId];
-      
+
   //     setFilters((prevFilters) => ({
   //       ...prevFilters,
   //       category: newSelectedCategories.length > 0 ? newSelectedCategories[0] : "",
@@ -122,28 +122,28 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
 
   //e.preventDefault() và e.stopPropagation() chặn event xử lí checked
   const handleCategoryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-  const categoryId = e.target.value;
-  setSelectedCategories((prev) =>
-    prev.includes(categoryId)
-      ? prev.filter((id) => id !== categoryId)
-      : [...prev, categoryId]
-  );
- 
-  setFilters((prev) => ({ ...prev, category: categoryId}));
-}, [setFilters]);
+    const categoryId = e.target.value;
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+
+    setFilters((prev) => ({ ...prev, category: categoryId }));
+  }, [setFilters]);
 
 
-const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-  const tagId = e.target.value;
-  setSelectedTags((prev) =>
-    prev.includes(tagId)
-      ? prev.filter((id) => id !== tagId)
-      : [...prev, tagId]
-  );
+  const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const tagId = e.target.value;
+    setSelectedTags((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
 
-  // ❌ Không cần setFilters nếu lọc client-side
-  // setFilters((prev) => ({ ...prev, tags: tagId }));
-}, []);
+    // ❌ Không cần setFilters nếu lọc client-side
+    // setFilters((prev) => ({ ...prev, tags: tagId }));
+  }, []);
 
 
 
@@ -250,7 +250,7 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
 
   // --- Effects for Sorting ---
 
-  
+
   useEffect(() => {
     const sorted = [...products];
     switch (sortSelected.value) {
@@ -286,7 +286,7 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
   // Remove the problematic useEffect and move its logic into the filteredAndSortedProducts useMemo
   const filteredAndSortedProducts = useMemo(() => {
     let currentProducts = [...sortedProducts];
-
+    // console.log("Filtered and Sorted Products:", currentProducts);
     // Filter by category
     if (selectedCategories.length > 0) {
       currentProducts = currentProducts.filter((product) => {
@@ -301,11 +301,14 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
     // Filter by tags
     if (selectedTags.length > 0) {
       currentProducts = currentProducts.filter((product) => {
-        const productTagIds = product.tags?.map((tag) => String(tag.id)) || [];
-        return selectedTags.some((tagId) => productTagIds.includes(tagId));
+        const productTagIds = product.tags?.map((tag) => Number(tag.id)) || [];
+        console.log("Selected productTagIds:", product.tags);
+
+        return selectedTags.some((tagId) => productTagIds.includes(Number(tagId)));
       });
     }
 
+    console.log("Filtered Products:", currentProducts);
 
     // Filter out of stock if needed
     if (!showOutOfStock) {
@@ -320,14 +323,13 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
       const price = Number(product.product_price) || 0;
       return price >= priceRange.min && price <= priceRange.max;
     });
-
     return currentProducts;
   }, [sortedProducts, showOutOfStock, selectedCategories, selectedTags, priceRange]);
 
   // Add this new useEffect to handle page reset when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategories,priceRange, showOutOfStock, sortSelected, selectedTags]);
+  }, [selectedCategories, priceRange, showOutOfStock, sortSelected, selectedTags]);
 
   // --- Loading and Error States ---
   if (isLoading) {
@@ -360,7 +362,6 @@ const handleTagChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
       </div>
     );
   }
-
   // --- Render ProductPageLayout ---
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12 bg-white">

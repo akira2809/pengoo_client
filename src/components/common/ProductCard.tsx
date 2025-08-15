@@ -138,12 +138,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       );
       if (mainImgObj && mainImgObj.url) {
         const normalized = getValidImageUrl(mainImgObj.url);
-        console.log("ProductCard - Using MAIN image by name:", {
-          productId: product.id,
-          productName: product.product_name,
-          imageUrl: mainImgObj.url.substring(0, 50) + "...",
-          source: "Main-Name",
-        });
+        // console.log("ProductCard - Using MAIN image by name:", {
+        //   productId: product.id,
+        //   productName: product.product_name,
+        //   imageUrl: mainImgObj.url.substring(0, 50) + "...",
+        //   source: "Main-Name",
+        // });
         return (
           normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
         );
@@ -197,11 +197,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     );
     if (hoverImgObj && hoverImgObj.url) {
       hoverImage = getValidImageUrl(hoverImgObj.url);
-      console.log("ProductCard - Using hover image:", {
-        productId: product.id,
-        imageUrl: hoverImgObj.url.substring(0, 50) + "...",
-        source: "Hover-Image",
-      });
+      // console.log("ProductCard - Using hover image:", {
+      //   productId: product.id,
+      //   imageUrl: hoverImgObj.url.substring(0, 50) + "...",
+      //   source: "Hover-Image",
+      // });
     }
   }
 
@@ -372,10 +372,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <button
               onClick={handleAddToWishlist}
               className={`p-2 rounded-full shadow hover:bg-background-50 border transition-colors duration-200
-                ${
-                  isWishlisted
-                    ? "bg-red-500 border-red-500"
-                    : "bg-white border-gray-300"
+                ${isWishlisted
+                  ? "bg-red-500 border-red-500"
+                  : "bg-white border-gray-300"
                 }`}
               aria-label="Yêu thích"
             >

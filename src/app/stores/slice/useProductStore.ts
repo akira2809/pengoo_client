@@ -51,36 +51,36 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
   const productPrice = item.product_price || 0;
   const discount = item.discount || 0;
   const imageUrl = item.image_url || '';
-  
-  const categoryId = typeof item.category_ID === 'object' 
-    ? String(item.category_ID.id) 
+
+  const categoryId = typeof item.category_ID === 'object'
+    ? String(item.category_ID.id)
     : String(item.category_ID || '');
-    
+
   const publisherID = typeof item.publisher_ID === 'object'
     ? item.publisher_ID.id
     : Number(item.publisher_ID || 0);
-    
+
   // Convert images to the correct format
   const productImages = Array.isArray(item.images)
     ? item.images.map((img, index) => {
-        // Accept both string and object
-        if (typeof img === 'string') {
-          return {
-            id: index + 1,
-            url: img,
-            name: index === 0 ? 'main' : '', // Mark first image as main
-            ord: undefined
-          };
-        }
+      // Accept both string and object
+      if (typeof img === 'string') {
         return {
-          id: img.id ?? index + 1,
-          url: img.url ?? '',
-          name: typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
-          ord: undefined // Always set ord to undefined for compatibility
+          id: index + 1,
+          url: img,
+          name: index === 0 ? 'main' : '', // Mark first image as main
+          ord: undefined
         };
-      })
+      }
+      return {
+        id: img.id ?? index + 1,
+        url: img.url ?? '',
+        name: typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
+        ord: undefined // Always set ord to undefined for compatibility
+      };
+    })
     : [];
-    
+
   // If no images but we have an image_url, use that as the main image
   if (productImages.length === 0 && item.image_url) {
     productImages.push({
@@ -109,13 +109,13 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
     publisher_ID: publisherID,
     tags: Array.isArray(item.tags) ? item.tags : [],
     images: productImages,
-    features: Array.isArray(item.features) 
+    features: Array.isArray(item.features)
       ? item.features.map(f => ({
-          id: f.id || 0,
-          title: f.title || '',
-          content: f.content || '',
-          image: f.image || ''
-        }))
+        id: f.id || 0,
+        title: f.title || '',
+        content: f.content || '',
+        image: f.image || ''
+      }))
       : [],
     created_at: item.created_at || new Date().toISOString(),
     updated_at: item.updated_at || new Date().toISOString(),
@@ -123,15 +123,15 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
     warranty: 'warranty' in item ? String(item.warranty || '') : '',
     shipping_info: 'shipping_info' in item ? String(item.shipping_info || '') : ''
   };
-  
+
   console.log('Mapped product data:', productData); // Debug log
   return productData;
 };
 
 // Helper function to handle errors
 const handleError = (
-  error: unknown, 
-  defaultMessage: string, 
+  error: unknown,
+  defaultMessage: string,
   set: (state: Partial<ProductState> | ((state: ProductState) => Partial<ProductState>)) => void
 ): void => {
   const errorMessage = error instanceof Error ? error.message : defaultMessage;
@@ -162,31 +162,29 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       const apiProducts: ApiProduct[] = response.data.map(item => ({
         ...item,
         // Ensure images is an array of {id, url, name, ord} objects
-        images: Array.isArray(item.images) 
+        images: Array.isArray(item.images)
           ? item.images.map((img, index) => ({
-              id: typeof img === 'object' ? img.id : index + 1,
-              url: typeof img === 'object' ? img.url : String(img),
-              name: typeof img === 'object' && 'name' in img ? img.name : (index === 0 ? 'main' : ''),
-              ord: undefined
-            }))
+            id: typeof img === 'object' ? img.id : index + 1,
+            url: typeof img === 'object' ? img.url : String(img),
+            name: typeof img === 'object' && 'name' in img ? img.name : (index === 0 ? 'main' : ''),
+            ord: undefined
+          }))
           : [],
         // Ensure features is an array of feature objects
         features: Array.isArray(item.features)
           ? item.features.map(f => ({
-              id: f.id || 0,
-              title: f.title || '',
-              content: f.content || '',
-              image: f.image || ''
-            }))
+            id: f.id || 0,
+            title: f.title || '',
+            content: f.content || '',
+            image: f.image || ''
+          }))
           : [],
         // Ensure tags is always an array of strings
-        tags: Array.isArray(item.tags)
-          ? item.tags.map(tag => typeof tag === 'string' ? tag : String(tag))
-          : []
+        tags: Array.isArray(item.tags) ? item.tags : []
       }));
 
       const products = apiProducts.map(mapApiProductToProduct);
-      
+
       // Update products in the store
       set(state => ({
         // Merge with existing products, avoiding duplicates
@@ -211,7 +209,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
     }
 
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await productService.getProductsByCategory(categoryId);
       console.log('Category Products Response:', response);
@@ -222,7 +220,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
 
       // The response.data should be an array of products
       const productsData = Array.isArray(response.data) ? response.data : [];
-      
+
       // Define interfaces for the API response
       interface ApiImage {
         id?: number | string;
@@ -246,20 +244,20 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
 
       // Map the response data to match the ApiProduct interface
       const apiProducts: ApiProduct[] = productsData.map((item: ApiProductResponse) => {
-        const images = Array.isArray(item.images) 
+        const images = Array.isArray(item.images)
           ? item.images.map((img, index) => ({
-              id: typeof img === 'object' && img !== null && 'id' in img ? Number(img.id) : index + 1,
-              url: typeof img === 'object' && img !== null && 'url' in img ? String(img.url) : String(img)
-            }))
+            id: typeof img === 'object' && img !== null && 'id' in img ? Number(img.id) : index + 1,
+            url: typeof img === 'object' && img !== null && 'url' in img ? String(img.url) : String(img)
+          }))
           : [];
 
         const features = Array.isArray(item.features)
           ? item.features.map((f) => ({
-              id: f.id ? Number(f.id) : 0,
-              title: f.title || '',
-              content: f.content || '',
-              image: f.image || ''
-            }))
+            id: f.id ? Number(f.id) : 0,
+            title: f.title || '',
+            content: f.content || '',
+            image: f.image || ''
+          }))
           : [];
 
         return {
@@ -270,7 +268,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       });
 
       const products = apiProducts.map(mapApiProductToProduct);
-      
+
       // Update products in the store
       set({
         products,
@@ -281,7 +279,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       handleError(error, 'Failed to fetch products by category', set);
     }
   },
-  
+
   // Add missing comma if this is the last method in the object
 
   fetchProductById: async (id: string): Promise<Product | null> => {
@@ -303,22 +301,22 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       const apiProduct: ApiProduct = {
         ...response.data,
         // Ensure images is an array of {id, url} objects
-        images: Array.isArray(response.data.images) 
+        images: Array.isArray(response.data.images)
           ? response.data.images.map((img, index) => ({
-              id: typeof img === 'object' ? img.id : index + 1,
-              url: typeof img === 'object' ? img.url : String(img),
-              name: typeof img === 'object' && 'name' in img && typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
-              ord: undefined
-            }))
+            id: typeof img === 'object' ? img.id : index + 1,
+            url: typeof img === 'object' ? img.url : String(img),
+            name: typeof img === 'object' && 'name' in img && typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
+            ord: undefined
+          }))
           : [],
         // Ensure features is an array of feature objects
         features: Array.isArray(response.data.features)
           ? response.data.features.map(f => ({
-              id: f.id || 0,
-              title: f.title || '',
-              content: f.content || '',
-              image: f.image || ''
-            }))
+            id: f.id || 0,
+            title: f.title || '',
+            content: f.content || '',
+            image: f.image || ''
+          }))
           : [],
         // Ensure tags is always an array of strings
         tags: Array.isArray(response.data.tags)
@@ -364,7 +362,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
     // If not found, fetch from API
     set({ isLoading: true, error: null });
 
-    
+
     try {
       const response = await productService.getProductBySlug(slug);
       if (!response?.data) return null;
@@ -373,11 +371,11 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
         ...response.data,
         images: Array.isArray(response.data.images)
           ? response.data.images.map((img, index) => ({
-              id: typeof img === 'object' ? img.id : index + 1,
-              url: typeof img === 'object' ? img.url : String(img),
-              name: typeof img === 'object' && 'name' in img && typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
-              ord: undefined
-            }))
+            id: typeof img === 'object' ? img.id : index + 1,
+            url: typeof img === 'object' ? img.url : String(img),
+            name: typeof img === 'object' && 'name' in img && typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
+            ord: undefined
+          }))
           : [],
         tags: Array.isArray(response.data.tags)
           ? response.data.tags.map(tag => typeof tag === 'string' ? tag : String(tag))
@@ -415,7 +413,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       // Ensure response.data is an array before mapping
       const searchData = Array.isArray(response.data) ? response.data : [response.data];
       const searchResults = searchData.map(item => mapApiProductToProduct(item as ApiProduct));
-      
+
       set(state => ({
         products: [...state.products, ...searchResults.filter(newProduct =>
           !state.products.some(existing => existing.id === newProduct.id)
@@ -423,7 +421,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
         isLoading: false,
         error: null
       }));
-      
+
       return searchResults;
     } catch (error) {
       handleError(error, 'Failed to search products', set);
@@ -436,11 +434,11 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
     try {
       const response = await productService.getProductsByCategory(categoryId);
       if (!response?.data) return [];
-      
+
       // Ensure response.data is an array before mapping
       const categoryData = Array.isArray(response.data) ? response.data : [response.data];
       const categorizedProducts = categoryData.map(item => mapApiProductToProduct(item as ApiProduct));
-      
+
       set(state => ({
         products: [...state.products, ...categorizedProducts.filter(newProduct =>
           !state.products.some(existing => existing.id === newProduct.id)
@@ -448,7 +446,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
         isLoading: false,
         error: null
       }));
-      
+
       return categorizedProducts;
     } catch (error) {
       handleError(error, 'Failed to fetch products by category', set);
@@ -459,11 +457,11 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
   // Add any other store methods here
   getFeaturedProducts: async (limit: number = 4): Promise<void> => {
     set({ isLoading: true, error: null });
-    
+
     try {
       // First try to get featured products from the API
       const response = await productService.getFeaturedProducts(limit);
-      
+
       if (response?.data) {
         // Define interfaces for the response data
         interface ImageData {
@@ -484,23 +482,23 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
         };
 
         // Handle both array and object responses
-        const responseData = (Array.isArray(response.data) 
-          ? response.data 
+        const responseData = (Array.isArray(response.data)
+          ? response.data
           : [response.data]) as ProductResponse[];
-        
+
         if (responseData.length > 0) {
           // Map the response data to match the ApiProduct interface
           const apiProducts = responseData.map((item) => {
             const product: Partial<ApiProduct> = { ...item };
-            
+
             // Ensure images is an array of {id, url} objects
             if (Array.isArray(item.images)) {
               product.images = item.images.map((img, index) => {
                 if (typeof img === 'string') {
-                  return { 
-                    id: index + 1, 
-                    url: img, 
-                    name: index === 0 ? 'main' : '', 
+                  return {
+                    id: index + 1,
+                    url: img,
+                    name: index === 0 ? 'main' : '',
                     ord: undefined
                   };
                 }
@@ -514,7 +512,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
             } else {
               product.images = [];
             }
-            
+
             // Ensure features is an array of feature objects
             if (Array.isArray(item.features)) {
               product.features = item.features.map((f) => ({
@@ -526,19 +524,19 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
             } else {
               product.features = [];
             }
-            
+
             return product as ApiProduct;
           });
-          
+
           const products = apiProducts.map(mapApiProductToProduct);
-          set({ 
+          set({
             featuredProducts: products,
-            isLoading: false 
+            isLoading: false
           });
           return;
         }
       }
-      
+
       // Fallback: Get the first N products if no featured products are available
       const state = (set as unknown as { getState: () => ProductState }).getState?.();
       if (state?.fetchProducts) {
@@ -552,7 +550,7 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
           return;
         }
       }
-      
+
       // If all else fails, set empty featured products
       set({
         featuredProducts: [],
