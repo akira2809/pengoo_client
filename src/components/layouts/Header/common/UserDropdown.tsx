@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 import { apiClient } from "@/app/api/apiClient";
+import { toast } from "react-hot-toast";
 import Image from "next/image";
 import PersonIcon from "@mui/icons-material/Person";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
@@ -113,6 +114,7 @@ export default function UserDropdown({
   const handleLogout = () => {
     logout();
     onClose();
+    toast.success("Đăng xuất thành công!");
     router.push("/");
   };
 
