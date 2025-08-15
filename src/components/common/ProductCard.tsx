@@ -116,7 +116,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (!url || typeof url !== "string" || url.trim() === "") {
       return null;
     }
-    // If it's already a full URL or starts with /, return as is
     if (
       url.startsWith("http") ||
       url.startsWith("/") ||
@@ -124,61 +123,84 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ) {
       return url;
     }
-    // Otherwise, assume it's a relative path
-    return `/${url.replace(/^\//, "")}`; // Ensure single leading slash
+    return `/${url.replace(/^\//, "")}`;
   };
 
-  // Debug product data
-  console.log("ProductCard - Product data:", {
-    id: product.id,
-    name: product.product_name,
-    images: product.images,
-    image_url: product.image_url,
-    source: "ProductCard"
-  });
-
-  // Simplified approach: Always use first image as main, second image as hover
+  // --- NEW LOGIC: Use image with name "main" as main image, fallback to first image, then image_url ---
   const mainImage = (() => {
-    // Try to get first image from images array
     if (Array.isArray(product.images) && product.images.length > 0) {
+      // Find image with name "main" (case-insensitive)
+      const mainImgObj = product.images.find(
+        (img) =>
+          img.name &&
+          img.name.trim().toLowerCase() === "main" &&
+          img.url
+      );
+      if (mainImgObj && mainImgObj.url) {
+        const normalized = getValidImageUrl(mainImgObj.url);
+        console.log("ProductCard - Using MAIN image by name:", {
+          productId: product.id,
+          productName: product.product_name,
+          imageUrl: mainImgObj.url.substring(0, 50) + "...",
+          source: "Main-Name",
+        });
+        return (
+          normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+        );
+      }
+      // Fallback: use first image in array
       const firstImage = product.images[0];
       if (firstImage && firstImage.url) {
         const normalized = getValidImageUrl(firstImage.url);
-        console.log("ProductCard - Using FIRST image as main:", {
+        console.log("ProductCard - Using FIRST image as fallback:", {
           productId: product.id,
           productName: product.product_name,
           imageUrl: firstImage.url.substring(0, 50) + "...",
-          source: "First-Image-Main"
+          source: "First-Image-Fallback",
         });
-        return normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
+        return (
+          normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+        );
       }
     }
-
-    // Fallback to image_url
+    // Fallback: use image_url field
     if (product.image_url) {
       const normalized = getValidImageUrl(product.image_url);
       console.log("ProductCard - Using image_url as fallback:", {
         productId: product.id,
         productName: product.product_name,
         imageUrl: product.image_url.substring(0, 50) + "...",
-        source: "ImageUrl-Fallback"
+        source: "ImageUrl-Fallback",
       });
-      return normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
+      return (
+        normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+      );
     }
-
     return "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
   })();
 
-  // Get hover image (second image in array)
+  // --- NEW LOGIC: Hover image is first image that is NOT the main image ---
   let hoverImage: string | null = null;
   if (Array.isArray(product.images) && product.images.length > 1) {
-    const secondImage = product.images[1];
-    if (secondImage && secondImage.url) {
-      hoverImage = getValidImageUrl(secondImage.url);
-      console.log("ProductCard - Using SECOND image as hover:", {
+    // Find main image index
+    const mainImgIndex = product.images.findIndex(
+      (img) =>
+        img.name &&
+        img.name.trim().toLowerCase() === "main" &&
+        img.url
+    );
+    // If no "main" image, use first image as main
+    const usedMainIndex = mainImgIndex !== -1 ? mainImgIndex : 0;
+    // Find first image that is not the main image
+    const hoverImgObj = product.images.find(
+      (img, idx) => idx !== usedMainIndex && img.url
+    );
+    if (hoverImgObj && hoverImgObj.url) {
+      hoverImage = getValidImageUrl(hoverImgObj.url);
+      console.log("ProductCard - Using hover image:", {
         productId: product.id,
-        imageUrl: secondImage.url.substring(0, 50) + "...",
-        source: "Second-Image-Hover"
+        imageUrl: hoverImgObj.url.substring(0, 50) + "...",
+        source: "Hover-Image",
       });
     }
   }

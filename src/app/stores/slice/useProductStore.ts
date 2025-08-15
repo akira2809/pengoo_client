@@ -30,6 +30,8 @@ interface ApiProduct {
   publisher_ID: Publisher | number;
   tags: string[];
   images: Array<{
+    name: unknown;
+    ord: undefined;
     id: number;
     url: string;
   }>;
@@ -59,21 +61,22 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
     : Number(item.publisher_ID || 0);
     
   // Convert images to the correct format
-  const productImages = Array.isArray(item.images) 
+  const productImages = Array.isArray(item.images)
     ? item.images.map((img, index) => {
+        // Accept both string and object
         if (typeof img === 'string') {
           return {
             id: index + 1,
             url: img,
-            name: index === 0 ? 'main' : '',
-            ord: index
+            name: index === 0 ? 'main' : '', // Mark first image as main
+            ord: undefined
           };
         }
         return {
-          id: img.id || index + 1,
-          url: img.url || '',
-          name: 'name' in img ? String(img.name) : (index === 0 ? 'main' : ''),
-          ord: 'ord' in img ? Number(img.ord) : index
+          id: img.id ?? index + 1,
+          url: img.url ?? '',
+          name: typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
+          ord: undefined // Always set ord to undefined for compatibility
         };
       })
     : [];
@@ -84,7 +87,7 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
       id: 1,
       url: item.image_url,
       name: 'main',
-      ord: 0
+      ord: undefined
     });
   }
 
@@ -158,11 +161,13 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
       // Map the response data to match the ApiProduct interface
       const apiProducts: ApiProduct[] = response.data.map(item => ({
         ...item,
-        // Ensure images is an array of {id, url} objects
+        // Ensure images is an array of {id, url, name, ord} objects
         images: Array.isArray(item.images) 
           ? item.images.map((img, index) => ({
               id: typeof img === 'object' ? img.id : index + 1,
-              url: typeof img === 'object' ? img.url : String(img)
+              url: typeof img === 'object' ? img.url : String(img),
+              name: typeof img === 'object' && 'name' in img ? img.name : (index === 0 ? 'main' : ''),
+              ord: undefined
             }))
           : [],
         // Ensure features is an array of feature objects
@@ -301,7 +306,9 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
         images: Array.isArray(response.data.images) 
           ? response.data.images.map((img, index) => ({
               id: typeof img === 'object' ? img.id : index + 1,
-              url: typeof img === 'object' ? img.url : String(img)
+              url: typeof img === 'object' ? img.url : String(img),
+              name: typeof img === 'object' && 'name' in img && typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
+              ord: undefined
             }))
           : [],
         // Ensure features is an array of feature objects
@@ -364,6 +371,14 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
 
       const product = mapApiProductToProduct({
         ...response.data,
+        images: Array.isArray(response.data.images)
+          ? response.data.images.map((img, index) => ({
+              id: typeof img === 'object' ? img.id : index + 1,
+              url: typeof img === 'object' ? img.url : String(img),
+              name: typeof img === 'object' && 'name' in img && typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
+              ord: undefined
+            }))
+          : [],
         tags: Array.isArray(response.data.tags)
           ? response.data.tags.map(tag => typeof tag === 'string' ? tag : String(tag))
           : []
@@ -482,11 +497,18 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
             if (Array.isArray(item.images)) {
               product.images = item.images.map((img, index) => {
                 if (typeof img === 'string') {
-                  return { id: index + 1, url: img };
+                  return { 
+                    id: index + 1, 
+                    url: img, 
+                    name: index === 0 ? 'main' : '', 
+                    ord: undefined
+                  };
                 }
                 return {
-                  id: img.id || index + 1,
-                  url: img.url || ''
+                  id: img.id ?? index + 1,
+                  url: img.url ?? '',
+                  name: typeof img.name === 'string' ? img.name : (index === 0 ? 'main' : ''),
+                  ord: undefined
                 };
               });
             } else {

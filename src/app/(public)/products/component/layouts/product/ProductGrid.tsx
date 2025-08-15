@@ -29,20 +29,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {products.length > 0 ? (
         products.map((product) => {
-          // Debug log - raw product data
-          console.log("ProductGrid - Raw product data:", {
-            id: product.id,
-            name: product.product_name,
-            images: product.images,
-            image_url: product.image_url,
-            source: "ProductGrid-Raw",
-          });
-
-          return (
-            <div key={product.id} className="w-full group">
-              <ProductCard product={product} />
-            </div>
-          );
+          console.log("ProductGrid - Product images:", product.images);
+          return <ProductCard product={product} key={product.id} />;
         })
       ) : (
         <div className="col-span-full text-center space-y-4 py-12 px-4">

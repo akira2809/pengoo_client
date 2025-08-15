@@ -105,7 +105,7 @@ function ProductsContent() {
   >([]);
 
   const searchParams = useSearchParams();
-  const sort = searchParams.get("sort");
+  const sort = searchParams?.get("sort") || ""; // Use optional chaining and fallback
   const [isLoadingCollections, setIsLoadingCollections] = useState(true);
   const [collectionsError, setCollectionsError] = useState<string | null>(null);
 

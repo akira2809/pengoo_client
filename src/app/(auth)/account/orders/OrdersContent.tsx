@@ -17,9 +17,9 @@ export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
   };
   details?: OrderItemDetail[];
   order_date?: string;
-  order_code?: string;
+  order_code: string; // Fix: remove optional, must be string
   total_price: number;
-  productStatus?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   [key: string]: unknown;
 }
 
@@ -106,28 +106,48 @@ export function OrdersContent() {
     if (!order.details || order.details.length === 0) {
       return <p className="py-4 text-center text-gray-500">Không có thông tin sản phẩm.</p>;
     }
-    return order.details.map((item, index) => (
-      <div key={`${item.productId}-${index}`} className="flex items-center space-x-4 py-3">
-        {/* Cải tiến: Hiển thị hình ảnh sản phẩm thật */}
-        <Image
-          src={item.product?.images?.[0]?.url || 'https://via.placeholder.com/150'}
-          alt={item.product?.product_name || 'Sản phẩm'}
-          width={80}
-          height={80}
-          className="h-20 w-20 rounded-md object-cover bg-gray-100"
-        />
-        <div className="flex-1">
-          {/* Cải tiến: Hiển thị tên sản phẩm */}
-          <h4 className="font-semibold text-gray-800">
-            {item.product?.product_name || `Mã sản phẩm: ${item.productId}`}
-          </h4>
-          <p className="text-sm text-gray-500">Số lượng: {item.quantity ?? 0}</p>
+    return order.details.map((item, index) => {
+      // Fix: item.productId is a number, not a product object
+      // You need to get product info from item (if available) or fallback to placeholder
+      // If your backend includes product info in item.product, use that; otherwise, fallback
+
+      type ProductInfo = {
+        product_name?: string;
+        images?: { url: string; name?: string }[];
+      };
+
+      const product: ProductInfo = (item as { product?: ProductInfo }).product || {};
+      const productName = product.product_name || `Mã sản phẩm: ${item.productId}`;
+      const productImages = product.images || [];
+      // Find main image if available
+      let imageUrl = "https://via.placeholder.com/150";
+      if (Array.isArray(productImages) && productImages.length > 0) {
+        const mainImgObj = productImages.find(
+          (img) => img.name && img.name.trim().toLowerCase() === "main"
+        );
+        imageUrl = mainImgObj?.url || productImages[0].url || imageUrl;
+      }
+      return (
+        <div key={`${item.productId}-${index}`} className="flex items-center space-x-4 py-3">
+          <Image
+            src={imageUrl}
+            alt={productName}
+            width={80}
+            height={80}
+            className="h-20 w-20 rounded-md object-cover bg-gray-100"
+          />
+          <div className="flex-1">
+            <h4 className="font-semibold text-gray-800">
+              {productName}
+            </h4>
+            <p className="text-sm text-gray-500">Số lượng: {item.quantity ?? 0}</p>
+          </div>
+          <div className="text-right">
+            <p className="font-medium text-gray-800">{formatPrice(item.price)}</p>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="font-medium text-gray-800">{formatPrice(item.price)}</p>
-        </div>
-      </div>
-    ));
+      );
+    });
   };
 
   const paginatedOrders = orders.slice(
