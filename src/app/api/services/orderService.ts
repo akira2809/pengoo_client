@@ -115,6 +115,8 @@ export const orderService = {
   //hủy thanh toán
   async cancelPayment(orderCoder: number) {
     return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.CANCEL_PAYMENT(orderCoder));
-
+  },
+  async successPayment(orderCoder: number) {
+    return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.SUCCESS_PAYMENT(orderCoder));
   },
 };
