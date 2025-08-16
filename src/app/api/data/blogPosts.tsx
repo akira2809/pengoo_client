@@ -1,4 +1,5 @@
 import Image from 'next/image'; // Cần import Image nếu bạn dùng nó trong content
+import { JSX } from 'react';
 
 // Định nghĩa kiểu dữ liệu cho một bài viết blog
 export interface BlogPost {
@@ -17,12 +18,12 @@ export const ALL_BLOG_POSTS: BlogPost[] = [
   {
     id: 'memento-mori-tu-goc-nhin-nghe-si',
     title: "Memento Mori - Từ Góc Nhìn Của Một Nghệ Sĩ",
-    excerpt: "Thời gian qua, Maztermind vừa ra mắt bộ bài Memento Mori với thiết kế vô cùng ấn tượng. Khác với các sản phẩm bài Tây đã từng được ra mắt như The historic playing cards và Immortalitas - The agen...",
+    excerpt: "Thời gian qua, Pengoo vừa ra mắt bộ bài Memento Mori với thiết kế vô cùng ấn tượng. Khác với các sản phẩm bài Tây đã từng được ra mắt như The historic playing cards và Immortalitas - The agen...",
     date: "24 Thg 1, 2022",
     link: "/blogs/memento-mori-tu-goc-nhin-nghe-si",
     content: [
       `Đây là nội dung chi tiết của bài viết "Memento Mori". Bạn có thể thêm nhiều đoạn văn bản, hình ảnh, danh sách, v.v. vào đây.`,
-      `Maztermind vừa ra mắt bộ bài Memento Mori với thiết kế vô cùng ấn tượng. Khác với các sản phẩm bài Tây đã từng được ra mắt như The historic playing cards và Immortalitas - The agent of the apocalypse, Memento Mori mang nét hiện đại nhưng vẫn giữ được những giá trị cốt lõi của thương hiệu.`,
+      `Pengoo vừa ra mắt bộ bài Memento Mori với thiết kế vô cùng ấn tượng. Khác với các sản phẩm bài Tây đã từng được ra mắt như The historic playing cards và Immortalitas - The agent of the apocalypse, Memento Mori mang nét hiện đại nhưng vẫn giữ được những giá trị cốt lõi của thương hiệu.`,
       `Bộ bài này được thiết kế dựa trên triết lý "Memento Mori" - một lời nhắc nhở về sự hữu hạn của cuộc sống, khuyến khích chúng ta sống trọn vẹn từng khoảnh khắc.`,
       <p key="p-memento-1" className="mb-4">
         Các chi tiết thiết kế:
@@ -57,28 +58,28 @@ export const ALL_BLOG_POSTS: BlogPost[] = [
   {
     id: 'uu-dai-tet-nham-dan-2022',
     title: "Ưu Đãi Tết Nhâm Dần 2022",
-    excerpt: "Nhân dịp chào đón Tết 2022, Maztermind hi vọng với những ưu đãi hấp dẫn sau: Tặng 1 bộ Bầu cua cho mỗi đơn hàng trên 6.000.000đ (số lượng có hạn) giảm giá đến 30% cho bộ sản phẩm Bầu Cua Xiêm P...",
+    excerpt: "Nhân dịp chào đón Tết 2022, Pengoo hi vọng với những ưu đãi hấp dẫn sau: Tặng 1 bộ Bầu cua cho mỗi đơn hàng trên 6.000.000đ (số lượng có hạn) giảm giá đến 30% cho bộ sản phẩm Bầu Cua Xiêm P...",
     date: "10 Thg 1, 2022",
     link: "/blog/uu-dai-tet-nham-dan-2022",
     content: [
-      `Chào đón Tết Nhâm Dần 2022, Maztermind mang đến những ưu đãi đặc biệt để tri ân khách hàng thân yêu.`,
+      `Chào đón Tết Nhâm Dần 2022, Pengoo mang đến những ưu đãi đặc biệt để tri ân khách hàng thân yêu.`,
       `Các ưu đãi bao gồm:`,
       <ul key="ul-uu-dai-1" className="list-disc pl-5 mb-4 space-y-2">
         <li>Tặng 1 bộ Bầu cua cho mỗi đơn hàng trên 6.000.000đ (số lượng có hạn).</li>
         <li>Giảm giá đến 30% cho bộ sản phẩm Bầu Cua Xiêm Phiên Bản Đặc Biệt.</li>
         <li>Miễn phí vận chuyển cho tất cả các đơn hàng.</li>
       </ul>,
-      `Hãy nhanh tay sở hữu những sản phẩm chất lượng cao của Maztermind và tận hưởng mùa Tết ấm áp bên gia đình.`
+      `Hãy nhanh tay sở hữu những sản phẩm chất lượng cao của Pengoo và tận hưởng mùa Tết ấm áp bên gia đình.`
     ]
   },
   {
     id: 'christmas-promotion',
     title: "Christmas Promotion",
-    excerpt: "Maztermind tặng bạn món quà Giáng Sinh với những ưu đãi đặc biệt như sau: Giảm giá đến 15% toàn bộ các sản phẩm Miễn phí giao hàng và gửi quà cho mọi đơn hàng Tặng Combo ví da passport và tag hành...",
+    excerpt: "Pengoo tặng bạn món quà Giáng Sinh với những ưu đãi đặc biệt như sau: Giảm giá đến 15% toàn bộ các sản phẩm Miễn phí giao hàng và gửi quà cho mọi đơn hàng Tặng Combo ví da passport và tag hành...",
     date: "9 Thg 12, 2021",
     link: "/blog/christmas-promotion",
     content: [
-      `Giáng Sinh này, Maztermind mang đến cho bạn những món quà ý nghĩa và ưu đãi hấp dẫn.`,
+      `Giáng Sinh này, Pengoo mang đến cho bạn những món quà ý nghĩa và ưu đãi hấp dẫn.`,
       `Các ưu đãi Giáng Sinh:`,
       <ul key="ul-xmas-1" className="list-disc pl-5 mb-4 space-y-2">
         <li>Giảm giá đến 15% toàn bộ các sản phẩm.</li>
@@ -164,11 +165,11 @@ export const ALL_BLOG_POSTS: BlogPost[] = [
   {
     id: 'co-ca-ngua-thanh-troy-nghe-thuat-thu-cong',
     title: "Cờ Cá Ngựa Thành Troy - Bậc Thang Nghệ Thuật In Đậm Dấu Ấn Thủ Công",
-    excerpt: "Khác với bản truyền thống thông thường, bộ cờ cá ngựa thành Troy của Maztermind là một tác phẩm đúc kết của quá trình tìm kiếm sự mới mẻ, khát khao làm ra vật phẩm mang đậm tính nghệ thuật. Để t...",
+    excerpt: "Khác với bản truyền thống thông thường, bộ cờ cá ngựa thành Troy của Pengoo là một tác phẩm đúc kết của quá trình tìm kiếm sự mới mẻ, khát khao làm ra vật phẩm mang đậm tính nghệ thuật. Để t...",
     date: "27 Thg 9, 2021",
     link: "/blog/co-ca-ngua-thanh-troy-nghe-thuat-thu-cong",
     content: [
-      `Bộ cờ cá ngựa Thành Troy của Maztermind không chỉ là một trò chơi giải trí, mà còn là một tác phẩm nghệ thuật thủ công tinh xảo.`,
+      `Bộ cờ cá ngựa Thành Troy của Pengoo không chỉ là một trò chơi giải trí, mà còn là một tác phẩm nghệ thuật thủ công tinh xảo.`,
       `Điểm nổi bật:`,
       <ul key="ul-ngua-1" className="list-disc pl-5 mb-4 space-y-2">
         <li>Thiết kế độc đáo, lấy cảm hứng từ sử thi Thành Troy.</li>
@@ -204,7 +205,7 @@ export const ALL_BLOG_POSTS: BlogPost[] = [
     date: "12 Thg 1, 2024",
     link: "/blog/kham-pha-niem-vui-tet-voi-bo-bau-cua-y-giao",
     content: [
-        `Bộ Bầu Cua Ý Giao của Maztermind mang đến một làn gió mới cho trò chơi truyền thống này vào dịp Tết Nguyên Đán.`,
+        `Bộ Bầu Cua Ý Giao của Pengoo mang đến một làn gió mới cho trò chơi truyền thống này vào dịp Tết Nguyên Đán.`,
         `Điểm đặc biệt:`,
         <ul key="ul-bc-yg-1" className="list-disc pl-5 mb-4 space-y-2">
             <li>Thiết kế sang trọng, tinh tế.</li>

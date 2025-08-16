@@ -13,7 +13,7 @@ const Commitmentage = () => {
         altText="Miễn phí vận chuyển"
         title="Miễn phí vận chuyển cho đơn hàng trên 1 triệu"
         description={`Với mong muốn mang đến trải nghiệm tốt nhất, Pengoo cung cấp ưu đãi miễn phí vận chuyển dành cho quý khách đặt hàng tại website với hóa đơn bất kỳ trên 1,000,000 VND. Ưu đãi sẽ được tự động áp dụng trong quá trình thanh toán, khách hàng chỉ cần an tâm mua sắm trên website và tiến hành đặt hàng theo hướng dẫn.\n
-                    Mọi thắc mắc xin liên hệ về hotline 012345678 hoặc email Info@Pengoo.vn. Đọc thêm chi tiết về chính sách vận chuyển của Pengoo tại đây.`}
+                    Mọi thắc mắc xin liên hệ về hotline 012345678 hoặc email Info@Pengoo.store. Đọc thêm chi tiết về chính sách vận chuyển của Pengoo tại đây.`}
         />
 
         <CommitmentCard
@@ -37,7 +37,7 @@ const Commitmentage = () => {
         imageUrl="/handcrafted.png"
         altText="Sản phẩm thủ công"
         title="Bảo hành từ 6- 12 tháng, cam kết đổi trả với sản phẩm bị lỗi"
-        description={`Nhằm cung cấp dịch vụ làm hài lòng khách hàng, Pengoo rất sẵn sàng được lắng nghe ý kiến phản hồi của bạn. Chính sách bảo hành của chúng tôi yêu cầu sản phẩm có đầy đủ logo và bao bì đóng gói mang thương hiệu Pengoo, có hóa đơn thanh toán (đối với khách tại cửa hàng) hoặc email xác nhận mua hàng/thanh toán thành công (đối với khách tại website). Về quy trình đổi trả, nếu khiếu nại của bạn thoả mãn điều kiện, xin vui lòng liên hệ về email info@Pengoo.vn để chúng tôi tiến hành đổi trả trong vòng 7 ngày làm việc.\n
+        description={`Nhằm cung cấp dịch vụ làm hài lòng khách hàng, Pengoo rất sẵn sàng được lắng nghe ý kiến phản hồi của bạn. Chính sách bảo hành của chúng tôi yêu cầu sản phẩm có đầy đủ logo và bao bì đóng gói mang thương hiệu Pengoo, có hóa đơn thanh toán (đối với khách tại cửa hàng) hoặc email xác nhận mua hàng/thanh toán thành công (đối với khách tại website). Về quy trình đổi trả, nếu khiếu nại của bạn thoả mãn điều kiện, xin vui lòng liên hệ về email info@Pengoo.store để chúng tôi tiến hành đổi trả trong vòng 7 ngày làm việc.\n
                     Chi tiết về chính sách bảo hành của Pengoo tại đây.`}
         imageOnRight
         />

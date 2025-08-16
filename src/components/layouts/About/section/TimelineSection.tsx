@@ -250,7 +250,7 @@ const TimelineSection: React.FC<TimelineSectionProps> = ({ timelineData }) => {
                     alt={item.altText}
                     fill
                     className="object-cover absolute inset-0 transition-opacity duration-500 ease-in-out"
-                    ref={(el) => imageRefs.current[index] = el}
+                    ref={(el) => { imageRefs.current[index] = el; }}
                     priority={index === 0} // Ưu tiên load ảnh đầu tiên
                   />
                 ))}
@@ -263,7 +263,7 @@ const TimelineSection: React.FC<TimelineSectionProps> = ({ timelineData }) => {
                 <div 
                   key={item.id} 
                   className="relative px-6 md:px-12"
-                  ref={(el) => contentRefs.current[index] = el}
+                  ref={(el) => { contentRefs.current[index] = el; }}
                 >
                   <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-100">
                     <h3 className="text-2xl font-semibold text-blue-600 mb-2">{item.year}</h3>

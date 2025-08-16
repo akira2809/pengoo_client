@@ -21,13 +21,13 @@ const ShippingContent: React.FC = () => {
       </ul>
 
       <p className="italic text-sm text-gray-600">
-        *Lưu ý: Mức giá trên áp dụng cho các kênh mua hàng online khác của Maztermind.
+        *Lưu ý: Mức giá trên áp dụng cho các kênh mua hàng online khác của Pengoo.
       </p>
 
       <h2 className="text-3xl font-bold mt-8 mb-4">Thời gian vận chuyển</h2>
       <ul className="list-disc pl-6 space-y-2">
         <li>
-          <strong>Nội thành TP.HCM:</strong> 2–3 ngày làm việc sau khi Maztermind xác nhận đơn hàng.
+          <strong>Nội thành TP.HCM:</strong> 2–3 ngày làm việc sau khi Pengoo xác nhận đơn hàng.
         </li>
         <li>
           <strong>Ngoại thành TP.HCM:</strong> 5–7 ngày làm việc. Thời gian có thể thay đổi tùy địa chỉ cụ thể.
@@ -37,7 +37,7 @@ const ShippingContent: React.FC = () => {
       <h3 className="text-3xl font-semibold mt-6 mb-2">Trường hợp giao hàng chậm trễ</h3>
       <ul className="list-disc pl-6 space-y-2">
         <li>
-          Nếu lý do chậm trễ do Maztermind, khách hàng sẽ được <strong>miễn phí vận chuyển</strong>.
+          Nếu lý do chậm trễ do Pengoo, khách hàng sẽ được <strong>miễn phí vận chuyển</strong>.
         </li>
         <li>
           Những trường hợp như: không liên lạc được, cung cấp thiếu thông tin, khách từ chối nhận hàng — 
