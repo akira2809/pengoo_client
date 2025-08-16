@@ -6,26 +6,26 @@ import { motion } from "framer-motion";
 const hotspots = [
   {
     id: 1,
-    title: "Hộp gỗ đựng Mahjong",
-    description: "Sản phẩm thủ công cao cấp, đựng bộ bài Mahjong sang trọng.",
-    style: { top: "40%", left: "15%" },
+    title: "Xạ thủ Siêu xịn",
+    description: "Sản phẩm thủ công cao cấp,sang trọng.",
+    style: { top: "40%", right:"29%" },
   },
   {
     id: 2,
-    title: "Bộ Poker gỗ",
-    description: "Poker set cao cấp với chips màu và vỏ hộp gỗ sồi bóng.",
+    title: "Khủng long ngầu lòi",
+    description: "Sản phẩm tạo nên chất riêng.",
     style: { top: "35%", left: "35%" },
   },
   {
     id: 3,
-    title: "Cờ vua gỗ",
-    description: "Bộ cờ vua truyền thống được chế tác từ gỗ óc chó.",
+    title: "Thợ săn mang chất tự tin",
+    description: "Nhựa cao cấp sanh sạch an toàn.",
     style: { top: "70%", left: "75%" },
   },
   {
     id: 4,
-    title: "Cờ vây cổ điển",
-    description: "Mặt bàn gỗ + quân cờ đen trắng đặc trưng của Nhật Bản.",
+    title: "Thống đốc quyết tâm đánh bại quái thú",
+    description: "Mặt bàn gỗ + quân cờ xịn  đặc trưng của Monster hunter.",
     style: { top: "65%", left: "30%" },
   },
 ];

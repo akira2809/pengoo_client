@@ -316,9 +316,9 @@ export default function SignInPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome Back
+              Chào mừng trở lại
             </h1>
-            <p className="text-gray-600">Please sign in to your account</p>
+            <p className="text-gray-600">Vui lòng đăng nhập vào tài khoản của bạn</p>
           </div>
 
           {/* Legacy MFA logic (commented) */}
