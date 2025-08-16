@@ -1,4 +1,3 @@
-import { CANCELLED } from "dns";
 
 // Base API configuration
 export const API_CONFIG = {
@@ -30,7 +29,8 @@ export const API_CONFIG = {
     // Order endpoints
     ORDERS: {
       BASE: '/orders',
-      BY_ID: (id: string) => `/orders/${id}`,
+      BY_ID: (id: number) => `/orders/${id}`,
+      BY_ORDER_CODE: (order_code: number) => `/orders/order-code/${order_code}`,
       USER_ORDERS: '/orders/user',
       UPDATE_STATUS: (id: number) => `/orders/${id}/status`,
       PAYOS_SUCCESS: '/orders/payos/order-success',

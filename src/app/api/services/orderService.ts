@@ -78,7 +78,7 @@ export const orderService = {
   },
 
   // Xóa đơn hàng
-  async deleteOrder(id: string) {
+  async deleteOrder(id: number) {
     return apiClient.delete<CartItem[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
   },
   // Lấy tất cả đơn hàng
@@ -87,8 +87,11 @@ export const orderService = {
   },
 
   //Lấy đơn hàng theo ID
-  async getOrderById(id: string) {
+  async getOrderById(id: number) {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
+  },
+  async getOrderByOrderCode(orderCode: number) {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ORDER_CODE(orderCode));
   },
 
   // Huỷ đơn hàng
@@ -102,7 +105,34 @@ export const orderService = {
       throw error;
     }
   },
-
+  async resendInvoice(orderId: number | string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/resend-invoice`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      return data;
+    } catch {
+      return { success: false, error: "Có lỗi xảy ra khi gửi lại hóa đơn" };
+    }
+  },
+  // Tải hóa đơn (download)
+  async downloadInvoice(orderId: number | string): Promise<Blob | null> {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/resend-invoice`, {
+        method: "GET",
+      });
+      if (res.status === 403) {
+        throw new Error("Hóa đơn chỉ có thể tải sau khi thanh toán COD được xác nhận.");
+      }
+      if (!res.ok) {
+        throw new Error("Không tìm thấy hóa đơn.");
+      }
+      return await res.blob();
+    } catch (error) {
+      throw error;
+    }
+  },
   async getDeliveryMethod() {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
   },
