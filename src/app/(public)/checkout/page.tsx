@@ -153,7 +153,7 @@ const CheckoutPage: React.FC = () => {
             ]);
           }
         } catch (error) {
-          // console.error("Error fetching data:", error);
+          console.error("Error fetching data:", error);
           // Set default delivery methods if API fails
           setDelivery([
             { id: 1, name: "Nội thành TP Hồ Chí Minh", fee: 25000 },
@@ -185,18 +185,7 @@ const CheckoutPage: React.FC = () => {
   const typedCartItems: ImportedCartItem[] = cartItems as ImportedCartItem[];
 
   // Debug cart items
-  useEffect(() => {
-    // console.log("Cart items:", typedCartItems);
-    typedCartItems.forEach((item, index) => {
-      // console.log(`Item ${index}:`, {
-      //   name: item.product_name,
-      //   price: item.price,
-      //   product_price: item.product_price,
-      //   quantity: item.quantity,
-      //   discount: item.discount,
-      // });
-    });
-  }, [typedCartItems]);
+
 
   // Calculate subtotal
   const subtotal = typedCartItems.reduce((sum, item) => {
@@ -750,7 +739,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.paymentMethod === "cod"}
                   onChange={handleInputChange}
                   label="Thanh toán khi nhận hàng (COD)"
-                  // icon={<CashIcon />}
+                // icon={<CashIcon />}
                 />
               </div>
 
@@ -783,9 +772,8 @@ const CheckoutPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
-                  isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
               >
                 {isSubmitting ? "Đang xử lý..." : `Thanh toán ngay`}
               </button>
@@ -831,8 +819,8 @@ const CheckoutPage: React.FC = () => {
                     <span className="text-gray-900">
                       {formatCurrency(
                         (item.price ?? item.product_price) *
-                          item.quantity *
-                          (1 - (item.discount || 0) / 100)
+                        item.quantity *
+                        (1 - (item.discount || 0) / 100)
                       )}
                     </span>
                   </div>
@@ -866,10 +854,9 @@ const CheckoutPage: React.FC = () => {
                           setShowCouponList(false);
                         }}
                         className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
-                          ${
-                            uc.active
-                              ? "bg-green-50 hover:bg-green-100 text-green-800"
-                              : "bg-red-50 hover:bg-red-100 text-red-700"
+                          ${uc.active
+                            ? "bg-green-50 hover:bg-green-100 text-green-800"
+                            : "bg-red-50 hover:bg-red-100 text-red-700"
                           }
                         `}
                       >

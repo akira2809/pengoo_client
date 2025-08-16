@@ -12,21 +12,27 @@ type Order = {
 import { useEffect, Suspense, useState } from 'react';
 function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get('order_id')
+  // const orderId = searchParams.get('order_id')
   const [order, setOrder] = useState<Order | null>(null);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [orderId, setOrderId] = useState(0);
 
   const orderCode = searchParams.get('orderCode')
   useEffect(() => {
-    if (orderId) {
-      orderService.successPayment(Number(orderCode))
-      orderService.getOrderByOrderCode(Number(orderCode)).then(res => {
+    if (orderCode) {
+      orderService.successPayment(Number(orderCode)).then(res => {
         setOrder(res.data as unknown as Order);
+        setOrderId(res.data.id as number);
+        console.log("Order data:", res.data);
         setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
       })
+      // orderService.getOrderByOrderCode(Number(orderCode)).then(res => {
+      //   setOrder(res.data as unknown as Order);
+      //   setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
+      // })
       // Track successful order conversion
       if (orderId && window.gtag) {
         window.gtag('event', 'purchase', {
