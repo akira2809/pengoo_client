@@ -160,7 +160,7 @@ const ContactPage: React.FC = () => {
       />
       <Layout>
         <ContactSection
-          imageUrl="/about.webp"
+          imageUrl="/BannerZK.webp"
           altText="Showroom"
           title="Showroom"
           description={`<strong>Địa chỉ:</strong> 6/10 Cách Mạng Tháng 8, P.Bến Thành, Q1, TP.HCM\n
@@ -169,7 +169,7 @@ const ContactPage: React.FC = () => {
         />
 
         <ContactSection
-          imageUrl="/about.webp"
+          imageUrl="/BannerMHWHunters.webp"
           altText="Gói quà miễn phí"
           title="Gói quà miễn phí"
           description={`Tận tay chọn món quà đầy tinh tế và sang trọng tại showroom để bạn gửi gắm tình cảm và sự quan tâm đến ai đó một cách trọn vẹn nhất.`}
@@ -177,7 +177,7 @@ const ContactPage: React.FC = () => {
         />
 
         <ContactSection
-          imageUrl="/about.webp"
+          imageUrl="/BannerDX.webp"
           altText="Trải nghiệm sản phẩm thực tế"
           title="Trải nghiệm sản phẩm thực tế"
           description={`Pengoo luôn tự hào với những người nghệ nhân Việt xuất chúng đã và đang làm ra các sản phẩm board games làm từ chất liệu hài hòa tạo nên giá trị bền vững, cùng vẻ đẹp tối giản thanh lịch.\n

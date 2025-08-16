@@ -3,12 +3,12 @@ import { gsap } from "gsap";
 
 // Dữ liệu mẫu cho các tiêu đề/khẩu hiệu
 const slogans: string[] = [
-  "Play in style",
-  "House of Artisan Board Games",
+  "Play as you are",
+  "Boardgames for you",
   "Premium Quality", // Đoán từ "P..." trong hình ảnh
-  "Unique Designs",
+  "Playmakers",
   "Pengoo at Play",
-  "Crafted for Joy"
+  "Your Game, Your Style"
 ];
 
 // Số lần nhân đôi nội dung để đảm bảo loop mượt mà.

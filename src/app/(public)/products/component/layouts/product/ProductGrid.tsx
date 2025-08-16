@@ -25,24 +25,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   showOutOfStock,
   categories,
 }) => {
+  console.log("ProductGrid - Products:", products);
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {products.length > 0 ? (
         products.map((product) => {
-          // Debug log - raw product data
-          console.log("ProductGrid - Raw product data:", {
-            id: product.id,
-            name: product.product_name,
-            images: product.images,
-            image_url: product.image_url,
-            source: "ProductGrid-Raw",
-          });
-
-          return (
-            <div key={product.id} className="w-full group">
-              <ProductCard product={product} />
-            </div>
-          );
+          console.log("ProductGrid - Product images:", product.images);
+          return <ProductCard product={product} key={product.id} />;
         })
       ) : (
         <div className="col-span-full text-center space-y-4 py-12 px-4">
@@ -70,9 +59,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                 <span className="font-medium text-right">
                   {selectedCategories.length > 0
                     ? categories
-                        .filter((cat) => selectedCategories.includes(cat.id))
-                        .map((cat) => cat.name)
-                        .join(", ")
+                      .filter((cat) => selectedCategories.includes(cat.id))
+                      .map((cat) => cat.name)
+                      .join(", ")
                     : "Tất cả"}
                 </span>
               </li>

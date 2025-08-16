@@ -1,3 +1,4 @@
+
 // Base API configuration
 export const API_CONFIG = {
   // Base URL for all API requests
@@ -28,12 +29,15 @@ export const API_CONFIG = {
     // Order endpoints
     ORDERS: {
       BASE: '/orders',
-      BY_ID: (id: string) => `/orders/${id}`,
+      BY_ID: (id: number) => `/orders/${id}`,
+      BY_ORDER_CODE: (order_code: number) => `/orders/order-code/${order_code}`,
       USER_ORDERS: '/orders/user',
       UPDATE_STATUS: (id: number) => `/orders/${id}/status`,
       PAYOS_SUCCESS: '/orders/payos/order-success',
       PAYOS_CANCEL: '/orders/payos/order-cancel',
       DELIVERY: '/orders/delivery',
+      CANCEL_PAYMENT: (orderCoder: number) => `/orders/payos/order-cancel?orderCode=${orderCoder}`,
+      SUCCESS_PAYMENT: (orderCoder: number) => `/orders/payos/order-success?orderCode=${orderCoder}`,
     },
 
     // User endpoints

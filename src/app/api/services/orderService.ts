@@ -78,7 +78,7 @@ export const orderService = {
   },
 
   // Xóa đơn hàng
-  async deleteOrder(id: string) {
+  async deleteOrder(id: number) {
     return apiClient.delete<CartItem[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
   },
   // Lấy tất cả đơn hàng
@@ -87,8 +87,11 @@ export const orderService = {
   },
 
   //Lấy đơn hàng theo ID
-  async getOrderById(id: string) {
+  async getOrderById(id: number) {
     return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ID(id));
+  },
+  async getOrderByOrderCode(orderCode: number) {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.BY_ORDER_CODE(orderCode));
   },
 
   // Huỷ đơn hàng
@@ -102,17 +105,6 @@ export const orderService = {
       throw error;
     }
   },
-
-  async getDeliveryMethod() {
-    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
-  },
-
-  // Lấy đơn hàng của người dùng
-  async getUserOrders() {
-    return apiClient.get<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.USER_ORDERS);
-  },
-
-  // Gửi lại hóa đơn qua email (manual only)
   async resendInvoice(orderId: number | string): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const res = await fetch(`/api/orders/${orderId}/resend-invoice`, {
@@ -124,7 +116,6 @@ export const orderService = {
       return { success: false, error: "Có lỗi xảy ra khi gửi lại hóa đơn" };
     }
   },
-
   // Tải hóa đơn (download)
   async downloadInvoice(orderId: number | string): Promise<Blob | null> {
     try {
@@ -141,5 +132,21 @@ export const orderService = {
     } catch (error) {
       throw error;
     }
+  },
+  async getDeliveryMethod() {
+    return apiClient.get<CreateOrderRequest[]>(API_CONFIG.ENDPOINTS.ORDERS.DELIVERY);
+  },
+
+  // Lấy đơn hàng của người dùng
+  async getUserOrders() {
+    return apiClient.get<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.USER_ORDERS);
+  },
+
+  //hủy thanh toán
+  async cancelPayment(orderCoder: number) {
+    return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.CANCEL_PAYMENT(orderCoder));
+  },
+  async successPayment(orderCoder: number) {
+    return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.SUCCESS_PAYMENT(orderCoder));
   },
 };

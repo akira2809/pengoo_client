@@ -28,6 +28,7 @@ interface NextMilestoneCouponResponse {
 }
 
 interface VerifyVoucherResponse {
+  success: boolean;
   valid: boolean;
   message?: string;
   vouchers: UserCoupon[];

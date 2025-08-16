@@ -1,10 +1,12 @@
-"use client";
-import { XCircleIcon } from "@heroicons/react/24/outline";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
-import { orderService } from "@/app/api/services/orderService";
+
+'use client';
+import { orderService } from '@/app/api/services/orderService';
+import { XCircleIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
+
 
 declare global {
   interface Window {
@@ -43,10 +45,13 @@ interface OrderData {
 export default function OrderCancelContent() {
   const searchParams = useSearchParams();
   // Get all relevant parameters from the URL
+  const orderCode = searchParams.get('orderCode');
+  const code = searchParams.get('code');
+  // const transactionId = searchParams.get('id');
+
   const orderIdFromUrl = searchParams.get("id") || searchParams.get("code");
   const status = searchParams.get("status");
   const isCancelled = searchParams.get("cancel") === "true";
-
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState<string>("");
@@ -54,23 +59,23 @@ export default function OrderCancelContent() {
 
   useEffect(() => {
     const handleOrderCancellation = async () => {
-      if (!orderIdFromUrl) {
+
+      if (!orderCode) {
         setIsLoading(false);
-        setError("Mã đơn hàng không hợp lệ");
+        setError('Mã đơn hàng không hợp lệ');
         return;
       }
 
       try {
-        // Fetch order data from API
-        const response = await orderService.getOrderById(orderIdFromUrl);
+        await orderService.cancelPayment(Number(orderCode));
+        const response = await orderService.getOrderByOrderCode(Number(orderCode));
         console.log("Order data:", response);
 
         if (response?.data) {
           let order: OrderData;
 
-          if (Array.isArray(response.data) && response.data.length > 0) {
-            order = response.data[0] as OrderData;
-          } else if (!Array.isArray(response.data)) {
+
+          if (!Array.isArray(response.data)) {
             order = response.data as OrderData;
           } else {
             throw new Error("Không tìm thấy thông tin đơn hàng");
@@ -81,6 +86,10 @@ export default function OrderCancelContent() {
         } else {
           throw new Error("Không tìm thấy thông tin đơn hàng");
         }
+        // if (!res.success) {
+        //   throw new Error('Không thể cập nhật trạng thái đơn hàng');
+        // }
+
 
         // Determine cancellation reason based on status
         let reason = "Đơn hàng đã bị hủy";
@@ -94,14 +103,16 @@ export default function OrderCancelContent() {
         setCancellationReason(reason);
 
         // Track order cancellation in analytics
-        if (typeof window !== "undefined" && window.gtag) {
-          window.gtag("event", "order_cancelled", {
-            transaction_id: orderIdFromUrl,
-            transaction_status: status || "cancelled",
-            transaction_cancelled: isCancelled,
-            payment_gateway: "payos",
-          });
-        }
+
+        // if (typeof window !== 'undefined' && window.gtag) {
+        //   window.gtag('event', 'order_cancelled', {
+        //     transaction_id: code,
+        //     transaction_status: status || 'cancelled',
+
+        //     transaction_cancelled: isCancelled,
+        //     payment_gateway: "payos",
+        //   });
+        // }
       } catch (err) {
         console.error("Error handling order cancellation:", err);
         toast.error("Có lỗi xảy ra khi xử lý đơn hàng");
@@ -112,7 +123,7 @@ export default function OrderCancelContent() {
     };
 
     handleOrderCancellation();
-  }, [orderIdFromUrl, status, isCancelled]);
+  }, [orderCode, code, status, isCancelled]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

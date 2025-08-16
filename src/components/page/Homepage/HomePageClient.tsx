@@ -62,10 +62,10 @@ const SmoothScrollHero = dynamic(
   { loading: () => <Fallback className="h-[600px] w-full my-8" />, ssr: false }
 );
 
-const AboutMaztermindSection = dynamic(
+const AboutPengooSection = dynamic(
   () =>
-    import("@/components/layouts/HomePage/AboutMaztermindSection").then(
-      (mod) => mod.AboutMaztermindSection
+    import("@/components/layouts/HomePage/AboutPengooSection").then(
+      (mod) => mod.AboutPengooSection
     ),
   { loading: () => <Fallback className="h-[500px] w-full my-8" />, ssr: false }
 );
@@ -262,7 +262,7 @@ function HomePage() {
           <div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />
         }
       >
-        <AboutMaztermindSection />
+        <AboutPengooSection />
       </Suspense>
 
       <Suspense

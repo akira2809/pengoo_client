@@ -30,7 +30,7 @@ const AboutTabs: React.FC<AboutTabsProps> = ({ activeTab, onTabChange }) => {
           }`}
           onClick={() => onTabChange('craftsmanship')}
         >
-          Nghệ thuật thủ công
+          Giá trị cốt lõi
           <span
             className={`absolute bottom-0 left-0 w-full h-1 bg-gray-900 transform transition-transform duration-300 ease-out ${
               activeTab === 'craftsmanship' ? 'scale-x-100' : 'scale-x-0'

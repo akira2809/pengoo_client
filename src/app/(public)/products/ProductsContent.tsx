@@ -79,7 +79,7 @@ const createDefaultProduct = (): Product => {
 
 function ProductsContent() {
   const { products, isLoading, error, fetchProducts } = useStore();
-
+  console.log("ProductsContent - Products:", products);
   // Removed unused filters state since it's not being used
   const [, setFilters] = useState({
     name: "",
@@ -105,7 +105,7 @@ function ProductsContent() {
   >([]);
 
   const searchParams = useSearchParams();
-  const sort = searchParams.get("sort");
+  const sort = searchParams?.get("sort") || ""; // Use optional chaining and fallback
   const [isLoadingCollections, setIsLoadingCollections] = useState(true);
   const [collectionsError, setCollectionsError] = useState<string | null>(null);
 
@@ -325,28 +325,29 @@ function ProductsContent() {
       typeof product.created_at === "string"
         ? product.created_at
         : typeof product.createdAt === "string"
-        ? product.createdAt
-        : new Date().toISOString();
+          ? product.createdAt
+          : new Date().toISOString();
 
     const updatedAt =
       typeof product.updated_at === "string"
         ? product.updated_at
         : typeof product.updatedAt === "string"
-        ? product.updatedAt
-        : new Date().toISOString();
+          ? product.updatedAt
+          : new Date().toISOString();
 
     // Map tags to TagType[] to match ProductData type
     const tagsArray: TagType[] = Array.isArray(product.tags)
       ? product.tags.map((tag) => {
-          if (typeof tag === "object" && tag !== null) {
-            // If already TagType, return as is
-            return tag as TagType;
-          }
-          // If string, wrap as TagType with name property
-          return { id: 0, name: String(tag), type: "" };
-        })
+        if (typeof tag === "object" && tag !== null) {
+          // If already TagType, return as is
+          // console.log("Tags:", tag);
+          return tag as TagType;
+        }
+        // If string, wrap as TagType with name property
+        return { id: Number(tag), name: String(tag), type: "" };
+      })
       : [];
-
+    console.log("Product Tags:", tagsArray);
     // Create a new object with only the properties that ProductData expects
     return {
       id: product.id,
@@ -370,16 +371,16 @@ function ProductsContent() {
       reviews: Number(product.reviews) || 0,
       features: Array.isArray(product.features)
         ? product.features.map((feature) => ({
-            id: 0, // Default ID since we don't have it
-            name: String(feature || ""),
-            description: String(feature || ""),
-            image: "",
-            title: String(feature || ""),
-            content: String(feature || ""),
-            icon: "",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }))
+          id: 0, // Default ID since we don't have it
+          name: String(feature || ""),
+          description: String(feature || ""),
+          image: "",
+          title: String(feature || ""),
+          content: String(feature || ""),
+          icon: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }))
         : [],
       tags: tagsArray,
       meta_title: String(product.meta_title || ""),
@@ -389,7 +390,7 @@ function ProductsContent() {
       tag_ID: Number(product.tag_ID) || 0,
     };
   });
-
+  console.log("productData", productData);
   return (
     <ProductPageLayout
       products={productData}

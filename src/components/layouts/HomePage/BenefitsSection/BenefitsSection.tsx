@@ -78,7 +78,7 @@ const benefits: Benefit[] = [
       </svg>
     ),
     title: "Thêm ưu đãi 10%",
-    description: "Nhận ngay mã giảm 10% đối với các khách hàng lần đầu tiên mua sắm tại Pengoo.vn",
+    description: "Nhận ngay mã giảm 10% đối với các khách hàng lần đầu tiên mua sắm tại Pengoo.store",
   },
 ];
 

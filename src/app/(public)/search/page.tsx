@@ -13,10 +13,10 @@ function SearchContent() {
   const router = useRouter();
 
   // Lấy các tham số từ URL
-  const searchQuery = searchParams.get("name") || "";
-  const categoryParam = searchParams.get("category") || "";
-  const minPriceParam = searchParams.get("minPrice") || "0";
-  const maxPriceParam = searchParams.get("maxPrice") || "5000000";
+  const searchQuery = searchParams?.get("name") || "";
+  const categoryParam = searchParams?.get("category") || "";
+  const minPriceParam = searchParams?.get("minPrice") || "0";
+  const maxPriceParam = searchParams?.get("maxPrice") || "5000000";
 
   const [products, setProducts] = useState<ProductData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -158,7 +158,62 @@ function SearchContent() {
             throw new Error("Dữ liệu trả về không hợp lệ");
           }
 
-          setProducts(results);
+          const mappedResults = results.map((product: unknown) => {
+            // Defensive: ensure product is an object
+            if (typeof product !== "object" || product === null) {
+              return {};
+            }
+            const prod = product as Record<string, unknown>;
+
+            // Map images to always have name and ord
+            let mainImageUrl = "";
+            let images: Array<{
+              id: number;
+              url: string;
+              name: string;
+              ord?: number;
+            }> = [];
+
+            if (Array.isArray(prod.images) && prod.images.length > 0) {
+              images = prod.images.map((img: unknown, index: number) => {
+                if (typeof img !== "object" || img === null) {
+                  return {
+                    id: index + 1,
+                    url: String(img),
+                    name: index === 0 ? "main" : "",
+                    ord: undefined,
+                  };
+                }
+                const imageObj = img as Record<string, unknown>;
+                return {
+                  id: typeof imageObj.id === "number" ? imageObj.id : index + 1,
+                  url: typeof imageObj.url === "string" ? imageObj.url : String(imageObj.url ?? ""),
+                  name: typeof imageObj.name === "string" ? imageObj.name : (index === 0 ? "main" : ""),
+                  ord: undefined,
+                };
+              });
+
+              const mainImgObj = images.find(
+                (img) => typeof img.name === "string" && img.name.trim().toLowerCase() === "main"
+              );
+              mainImageUrl = mainImgObj?.url || images[0].url;
+            } else {
+              mainImageUrl = typeof prod.image_url === "string"
+                ? prod.image_url
+                : typeof prod.image === "string"
+                ? prod.image
+                : "";
+            }
+
+            return {
+              ...(typeof prod === "object" && prod !== null ? prod : {}),
+              images,
+              image: mainImageUrl,
+              image_url: mainImageUrl,
+            };
+          });
+
+          setProducts(mappedResults);
         } else {
           // Nếu không có từ khóa tìm kiếm, sử dụng getProducts để lọc theo danh mục hoặc giá
           const apiParams: Record<string, unknown> = {};
