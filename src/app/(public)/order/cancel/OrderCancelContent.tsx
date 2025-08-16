@@ -18,16 +18,40 @@ declare global {
   }
 }
 
+interface OrderData {
+  id: number;
+  order_code: string;
+  payment_status: string;
+  productStatus: string;
+  total_price: number;
+  paypal_order_id?: string;
+  payment_type: string;
+  order_date: string;
+  shipping_address: string;
+  user: {
+    id: number;
+    full_name: string;
+    email: string;
+    username: string;
+  };
+  delivery: {
+    id: number;
+    name: string;
+    description: string;
+    fee: string;
+  };
+}
+
 export default function OrderCancelContent() {
   const searchParams = useSearchParams();
   // Get all relevant parameters from the URL
   const orderCode = searchParams.get('orderCode');
   const code = searchParams.get('code');
-  const transactionId = searchParams.get('id');
-  const status = searchParams.get('status');
-  const isCancelled = searchParams.get('cancel') === 'true';
+  // const transactionId = searchParams.get('id');
 
-
+  const orderIdFromUrl = searchParams.get("id") || searchParams.get("code");
+  const status = searchParams.get("status");
+  const isCancelled = searchParams.get("cancel") === "true";
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState<string>("");
@@ -36,14 +60,32 @@ export default function OrderCancelContent() {
   useEffect(() => {
     const handleOrderCancellation = async () => {
 
-      // if (!orderCode) {
-      //   setIsLoading(false);
-      //   setError('Mã đơn hàng không hợp lệ');
-      //   return;
-      // }
+      if (!orderCode) {
+        setIsLoading(false);
+        setError('Mã đơn hàng không hợp lệ');
+        return;
+      }
 
       try {
-        const res = await orderService.cancelPayment(Number(orderCode));
+        await orderService.cancelPayment(Number(orderCode));
+        const response = await orderService.getOrderByOrderCode(Number(orderCode));
+        console.log("Order data:", response);
+
+        if (response?.data) {
+          let order: OrderData;
+
+
+          if (!Array.isArray(response.data)) {
+            order = response.data as OrderData;
+          } else {
+            throw new Error("Không tìm thấy thông tin đơn hàng");
+          }
+
+          setOrderData(order);
+          console.log("Parsed order data:", order);
+        } else {
+          throw new Error("Không tìm thấy thông tin đơn hàng");
+        }
         // if (!res.success) {
         //   throw new Error('Không thể cập nhật trạng thái đơn hàng');
         // }
@@ -62,15 +104,15 @@ export default function OrderCancelContent() {
 
         // Track order cancellation in analytics
 
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'order_cancelled', {
-            transaction_id: code,
-            transaction_status: status || 'cancelled',
+        // if (typeof window !== 'undefined' && window.gtag) {
+        //   window.gtag('event', 'order_cancelled', {
+        //     transaction_id: code,
+        //     transaction_status: status || 'cancelled',
 
-            transaction_cancelled: isCancelled,
-            payment_gateway: "payos",
-          });
-        }
+        //     transaction_cancelled: isCancelled,
+        //     payment_gateway: "payos",
+        //   });
+        // }
       } catch (err) {
         console.error("Error handling order cancellation:", err);
         toast.error("Có lỗi xảy ra khi xử lý đơn hàng");
@@ -81,7 +123,7 @@ export default function OrderCancelContent() {
     };
 
     handleOrderCancellation();
-  }, [orderIdFromUrl, status, isCancelled]);
+  }, [orderCode, code, status, isCancelled]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
