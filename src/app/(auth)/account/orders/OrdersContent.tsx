@@ -14,11 +14,24 @@ import { CreateOrderResponse, OrderItemDetail } from '@/app/type/order';
 export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
   user?: {
     id: number | string;
+    username?: string;
+    full_name?: string;
+    email?: string;
+    phone_number?: number;
+    avatar_url?: string;
+  };
+  delivery?: {
+    name?: string;
+    description?: string;
+    fee?: string | number;
+    estimatedTime?: string;
   };
   details?: OrderItemDetail[];
   order_date?: string;
   order_code: string; // Fix: remove optional, must be string
   total_price: number;
+  shipping_address?: string;
+  payment_type?: string;
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   [key: string]: unknown;
 }
@@ -38,6 +51,7 @@ export function OrdersContent() {
   const { user } = useAuthStore();
   const [orders, setOrders] = useState<OrderWithUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithUser | null>(null);
 
   const ITEMS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
@@ -209,7 +223,7 @@ export function OrdersContent() {
                 </div>
 
                 {/* --- Order Footer --- */}
-                <div className="p-4 sm:p-5 flex justify-between items-center bg-gray-50">
+                <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center bg-gray-50 gap-3 sm:gap-0">
                   <div className="font-semibold text-lg text-gray-900">
                     <span>Tổng tiền: </span>
                     <span>{formatPrice(order.total_price)}</span>
@@ -226,6 +240,7 @@ export function OrdersContent() {
                     )}
                      <button
                         // Cải tiến: Nút xem chi tiết
+                        onClick={() => setSelectedOrder(order)}
                         className="px-4 py-2 text-sm font-medium text-white bg-gray-800 border border-transparent rounded-md hover:bg-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
                       >
                         Xem chi tiết
@@ -249,6 +264,62 @@ export function OrdersContent() {
           </div>
         )}
       </div>
+
+      
+      {/* Modal Chi tiết đơn hàng */}
+      {selectedOrder && (
+        <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setSelectedOrder(null)} // click nền đen -> đóng
+          >
+            <div
+              className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()} // chặn click bên trong
+            >
+            <h2 className="text-2xl font-bold mb-4">Chi tiết đơn hàng #{selectedOrder.id}</h2>
+            <p className="text-sm text-gray-500 mb-4">Ngày đặt: {formatOrderDate(selectedOrder.order_date)}</p>
+
+            {/* Thông tin khách */}
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-800">Thông tin khách hàng</h3>
+              <p>Họ tên: {selectedOrder.user?.full_name}</p>
+              <p>Email: {selectedOrder.user?.email}</p>
+              <p>SĐT: {selectedOrder.user?.phone_number}</p>
+            </div>
+
+            {/* Địa chỉ và giao hàng */}
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-800">Thông tin giao hàng</h3>
+              <p>Địa chỉ: {selectedOrder.shipping_address}</p>
+              <p>Đơn vị vận chuyển: {selectedOrder.delivery?.name}</p>
+              <p>Phí ship: {formatPrice(selectedOrder.delivery?.fee)}</p>
+              <p>Thời gian dự kiến: {selectedOrder.delivery?.estimatedTime}</p>
+            </div>
+
+            {/* Thanh toán */}
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-800">Thanh toán</h3>
+              <p>Phương thức: {selectedOrder.payment_type}</p>
+              <p>Tổng tiền: {formatPrice(selectedOrder.total_price)}</p>
+            </div>
+
+            {/* Sản phẩm */}
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-800 mb-2">Sản phẩm</h3>
+              {renderOrderItems(selectedOrder)}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

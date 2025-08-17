@@ -1,61 +1,72 @@
 import React, { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 
-// Dữ liệu mẫu cho các tiêu đề/khẩu hiệu
+// Dữ liệu khẩu hiệu
 const slogans: string[] = [
   "Play as you are",
   "Boardgames for you",
-  "Premium Quality", // Đoán từ "P..." trong hình ảnh
+  "Premium Quality",
   "Playmakers",
   "Pengoo at Play",
   "Your Game, Your Style"
 ];
 
-// Số lần nhân đôi nội dung để đảm bảo loop mượt mà.
-// Với nội dung dài, 2 hoặc 3 lần có thể đủ. Với nội dung ngắn, 4 lần như ví dụ của bạn sẽ tốt.
-const DUPLICATE_COUNT = 4; 
+const DUPLICATE_COUNT = 4; // nhân đôi để loop mượt
 
 export default function HeadlineMarquee() {
-  const marqueeRef = useRef<HTMLDivElement>(null); // Ref cho div chứa nội dung cuộn
+  const marqueeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (marqueeRef.current) {
-      // Vì chúng ta đã nhân đôi nội dung bằng cách render mảng `slogans` DUPLICATE_COUNT lần
-      // trong JSX, nên `marqueeRef.current.scrollWidth` đã bao gồm tất cả nội dung.
-      // `totalWidth` sẽ là chiều rộng của MỘT BỘ nội dung gốc.
-      const totalWidth = marqueeRef.current.scrollWidth / DUPLICATE_COUNT; 
-      
-      // Đảm bảo không có animation nào chạy trước đó và đặt lại vị trí ban đầu
+      const totalWidth = marqueeRef.current.scrollWidth / DUPLICATE_COUNT;
+
       gsap.killTweensOf(marqueeRef.current);
       gsap.set(marqueeRef.current, { x: 0 });
 
-      // Tạo animation cuộn marquee
+      // Tạo hiệu ứng marquee
       gsap.to(marqueeRef.current, {
-        x: `-=${totalWidth}px`, // Cuộn sang trái bằng đúng chiều rộng của một bộ nội dung
-        ease: "none",          // Chuyển động đều
-        duration: 40,          // Thời gian cho một vòng lặp (điều chỉnh tốc độ ở đây)
-        repeat: -1,            // Lặp lại vô hạn
-        onRepeat: () => {
-          // Khi animation lặp lại, reset vị trí về 0 để đảm bảo vòng lặp liền mạch
-          gsap.set(marqueeRef.current, { x: 0 });
-        },
+        x: `-=${totalWidth}px`,
+        ease: "none",
+        duration: 35, // tốc độ cuộn
+        repeat: -1,
+        modifiers: {
+          x: gsap.utils.unitize((x: number) => parseFloat(String(x)) % -totalWidth)
+        }
       });
     }
-  }, []); // Chỉ chạy một lần khi component mount
+  }, []);
+
+  useEffect(() => {
+    if (marqueeRef.current) {
+      const texts = marqueeRef.current.querySelectorAll(".slogan-text");
+      // Hiệu ứng glow nhịp nháy lần lượt
+      gsap.to(texts, {
+        opacity: 0.8,
+        scale: 1.05,
+        duration: 1.5,
+        repeat: -1,
+        yoyo: true,
+        stagger: 0.5,
+        ease: "power1.inOut"
+      });
+    }
+  }, []);
 
   return (
-    <section className="py-12 md:py-24 overflow-hidden whitespace-nowrap mb-16">
-      {/* Container cuộn */}
+    <section className="py-12 md:py-18 overflow-hidden whitespace-nowrap mb-16 bg-background-50">
       <div ref={marqueeRef} className="inline-block will-change-transform">
-        {/* Render nội dung DUPLICATE_COUNT lần để tạo vòng lặp liền mạch */}
         {Array.from({ length: DUPLICATE_COUNT }).map((_, duplicationIndex) => (
           <React.Fragment key={duplicationIndex}>
             {slogans.map((slogan, sloganIndex) => (
               <span
-                key={`${duplicationIndex}-${sloganIndex}`} // Key duy nhất cho mỗi span
-                className="inline-flex items-center px-8 md:px-16 lg:px-24" // padding ngang cho mỗi slogan
+                key={`${duplicationIndex}-${sloganIndex}`}
+                className="inline-flex items-center px-8 md:px-16 lg:px-24"
               >
-                <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-text-900 inline">
+                <h2
+                  className="slogan-text text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl 
+                  font-extrabold bg-gradient-to-r from-blue-500 via-sky-400 to-blue-400 
+                  bg-clip-text text-transparent drop-shadow-md"
+                >
                   {slogan}
                 </h2>
               </span>
