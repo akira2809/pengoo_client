@@ -52,7 +52,6 @@ interface FormData {
   couponCode?: string;
 }
 
-
 // Helper to map delivery_id to shippingMethod string
 const getShippingMethodString = (id: number): "localHCM" | "outsideHCM" => {
   if (id === 1) return "localHCM";
@@ -137,12 +136,16 @@ const CheckoutPage: React.FC = () => {
               })
             );
             setDelivery(mappedDelivery);
-            setShippingCost(mappedDelivery[0].fee);
+            const initialShippingCost = Number(mappedDelivery[0].fee) || 25000;
+            // console.log(
+            //   `Setting initial shipping cost: ${initialShippingCost} (type: ${typeof initialShippingCost})`
+            // );
+            setShippingCost(initialShippingCost);
           } else {
-            console.error(
-              "Invalid delivery method data format:",
-              deliveryMethod
-            );
+            // console.error(
+            //   "Invalid delivery method data format:",
+            //   deliveryMethod
+            // );
             // Set default delivery methods if API fails
             setDelivery([
               { id: 1, name: "Nội thành TP Hồ Chí Minh", fee: 25000 },
@@ -164,28 +167,53 @@ const CheckoutPage: React.FC = () => {
 
   // Format currency
   const formatCurrency = (amount: number) => {
+    // Ensure amount is a valid number
+    const validAmount =
+      isNaN(amount) || !isFinite(amount) ? 0 : Math.round(amount);
+    // console.log(`Formatting currency: ${amount} -> ${validAmount}`);
+
     return (
       new Intl.NumberFormat("vi-VN", {
         style: "decimal",
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(amount) + "₫"
+      }).format(validAmount) + "₫"
     );
   };
 
   // Explicitly type cartItems as ImportedCartItem[]
   const typedCartItems: ImportedCartItem[] = cartItems as ImportedCartItem[];
 
+  // Debug cart items
+
+
   // Calculate subtotal
-  const subtotal = typedCartItems.reduce(
-    (sum, item) =>
-      sum +
-      item.product_price * item.quantity * (1 - (item.discount || 0) / 100),
-    0
-  );
+  const subtotal = typedCartItems.reduce((sum, item) => {
+    const price = item.price ?? item.product_price;
+    const discountMultiplier = 1 - (item.discount || 0) / 100;
+    const itemTotal = price * item.quantity * discountMultiplier;
+    // console.log(
+    //   `Item: ${item.product_name}, Price: ${price}, Quantity: ${item.quantity}, Discount: ${item.discount}%, Total: ${itemTotal}`
+    // );
+    return sum + itemTotal;
+  }, 0);
 
   // Calculate total
-  const total = subtotal - discountAmount + shippingCost;
+  const numericSubtotal = Number(subtotal) || 0;
+  const numericDiscountAmount = Number(discountAmount) || 0;
+  const numericShippingCost = Number(shippingCost) || 0;
+
+  // console.log(
+  //   `Debug types - Subtotal: ${typeof subtotal} (${subtotal}), Discount: ${typeof discountAmount} (${discountAmount}), Shipping: ${typeof shippingCost} (${shippingCost})`
+  // );
+
+  const total = Math.max(
+    0,
+    numericSubtotal - numericDiscountAmount + numericShippingCost
+  );
+  // console.log(
+  //   `Subtotal: ${numericSubtotal}, Discount: ${numericDiscountAmount}, Shipping: ${numericShippingCost}, Total: ${total}`
+  // );
 
   // Handle cart initialization
   useEffect(() => {
@@ -240,7 +268,11 @@ const CheckoutPage: React.FC = () => {
   ]);
   const changeShipFee = (id: number) => {
     const data = delivery.find((item) => id === item.id);
-    return data ? data.fee : 25000;
+    const fee = data ? Number(data.fee) : 25000;
+    // console.log(
+    //   `Changing shipping fee for delivery ID ${id}: ${fee} (type: ${typeof fee})`
+    // );
+    return fee;
   };
   // Show loading state while checking auth or cart
   if (isAuthLoading || !authChecked || !isCartReady) {
@@ -275,8 +307,12 @@ const CheckoutPage: React.FC = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    if (name == "delivery_id") {
-      setShippingCost(changeShipFee(Number(value)));
+    if (name === "delivery_id") {
+      const newShippingCost = changeShipFee(Number(value));
+      // console.log(
+      //   `Setting new shipping cost: ${newShippingCost} (type: ${typeof newShippingCost})`
+      // );
+      setShippingCost(Number(newShippingCost));
     }
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
@@ -305,14 +341,21 @@ const CheckoutPage: React.FC = () => {
       showErrorToast("Vui lòng nhập mã giảm giá.");
       return;
     }
-    const data = await applyVoucher(code, subtotal) as { discount: number; coupon: { code: string } } | null | undefined;
+    const data = (await applyVoucher(code, subtotal)) as
+      | { discount: number; coupon: { code: string } }
+      | null
+      | undefined;
     if (data === undefined || data === null) {
       showErrorToast(`Mã khuyến mãi không hợp lệ hoặc đã hết hạn.`);
       setDiscountAmount(0);
       setIsCouponApplied(false);
       return;
     } else {
-      setDiscountAmount(data.discount);
+      const discount = Number(data.discount) || 0;
+      // console.log(
+      //   `Setting discount amount: ${discount} (type: ${typeof discount})`
+      // );
+      setDiscountAmount(discount);
       setIsCouponApplied(true);
       showSuccessToast(`Áp dụng mã khuyến mãi ${data.coupon.code} thành công!`);
     }
@@ -352,7 +395,7 @@ const CheckoutPage: React.FC = () => {
         shippingMethod: getShippingMethodString(Number(formData.delivery_id)),
         name: "",
         fee: 0,
-        description: ""
+        description: "",
       };
       const preparedOrder = orderService.prepareOrderData(
         orderData,
@@ -696,7 +739,7 @@ const CheckoutPage: React.FC = () => {
                   checked={formData.paymentMethod === "cod"}
                   onChange={handleInputChange}
                   label="Thanh toán khi nhận hàng (COD)"
-                  // icon={<CashIcon />}
+                // icon={<CashIcon />}
                 />
               </div>
 
@@ -729,9 +772,8 @@ const CheckoutPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
-                  isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
               >
                 {isSubmitting ? "Đang xử lý..." : `Thanh toán ngay`}
               </button>
@@ -777,8 +819,8 @@ const CheckoutPage: React.FC = () => {
                     <span className="text-gray-900">
                       {formatCurrency(
                         (item.price ?? item.product_price) *
-                          item.quantity *
-                          (1 - (item.discount || 0) / 100)
+                        item.quantity *
+                        (1 - (item.discount || 0) / 100)
                       )}
                     </span>
                   </div>
@@ -812,10 +854,9 @@ const CheckoutPage: React.FC = () => {
                           setShowCouponList(false);
                         }}
                         className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
-                          ${
-                            uc.active
-                              ? "bg-green-50 hover:bg-green-100 text-green-800"
-                              : "bg-red-50 hover:bg-red-100 text-red-700"
+                          ${uc.active
+                            ? "bg-green-50 hover:bg-green-100 text-green-800"
+                            : "bg-red-50 hover:bg-red-100 text-red-700"
                           }
                         `}
                       >

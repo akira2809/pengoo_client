@@ -43,7 +43,7 @@ const AboutPage: React.FC = () => {
   return (
     <main>
       {/* Thay đổi đường dẫn ảnh cho phù hợp với dự án của bạn */}
-      <AboutUsBanner title="VỀ PENGOO" backgroundImage="/MM_CRAFTMANSHIP_25.webp" />
+      <AboutUsBanner title="VỀ PENGOO" backgroundImage="/VNIBanner.png" />
       {/* Các nội dung khác của trang giới thiệu */}
       <AboutPageContent />
     </main>

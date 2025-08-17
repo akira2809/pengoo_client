@@ -1,73 +1,105 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { productService } from '@/app/api/services/productService';
-import { ProductData } from '@/app/type/product';
-import { Skeleton } from '@/components/common/UI/Skeleton';
-import ScratchMinigamePopup from '@/components/common/scratch-minigame/ScratchMinigamePopup';
+import React, { useEffect, useState, Suspense } from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { productService } from "@/app/api/services/productService";
+import { ProductData } from "@/app/type/product";
+import { Skeleton } from "@/components/common/UI/Skeleton";
+import ScratchMinigamePopup from "@/components/common/scratch-minigame/ScratchMinigamePopup";
+
 // Tạo một component fallback mặc định
-const Fallback = ({ className = '' }: { className?: string }) => (
+const Fallback = ({ className = "" }: { className?: string }) => (
   <div className={`bg-gray-100 animate-pulse ${className}`}></div>
 );
 
 // Dynamic imports
 const Banner = dynamic(
-  () => import('@/components/layouts/HomePage/Banner/Banner').then((mod) => mod.default),
+  () =>
+    import("@/components/layouts/HomePage/Banner/Banner").then(
+      (mod) => mod.default
+    ),
   { loading: () => <Fallback className="h-[500px] w-full" />, ssr: false }
 );
 
 const BannerHotspot = dynamic(
-  () => import('@/components/layouts/HomePage/Banner/Banner-hotspot').then((mod) => mod.default),
+  () =>
+    import("@/components/layouts/HomePage/Banner/Banner-hotspot").then(
+      (mod) => mod.default
+    ),
   { loading: () => <Fallback className="h-[300px] w-full my-8" />, ssr: false }
 );
 
 const CollectionSection = dynamic(
-  () => import('@/components/layouts/HomePage/collection/CollectionSection').then((mod) => mod.default),
+  () =>
+    import("@/components/layouts/HomePage/collection/CollectionSection").then(
+      (mod) => mod.default
+    ),
   { loading: () => <Fallback className="h-[400px] w-full my-8" />, ssr: false }
 );
 
 const BenefitsSection = dynamic(
-  () => import('@/components/layouts/HomePage/BenefitsSection/BenefitsSection').then((mod) => mod.default),
+  () =>
+    import(
+      "@/components/layouts/HomePage/BenefitsSection/BenefitsSection"
+    ).then((mod) => mod.default),
   { loading: () => <Fallback className="h-[300px] w-full my-8" />, ssr: false }
 );
 
 const HeadlineMarquee = dynamic(
-  () => import('@/components/layouts/HomePage/HeadlineMarquee').then((mod) => mod.default),
+  () =>
+    import("@/components/layouts/HomePage/HeadlineMarquee").then(
+      (mod) => mod.default
+    ),
   { loading: () => <Fallback className="h-[50px] w-full my-4" />, ssr: false }
 );
 
 const SmoothScrollHero = dynamic(
-  () => import('@/components/layouts/HomePage/HeroScrollZoom').then((mod) => mod.SmoothScrollHero),
+  () =>
+    import("@/components/layouts/HomePage/HeroScrollZoom").then(
+      (mod) => mod.SmoothScrollHero
+    ),
   { loading: () => <Fallback className="h-[600px] w-full my-8" />, ssr: false }
 );
 
-const AboutMaztermindSection = dynamic(
-  () => import('@/components/layouts/HomePage/AboutMaztermindSection').then((mod) => mod.AboutMaztermindSection),
+const AboutPengooSection = dynamic(
+  () =>
+    import("@/components/layouts/HomePage/AboutPengooSection").then(
+      (mod) => mod.AboutPengooSection
+    ),
   { loading: () => <Fallback className="h-[500px] w-full my-8" />, ssr: false }
 );
 
 const VideoSection = dynamic(
-  () => import('@/components/layouts/HomePage/VideoSection').then((mod) => mod.VideoSection),
+  () =>
+    import("@/components/layouts/HomePage/VideoSection").then(
+      (mod) => mod.VideoSection
+    ),
   { loading: () => <Fallback className="h-[500px] w-full my-8" />, ssr: false }
 );
 
 const TestimonialCarousel = dynamic(
-  () => import('@/components/layouts/HomePage/TestimonialCarousel').then((mod) => mod.TestimonialCarousel),
+  () =>
+    import("@/components/layouts/HomePage/TestimonialCarousel").then(
+      (mod) => mod.TestimonialCarousel
+    ),
   { loading: () => <Fallback className="h-[300px] w-full my-8" />, ssr: false }
 );
 
 const BlogSection = dynamic(
-  () => import('@/components/common/BlogSection').then((mod) => mod.BlogSection),
+  () =>
+    import("@/components/common/BlogSection").then((mod) => mod.BlogSection),
   {
-    loading: () => <div className="h-[500px] w-full my-8 bg-gray-100 animate-pulse"></div>,
-    ssr: true
+    loading: () => (
+      <div className="h-[500px] w-full my-8 bg-gray-100 animate-pulse"></div>
+    ),
+    ssr: true,
   }
 );
 
 const DynamicProductCard = dynamic(
-  () => import('@/components/common/ProductCard').then((mod) => mod.ProductCard),
+  () =>
+    import("@/components/common/ProductCard").then((mod) => mod.ProductCard),
   { loading: () => <Fallback className="h-[400px] w-full" />, ssr: true }
 );
 
@@ -87,13 +119,38 @@ function HomePage() {
         const products = Array.isArray(response) ? response : response?.data;
 
         if (products && Array.isArray(products)) {
-          setFeaturedProducts(products.slice(0, 8));
+          // Multi-criteria sorting for featured products
+          const sortedProducts = products.sort((a, b) => {
+            // Priority 1: Products with discount (higher discount first)
+            const discountA = Number(a.discount) || 0;
+            const discountB = Number(b.discount) || 0;
+
+            if (discountA !== discountB) {
+              return discountB - discountA; // Higher discount first
+            }
+
+            // Priority 2: Products with sales (higher sales first)
+            const soldA = Number(a.quantity_sold) || 0;
+            const soldB = Number(b.quantity_sold) || 0;
+
+            if (soldA !== soldB) {
+              return soldB - soldA; // Higher sales first
+            }
+
+            // Priority 3: Newer products (if dates are available)
+            const dateA = new Date(a.created_at || 0).getTime();
+            const dateB = new Date(b.created_at || 0).getTime();
+
+            return dateB - dateA; // Newer products first
+          });
+
+          setFeaturedProducts(sortedProducts.slice(0, 8));
         } else {
-          throw new Error('Invalid response format');
+          throw new Error("Invalid response format");
         }
       } catch (err) {
-        console.error('Error fetching featured products:', err);
-        setError('Không thể tải sản phẩm. Vui lòng thử lại sau.');
+        console.error("Error fetching featured products:", err);
+        setError("Không thể tải sản phẩm. Vui lòng thử lại sau.");
       } finally {
         setIsLoading(false);
       }
@@ -104,7 +161,11 @@ function HomePage() {
 
   return (
     <>
-      <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse" />}>
+      <Suspense
+        fallback={
+          <div className="h-[500px] w-full bg-gray-100 animate-pulse" />
+        }
+      >
         <Banner />
       </Suspense>
 
@@ -156,41 +217,73 @@ function HomePage() {
         </div>
       </section>
 
-      <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
+      <Suspense
+        fallback={
+          <div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
         <BannerHotspot />
       </Suspense>
 
-      <Suspense fallback={<div className="h-[400px] w-full bg-gray-100 animate-pulse my-8" />}>
+      <Suspense
+        fallback={
+          <div className="h-[400px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
         <CollectionSection />
       </Suspense>
 
-      <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
+      <Suspense
+        fallback={
+          <div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
         <BenefitsSection />
       </Suspense>
 
-      <Suspense fallback={<div className="h-[50px] w-full bg-gray-100 animate-pulse my-4" />}>
+      <Suspense
+        fallback={
+          <div className="h-[50px] w-full bg-gray-100 animate-pulse my-4" />
+        }
+      >
         <HeadlineMarquee />
       </Suspense>
 
-      <Suspense fallback={<div className="h-[600px] w-full bg-gray-100 animate-pulse my-8" />}>
+      <Suspense
+        fallback={
+          <div className="h-[600px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
         <SmoothScrollHero />
       </Suspense>
 
-      <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />}>
-        <AboutMaztermindSection />
+      <Suspense
+        fallback={
+          <div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
+        <AboutPengooSection />
       </Suspense>
 
-      <Suspense fallback={<div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />}>
+      <Suspense
+        fallback={
+          <div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
         <VideoSection />
       </Suspense>
 
-      <Suspense fallback={<div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />}>
+      <Suspense
+        fallback={
+          <div className="h-[300px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
         <TestimonialCarousel />
       </Suspense>
 
       <BlogSection />
 
-      { }
+      {}
       <ScratchMinigamePopup buttonImage="/images/minigame/greenssrb.png" />
     </>
   );

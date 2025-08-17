@@ -1,35 +1,49 @@
 'use client';
+import { orderService } from '@/app/api/services/orderService';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, Suspense, useState } from 'react';
-import { orderService } from '@/app/api/services/orderService';
-
-// Define the order type for type safety
 type Order = {
   id: number;
   payment_type: string;
   payment_status: string;
   [key: string]: unknown;
 };
-
+import { useEffect, Suspense, useState } from 'react';
 function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get('order_id') || searchParams.get('orderCode');
+  // const orderId = searchParams.get('order_id')
   const [order, setOrder] = useState<Order | null>(null);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [orderId, setOrderId] = useState(0);
 
+  const orderCode = searchParams.get('orderCode')
   useEffect(() => {
-    if (orderId) {
-      orderService.getOrderById(orderId).then(res => {
+    if (orderCode) {
+      orderService.successPayment(Number(orderCode)).then(res => {
         setOrder(res.data as unknown as Order);
+        setOrderId(res.data.id as number);
+        console.log("Order data:", res.data);
         setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
-      });
+      })
+      // orderService.getOrderByOrderCode(Number(orderCode)).then(res => {
+      //   setOrder(res.data as unknown as Order);
+      //   setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
+      // })
+      // Track successful order conversion
+      if (orderId && window.gtag) {
+        window.gtag('event', 'purchase', {
+          transaction_id: orderId,
+          // Add other relevant e-commerce tracking data here
+
+        });
+      }
     }
-  }, [orderId]);
+
+  }, [orderId, orderCode]);
 
   const handleResendInvoice = async () => {
     if (!orderId) return;
@@ -143,6 +157,9 @@ function OrderSuccessContentInner() {
               Xem đơn hàng
             </Link>
           </div>
+
+
+
           <div className="mt-8 border-t border-gray-200 pt-8">
             <h2 className="text-lg font-medium text-gray-900">Bạn cần hỗ trợ?</h2>
             <p className="mt-2 text-gray-600">

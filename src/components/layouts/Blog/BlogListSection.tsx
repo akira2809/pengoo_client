@@ -46,7 +46,7 @@ const BlogListSection: React.FC<BlogListSectionProps> = ({ posts }) => {
         {/* Hiển thị bài viết đầu tiên với giao diện lớn */}
         {featuredPost && (
           <div className="mb-16">
-            <FeaturedBlogCard {...featuredPost} />
+            <FeaturedBlogCard {...featuredPost} imageSrc={featuredPost.imageSrc ?? ""} />
           </div>
         )}
 

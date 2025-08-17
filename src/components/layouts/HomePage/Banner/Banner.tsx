@@ -5,13 +5,13 @@ import Image from "next/image";
 
 const images = [
   "/banner1.png",
-  "/Spacefest-Poker_HeroBanner_PC-min.png",
-  "/Hero-Banner_Mua4tang1_4000x2000_min.webp",
-  "/Nomad_Homepage-banner_4000x2000_fdc9b88b-bca2-4ee8-80a4-cbabec9fe2b9.webp",
+  "/BannerWS.webp",
+  "/BannerHMS.webp",
+  "/BannerS&S2.webp",
 ];
 
 // Preload images
-const preloadImages = (imageUrls: string[]) => {
+const preloadImages: (imageUrls: string[]) => void = (imageUrls: string[]) => {
   imageUrls.forEach((src) => {
     const img = new window.Image();
     img.src = src;
@@ -211,7 +211,7 @@ export default function HeroBanner() {
       {images.map((src, index) => (
         <div
           key={index}
-          ref={(el) => (slideRefs.current[index] = el)}
+          ref={(el) => { slideRefs.current[index] = el; }}
           className="absolute inset-0 w-full h-full"
           style={{ 
             opacity: index === current ? 1 : 0,

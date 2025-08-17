@@ -9,7 +9,7 @@ import Image from "next/image";
 // Dữ liệu text cho phần hero
 const HERO_TEXT = {
   subtitle: "Thương hiệu Pengoo",
-  title: "Tôn vinh bàn tay & trí tuệ của nghệ sỹ, nghệ nhân Việt Nam",
+  title: "Sống như cách bạn chơi và chơi như cách bạn sống",
 };
 
 // Chiều cao của section để ảnh có thể phóng to và text xuất hiện
@@ -82,7 +82,7 @@ const Hero = () => {
         >
           {/* Image component của Next.js */}
           <Image
-            src="/craftsmanship-2-3200x1600.jpg" // Đảm bảo ảnh này nằm trong thư mục `public` của bạn
+            src="/BannerCSD.jpg" // Đảm bảo ảnh này nằm trong thư mục `public` của bạn
             alt={HERO_TEXT.title}
             layout="fill" // Chiếm toàn bộ không gian của motion.div parent
             objectFit="cover" // Đảm bảo ảnh phủ đầy và cắt bớt nếu cần
