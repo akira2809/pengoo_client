@@ -10,7 +10,7 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/app/api/services/wishlistService";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 interface ImageType {
   id: number;
@@ -71,6 +71,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const addItem = useCartStore((state) => state.addItem);
   const { user } = useAuthStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const router = useRouter();
 
   const userId = user ? user.id : null;
 
@@ -131,10 +132,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (Array.isArray(product.images) && product.images.length > 0) {
       // Find image with name "main" (case-insensitive)
       const mainImgObj = product.images.find(
-        (img) =>
-          img.name &&
-          img.name.trim().toLowerCase() === "main" &&
-          img.url
+        (img) => img.name && img.name.trim().toLowerCase() === "main" && img.url
       );
       if (mainImgObj && mainImgObj.url) {
         const normalized = getValidImageUrl(mainImgObj.url);
@@ -145,7 +143,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         //   source: "Main-Name",
         // });
         return (
-          normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+          normalized ||
+          "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
         );
       }
       // Fallback: use first image in array
@@ -159,7 +158,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           source: "First-Image-Fallback",
         });
         return (
-          normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+          normalized ||
+          "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
         );
       }
     }
@@ -184,10 +184,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   if (Array.isArray(product.images) && product.images.length > 1) {
     // Find main image index
     const mainImgIndex = product.images.findIndex(
-      (img) =>
-        img.name &&
-        img.name.trim().toLowerCase() === "main" &&
-        img.url
+      (img) => img.name && img.name.trim().toLowerCase() === "main" && img.url
     );
     // If no "main" image, use first image as main
     const usedMainIndex = mainImgIndex !== -1 ? mainImgIndex : 0;
@@ -205,17 +202,95 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   }
 
+  // Helper function to check if product is purchasable
+  const isPurchasable = () => {
+    const stock = Number(product.quantity_stock) || 0;
+    const status = product.status?.toString().toLowerCase().trim();
+
+    // Check status first - only allow if available
+    const isAvailable = !status || status === "available";
+
+    if (!isAvailable) {
+      return false;
+    }
+
+    // Then check stock
+    return stock > 0;
+  };
+
+  // Helper function to get status display info
+  const getStatusInfo = () => {
+    const stock = Number(product.quantity_stock) || 0;
+    const status = product.status?.toString().toLowerCase().trim();
+
+    // Status mapping - text only
+    switch (status) {
+      case "unavailable":
+        return {
+          show: true,
+          text: "Không khả dụng",
+          bgColor: "bg-gray-600",
+          textColor: "text-white",
+          description: "Sản phẩm tạm thời không khả dụng",
+        };
+      case "coming soon":
+      case "comingsoon":
+        return {
+          show: true,
+          text: "Sắp ra mắt",
+          bgColor: "bg-blue-600",
+          textColor: "text-white",
+          description: "Sản phẩm sẽ sớm có mặt",
+        };
+      case "discontinued":
+        return {
+          show: true,
+          text: "Ngừng sản xuất",
+          bgColor: "bg-orange-600",
+          textColor: "text-white",
+          description: "Sản phẩm đã ngừng sản xuất",
+        };
+      case "available":
+      default:
+        // For available status or undefined, check stock
+        if (stock <= 0) {
+          return {
+            show: true,
+            text: "Hết hàng",
+            bgColor: "bg-red-600",
+            textColor: "text-white",
+            description: "Sản phẩm sẽ sớm được cập nhật lại",
+          };
+        }
+        return { show: false };
+    }
+  };
+
   // ✅ Xử lý click thêm vào giỏ hàng
   const handleAddToCart = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const stock = Number(product.quantity_stock) || 0;
-
-    if (stock <= 0) {
-      toast.error("Sản phẩm đã hết hàng.");
+    if (!isPurchasable()) {
+      const status = product.status?.toString().toLowerCase().trim();
+      switch (status) {
+        case "unavailable":
+          toast.error("Sản phẩm hiện không khả dụng.");
+          break;
+        case "coming soon":
+        case "comingsoon":
+          toast.error("Sản phẩm sắp ra mắt, vui lòng chờ đợi.");
+          break;
+        case "discontinued":
+          toast.error("Sản phẩm đã ngừng sản xuất.");
+          break;
+        default:
+          toast.error("Sản phẩm đã hết hàng.");
+      }
       return;
     }
+
+    const stock = Number(product.quantity_stock) || 0;
 
     // Lấy số lượng hiện tại của sản phẩm trong giỏ (nếu có)
     const currentItem = useCartStore
@@ -301,6 +376,64 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
+  // ✅ Xử lý click "Mua ngay" - chuyển thẳng đến checkout với sản phẩm này
+  const handleBuyNow = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isPurchasable()) {
+      const status = product.status?.toString().toLowerCase().trim();
+      switch (status) {
+        case "unavailable":
+          toast.error("Sản phẩm hiện không khả dụng.");
+          break;
+        case "coming soon":
+        case "comingsoon":
+          toast.error("Sản phẩm sắp ra mắt, vui lòng chờ đợi.");
+          break;
+        case "discontinued":
+          toast.error("Sản phẩm đã ngừng sản xuất.");
+          break;
+        default:
+          toast.error("Sản phẩm đã hết hàng.");
+      }
+      return;
+    }
+
+    const stock = Number(product.quantity_stock) || 0;
+
+    // Tạo item để lưu vào localStorage cho checkout
+    const buyNowItem = {
+      id: Number(product.id),
+      product_name: product.product_name,
+      product_price: Number(product.product_price),
+      quantity: 1,
+      image_url: mainImage,
+      discount: Number(product.discount) || 0,
+      slug: product.slug,
+      description: product.meta_description,
+      quantity_stock: stock,
+      timestamp: Date.now(), // Thêm timestamp để kiểm tra expire
+    };
+
+    // Lưu vào localStorage với key riêng cho buy-now (expire sau 30 phút)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("buy-now-item", JSON.stringify(buyNowItem));
+    }
+
+    // Kiểm tra đăng nhập
+    if (!user || !user.id) {
+      toast.error("Bạn cần đăng nhập để mua hàng.");
+      router.push(
+        `/signin?redirect=${encodeURIComponent("/checkout?mode=buy-now")}`
+      );
+      return;
+    }
+
+    // Chuyển đến trang checkout
+    router.push("/checkout?mode=buy-now");
+  };
+
   return (
     <Link href={`/products/${product.slug}`} className="block group" passHref>
       <article
@@ -321,6 +454,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               Best Seller
             </div>
           )}
+        
         </div>
 
         {/* Ảnh sản phẩm */}
@@ -354,17 +488,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 }}
               />
             )}
-            {/* Hiển thị HẾT HÀNG nếu sản phẩm không còn hàng */}
-            {Number(product.quantity_stock) <= 0 && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
-                <div className="bg-white text-red-600 font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-red-600">
-                  Hết hàng
+            {/* Hiển thị trạng thái sản phẩm */}
+            {(() => {
+              const statusInfo = getStatusInfo();
+              if (!statusInfo.show) return null;
+
+              return (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
+                  <div
+                    className={`${statusInfo.bgColor} ${statusInfo.textColor} font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-current`}
+                  >
+                    {statusInfo.text}
+                  </div>
+                  <p className="mt-2 text-xs text-white italic opacity-80">
+                    {statusInfo.description}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs text-white italic opacity-80">
-                  Sản phẩm sẽ sớm được cập nhật lại
-                </p>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -372,9 +513,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <button
               onClick={handleAddToWishlist}
               className={`p-2 rounded-full shadow hover:bg-background-50 border transition-colors duration-200
-                ${isWishlisted
-                  ? "bg-red-500 border-red-500"
-                  : "bg-white border-gray-300"
+                ${
+                  isWishlisted
+                    ? "bg-red-500 border-red-500"
+                    : "bg-white border-gray-300"
                 }`}
               aria-label="Yêu thích"
             >
@@ -467,8 +609,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )} */}
         {/* Nút Mua ngay */}
-        <button className="w-full bg-background-900 text-white py-2 rounded-b-xl hover:bg-background-800 transition">
-          Mua ngay
+        <button
+          onClick={handleBuyNow}
+          disabled={!isPurchasable()}
+          className={`w-full py-2 rounded-b-xl transition ${
+            isPurchasable()
+              ? "bg-background-900 text-white hover:bg-background-800"
+              : "bg-gray-400 text-gray-600 cursor-not-allowed"
+          }`}
+        >
+          {(() => {
+            const status = product.status?.toString().toLowerCase().trim();
+            if (!isPurchasable()) {
+              switch (status) {
+                case "unavailable":
+                  return "Không khả dụng";
+                case "coming soon":
+                case "comingsoon":
+                  return "Sắp ra mắt";
+                case "discontinued":
+                  return "Ngừng sản xuất";
+                default:
+                  return "Hết hàng";
+              }
+            }
+            return "Mua ngay";
+          })()}
         </button>
       </article>
     </Link>

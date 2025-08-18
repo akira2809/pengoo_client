@@ -240,12 +240,29 @@ function ProductsContent() {
       const slug = getStringProperty(productObj, "slug") || "";
       const description = getStringProperty(productObj, "description") || "";
 
-      // Ensure status is always a string
+      // Ensure status is always a string - preserve original status value
       const statusValue = productObj.status;
-      const status =
-        typeof statusValue === "number"
-          ? statusValue.toString()
-          : getStringProperty(productObj, "status");
+      let status = "";
+      
+      if (typeof statusValue === "string") {
+        status = statusValue;
+      } else if (typeof statusValue === "number") {
+        status = statusValue.toString();
+      } else if (statusValue !== null && statusValue !== undefined) {
+        status = String(statusValue);
+      } else {
+        status = "available"; // Default status if undefined
+      }
+      
+      // Debug status transformation
+      // console.log("ProductsContent - Status transformation:", {
+      //   productId: getNumberProperty(productObj, "id"),
+      //   productName: productName?.substring(0, 30) + "...",
+      //   originalStatus: statusValue,
+      //   originalType: typeof statusValue,
+      //   transformedStatus: status,
+      //   stock: getNumberProperty(productObj, "quantity_stock")
+      // });
 
       const metaTitle = getStringProperty(productObj, "meta_title") || "";
       const metaDescription =

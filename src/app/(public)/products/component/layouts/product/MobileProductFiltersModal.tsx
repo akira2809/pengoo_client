@@ -4,6 +4,7 @@ import { MobileFilterModal } from '@/components/common/MobileFilterModal'; // Đ
 import { Listbox, Transition, Switch } from '@headlessui/react';
 import { FaCheck, FaChevronDown } from 'react-icons/fa';
 import { FilterDropdown } from '@/components/common/FilterDropdown'; // Đảm bảo đường dẫn đúng
+import { StatusFilter } from './StatusFilter';
 
 interface SortOption {
   id: number;
@@ -40,6 +41,8 @@ interface MobileProductFiltersModalProps {
   tags: Tag[];
   selectedTags: string[];
   onTagChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  selectedStatus: string[];
+  onStatusChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   priceRange: PriceRange;
   displayRange: { min: string; max: string; }; // Display range for inputs
   handlePriceChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => void;
@@ -62,6 +65,8 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
   tags,
   selectedTags, 
   onTagChange,
+  selectedStatus,
+  onStatusChange,
   priceRange,
   displayRange,
   handlePriceChange,
@@ -217,6 +222,14 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
               )}
             </div>
           </FilterDropdown>
+        </div>
+
+        {/* Status Filter */}
+        <div className="mb-6">
+          <StatusFilter
+            selectedStatus={selectedStatus}
+            onStatusChange={onStatusChange}
+          />
         </div>
 
         {/* Price Range Filter */}
