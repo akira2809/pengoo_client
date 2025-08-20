@@ -96,6 +96,17 @@ export default function ScratchMinigameModal({ onClose }: { onClose: () => void 
   const [initialUserPoints, setInitialUserPoints] = useState<number>(0);
 
   useEffect(() => {
+    // Prevent background scrolling when the modal is open
+    document.body.style.overflow = 'hidden';
+
+    // Re-enable scrolling when the modal is closed
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []); // Empty dependency array means this effect runs only on mount and unmount
+
+
+  useEffect(() => {
     setUsedToday(getUsageFromStorage());
   }, []);
 
