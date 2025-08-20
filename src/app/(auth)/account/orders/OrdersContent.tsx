@@ -7,8 +7,11 @@ import { ProductPagination } from '@/app/(public)/products/component/layouts/pro
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import Image from 'next/image';
-
 import { CreateOrderResponse, OrderItemDetail } from '@/app/type/order';
+import toast from 'react-hot-toast';
+
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "diishpkrl";
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "your_unsigned_preset";
 
 // --- Type Definitions ---
 export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
@@ -35,7 +38,12 @@ export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   [key: string]: unknown;
 }
-
+interface IBank {
+  name: string;
+  bin:string,
+  logo:string,
+  id:number
+}
 // --- Status Configuration ---
 const STATUS_CONFIG = {
   pending: { text: 'Chờ xác nhận', style: 'bg-yellow-100 text-yellow-800' },
@@ -55,8 +63,21 @@ export function OrdersContent() {
   const [returnOrder, setReturnOrder] = useState<OrderWithUser | null>(null);
   const [returnReason, setReturnReason] = useState('');
   const [returnMessage, setReturnMessage] = useState('');
-  const [returnVideo, setReturnVideo] = useState<File | null>(null);
-  const [returnImages, setReturnImages] = useState<File[]>([]);
+  const [returnVideo, setReturnVideo] = useState<string | null>(null);
+  const [returnImages, setReturnImages] = useState<string[]>([]);
+
+  
+  // --- Ngân hàng ---
+  const [listBank, setListBank] = useState<IBank[]>([]);
+  const [selectedBank, setSelectedBank] = useState<IBank | null>(null);
+  const [showBankList, setShowBankList] = useState(false);
+  const [accountNumber, setAccountNumber] = useState('');
+
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  // State cho upload (ảnh & video)
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const ITEMS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,10 +101,19 @@ export function OrdersContent() {
         setIsLoading(false);
       }
     };
-    
+
     fetchOrders();
   }, [user?.id]);
-
+  useEffect(() => {
+  const fetchListBank = async () => {
+      const res = await fetch('https://api.vietqr.io/v2/banks')
+      const data = await res.json()
+      console.log('Danh sách ngân hàng:', data)
+      setListBank(data.data)
+      // console.log('Danh sách ngân hàng:', data)
+    }
+    fetchListBank()
+  },[])
   // --- Helper Functions ---
   const formatPrice = (price: unknown) => {
     const numericPrice = Number(price);
@@ -119,36 +149,64 @@ export function OrdersContent() {
     }
   };
 
-  // --- Hoàn đơn hàng ---
-  const handleSubmitReturn = () => {
-    if (!returnOrder) return;
-    if (!returnReason) {
-      alert('Vui lòng chọn lý do hoàn đơn');
-      return;
-    }
+  
 
-    // Demo gửi formdata
-    const formData = new FormData();
-    formData.append('orderId', String(returnOrder.id));
-    formData.append('reason', returnReason);
-    formData.append('message', returnMessage);
-    if (returnVideo) {
-      formData.append('video', returnVideo);
-    }
-    returnImages.forEach((file, idx) => {
-      formData.append(`images[${idx}]`, file);
-    });
+ // --- Hoàn đơn hàng ---
+const handleSubmitReturn = () => {
+  const newErrors: {[key: string]: string} = {};
 
-    // TODO: Gọi API hoàn đơn ở đây
-    console.log('FormData gửi đi:', { reason: returnReason, message: returnMessage, video: returnVideo, images: returnImages });
+  if (!returnReason) {
+    newErrors.reason = 'Vui lòng chọn lý do hoàn đơn';
+  }
+  if (returnReason === 'other' && !returnMessage.trim()) {
+    newErrors.message = 'Vui lòng nhập lý do chi tiết';
+  }
+  if (!selectedBank) {
+    newErrors.bank = 'Vui lòng chọn ngân hàng';
+  }
+  if (!accountNumber.trim()) {
+    newErrors.account = 'Vui lòng nhập số tài khoản';
+  } else if (!/^\d+$/.test(accountNumber.trim())) {
+    newErrors.account = 'Số tài khoản không hợp lệ';
+  }
+  if (returnImages.length > 5) {
+    newErrors.images = 'Bạn chỉ được chọn tối đa 5 hình ảnh';
+  }
 
-    alert('Yêu cầu hoàn đơn đã được gửi!');
-    setReturnOrder(null);
-    setReturnReason('');
-    setReturnMessage('');
-    setReturnVideo(null);
-    setReturnImages([]);
-  };
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  } 
+
+  // Clear error nếu hợp lệ
+  setErrors({});
+
+  // Demo gửi formdata
+  const formData = new FormData();
+  formData.append('orderId', String(returnOrder?.id));
+  formData.append('reason', returnReason);
+  formData.append('message', returnMessage);
+  formData.append('bank', selectedBank?.name || '');
+  formData.append('accountNumber', accountNumber);
+  if (returnVideo) {
+    formData.append('video', returnVideo);
+  }
+  returnImages.forEach((file, idx) => {
+    formData.append(`images[${idx}]`, file);
+  });
+
+  console.log('FormData gửi đi:', { reason: returnReason, message: returnMessage, bank: selectedBank, accountNumber });
+
+  alert('Yêu cầu hoàn đơn đã được gửi!');
+  setReturnOrder(null);
+  setReturnReason('');
+  setReturnMessage('');
+  setReturnVideo(null);
+  setReturnImages([]);
+  setSelectedBank(null);
+  setAccountNumber('');
+  setErrors({});
+};
 
   // --- Render Functions ---
   const renderOrderItems = (order: OrderWithUser) => {
@@ -193,6 +251,68 @@ export function OrdersContent() {
       );
     });
   };
+
+
+  // Hàm upload file lên Cloudinary
+const handleUploadToCloudinary = async (files: FileList, type: "image" | "video") => {
+  if (!files || files.length === 0) return;
+
+  setUploading(true);
+  setUploadProgress(0);
+
+  try {
+    const uploads = Array.from(files).map((file) => {
+      return new Promise<string>((resolve, reject) => {
+        if (file.size > 20 * 1024 * 1024) {
+          toast.error("File quá lớn! Tối đa 20MB.");
+          return reject();
+        }
+
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+        formData.append("folder", "orders");
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`);
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = (event.loaded / event.total) * 100;
+            setUploadProgress(Math.round(percent));
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            resolve(data.secure_url);
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.send(formData);
+      });
+    });
+
+    const urls = await Promise.all(uploads);
+
+    if (type === "image") {
+      setReturnImages((prev) => [...prev, ...urls].slice(0, 5)); // giới hạn 5 ảnh
+    } else if (type === "video") {
+      setReturnVideo(urls[0]); // chỉ 1 video
+    }
+
+    toast.success("Upload thành công!");
+
+  } catch (err) {
+    toast.error("Upload thất bại!");
+
+  } finally {
+    setUploading(false);
+    setUploadProgress(0);
+  }
+};
 
   const paginatedOrders = orders.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -344,73 +464,200 @@ export function OrdersContent() {
         </div>
       )}
 
+
       {/* Modal Hoàn đơn hàng */}
-{returnOrder && (
-  <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    onClick={() => setReturnOrder(null)}
-  >
-    <div
-      className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <h2 className="text-2xl font-bold mb-4">Hoàn đơn #{returnOrder.id}</h2>
-
-      {/* Lý do */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Lý do hoàn hàng</label>
-        <select className="w-full border rounded px-3 py-2">
-          <option value="">-- Chọn lý do --</option>
-          <option value="defective">Sản phẩm bị lỗi</option>
-          <option value="missing">Thiếu sản phẩm</option>
-          <option value="wrong">Giao sai sản phẩm</option>
-        </select>
-      </div>
-
-      {/* Upload video */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Upload Video</label>
-        <input type="file" accept="video/*" className="w-full" />
-      </div>
-
-      {/* Upload hình ảnh */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Upload Hình ảnh (tối đa 5)</label>
-        <input type="file" accept="image/*" multiple className="w-full" />
-        <p className="text-sm text-gray-500 mt-1">Bạn có thể chọn tối đa 5 hình</p>
-      </div>
-
-      {/* Message */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Ghi chú</label>
-        <textarea
-          rows={4}
-          className="w-full border rounded px-3 py-2"
-          placeholder="Nhập ghi chú của bạn..."
-        ></textarea>
-      </div>
-
-      <div className="flex justify-end gap-3">
-        <button
+      {returnOrder && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={() => setReturnOrder(null)}
-          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
         >
-          Đóng
-        </button>
-        <button
-          onClick={() => {
-            // TODO: gọi API gửi yêu cầu hoàn đơn ở đây
-            alert('Yêu cầu hoàn đơn đã được gửi!');
-            setReturnOrder(null);
-          }}
-          className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-        >
-          Gửi yêu cầu
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <div
+            className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 overflow-y-auto max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold mb-6">
+              Hoàn đơn #{returnOrder.id}
+            </h2>
+
+            {/* Grid 2 cột - responsive */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Cột trái */}
+              <div className="space-y-4">
+                {/* Lý do */}
+                <div>
+                  <label className="block font-medium mb-1">Lý do hoàn hàng</label>
+                  <select
+                    className="w-full border rounded px-3 py-2"
+                    value={returnReason}
+                    onChange={(e) => setReturnReason(e.target.value)}
+                  >
+                    <option value="">-- Chọn lý do --</option>
+                    <option value="defective">Sản phẩm bị lỗi</option>
+                    <option value="missing">Thiếu sản phẩm</option>
+                    <option value="wrong">Giao sai sản phẩm</option>
+                    <option value="other">Khác</option>
+                  </select>
+                  {errors.reason && (
+                    <p className="text-sm text-red-500 mt-1">{errors.reason}</p>
+                  )}
+                </div>
+
+                {/* Nếu chọn Khác */}
+                {returnReason === "other" && (
+                  <div>
+                    <label className="block font-medium mb-1">Nhập lý do chi tiết</label>
+                    <textarea
+                      rows={3}
+                      className="w-full border rounded px-3 py-2"
+                      placeholder="Nhập lý do khác..."
+                      value={returnMessage}
+                      onChange={(e) => setReturnMessage(e.target.value)}
+                    ></textarea>
+                    {errors.message && (
+                      <p className="text-sm text-red-500 mt-1">{errors.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Chọn ngân hàng */}
+                <div>
+                  <label className="block font-medium mb-1">Chọn ngân hàng</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-between border rounded px-3 py-2"
+                      onClick={() => setShowBankList(!showBankList)}
+                    >
+                      {selectedBank ? (
+                        <span className="flex items-center gap-2">
+                          <img src={selectedBank.logo} alt={selectedBank.name} className="w-6 h-6" />
+                          {selectedBank.name}
+                        </span>
+                      ) : (
+                        <span className="text-gray-500">-- Chọn ngân hàng --</span>
+                      )}
+                    </button>
+                    {showBankList && (
+                      <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded border bg-white shadow">
+                        {listBank.map((bank) => (
+                          <li
+                            key={bank.id}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              setSelectedBank(bank);
+                              setShowBankList(false);
+                            }}
+                          >
+                            <img src={bank.logo} alt={bank.name} className="w-6 h-6" />
+                            {bank.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {errors.bank && <p className="text-sm text-red-500 mt-1">{errors.bank}</p>}
+                </div>
+
+                {/* Nhập số tài khoản */}
+                <div>
+                  <label className="block font-medium mb-1">Nhập số tài khoản</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="Nhập số tài khoản"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                  />
+                  {errors.account && (
+                    <p className="text-sm text-red-500 mt-1">{errors.account}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Cột phải */}
+              <div className="space-y-4">
+                {/* Upload video */}
+                <div>
+                  <label className="block font-medium mb-1">Upload Video</label>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    className="w-full"
+                    onChange={(e) => e.target.files && handleUploadToCloudinary(e.target.files, "video")}
+                  />
+                  {uploading && <p className="text-sm text-blue-600 mt-1">Đang upload... {uploadProgress}%</p>}
+                  {/* Preview video */}
+                  {returnVideo && (
+                    <div className="relative mt-2">
+                      <video src={returnVideo} controls className="w-full rounded-md max-h-60" />
+                      <button
+                        onClick={() => setReturnVideo(null)}
+                        className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                      >
+                        X
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload hình ảnh */}
+                <div>
+                  <label className="block font-medium mb-1">Upload Hình ảnh (tối đa 5)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="w-full"
+                    onChange={(e) => e.target.files && handleUploadToCloudinary(e.target.files, "image")}
+                  />
+                  {uploading && <p className="text-sm text-blue-600 mt-1">Đang upload... {uploadProgress}%</p>}
+
+                  {/* Preview hình ảnh */}
+                  {returnImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {returnImages.map((url, idx) => (
+                        <div key={idx} className="relative">
+                          <img
+                            src={url}
+                            alt={`preview-${idx}`}
+                            className="w-24 h-24 object-cover rounded-md border"
+                          />
+                          <button
+                            onClick={() =>
+                              setReturnImages((prev) => prev.filter((_, i) => i !== idx))
+                            }
+                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Nút hành động */}
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setReturnOrder(null)}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={handleSubmitReturn}
+                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+              >
+                Gửi yêu cầu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }
