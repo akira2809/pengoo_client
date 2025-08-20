@@ -7,6 +7,7 @@ import { productService } from "@/app/api/services/productService";
 import { ProductData } from "@/app/type/product";
 import { Skeleton } from "@/components/common/UI/Skeleton";
 import ScratchMinigamePopup from "@/components/common/scratch-minigame/ScratchMinigamePopup";
+import InteractiveExperience from "@/components/layouts/HomePage/InteractiveExperience/InteractiveExperience";
 
 // Tạo một component fallback mặc định
 const Fallback = ({ className = "" }: { className?: string }) => (
@@ -281,9 +282,18 @@ function HomePage() {
         <TestimonialCarousel />
       </Suspense>
 
+      <Suspense
+        fallback={
+          <div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
+        <InteractiveExperience />
+      </Suspense>
+
       <BlogSection />
 
-      {}
+      
+
       <ScratchMinigamePopup buttonImage="/images/minigame/greenssrb.png" />
     </>
   );
