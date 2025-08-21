@@ -22,7 +22,7 @@ interface CheckoutFormData {
   city: string;
   apartment: string;
   note?: string;
-  paymentMethod: 'cod' | 'payos';
+  paymentMethod: 'cod' | 'payos' | 'paypal';
   shippingMethod: 'localHCM' | 'outsideHCM';
   total: number;
   couponCode?: string;
@@ -43,7 +43,7 @@ export interface CreateOrderRequest {
   description: string;
   userId?: number | null;
   delivery_id: number;
-  payment_type: 'cod' | 'payos';
+  payment_type: 'cod' | 'payos' | 'paypal';
   total_price: number;
   shipping_address: string;
   payment_status: 'pending' | 'paid' | 'failed';

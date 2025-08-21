@@ -12,7 +12,6 @@ type Order = {
 import { useEffect, Suspense, useState } from 'react';
 function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
-  // const orderId = searchParams.get('order_id')
   const [order, setOrder] = useState<Order | null>(null);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
@@ -20,30 +19,41 @@ function OrderSuccessContentInner() {
   const [downloading, setDownloading] = useState(false);
   const [orderId, setOrderId] = useState(0);
 
-  const orderCode = searchParams.get('orderCode')
+  const orderCode = searchParams?.get('orderCode');
+  const order_id = searchParams?.get('order_id');
+
   useEffect(() => {
+    // Prefer orderCode (PayOS), fallback to order_id (COD)
     if (orderCode) {
-      orderService.successPayment(Number(orderCode)).then(res => {
-        setOrder(res.data as unknown as Order);
-        setOrderId(res.data.id as number);
-        console.log("Order data:", res.data);
-        setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
-      })
-      // orderService.getOrderByOrderCode(Number(orderCode)).then(res => {
-      //   setOrder(res.data as unknown as Order);
-      //   setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${orderId}`);
-      // })
-      // Track successful order conversion
-      if (orderId && window.gtag) {
-        window.gtag('event', 'purchase', {
-          transaction_id: orderId,
-          // Add other relevant e-commerce tracking data here
-
-        });
-      }
+      orderService.successPayment(Number(orderCode)).then((res) => {
+        const data = res?.data as Partial<Order> | undefined;
+        if (data && !Array.isArray(data) && typeof data.id === 'number') {
+          setOrder(data as Order);
+          setOrderId(data.id as number);
+          setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${data.id}`);
+        } else {
+          setOrder(null);
+        }
+      });
+    } else if (order_id) {
+      orderService.getOrderById(Number(order_id)).then((res) => {
+        const data = res?.data as Partial<Order> | undefined;
+        if (data && !Array.isArray(data) && typeof data.id === 'number') {
+          setOrder(data as Order);
+          setOrderId(data.id as number);
+          setInvoiceUrl(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invoices/${data.id}`);
+        } else {
+          setOrder(null);
+        }
+      });
     }
-
-  }, [orderId, orderCode]);
+    // Track successful order conversion
+    if (orderId && window.gtag) {
+      window.gtag('event', 'purchase', {
+        transaction_id: orderId,
+      });
+    }
+  }, [orderId, orderCode, order_id]);
 
   const handleResendInvoice = async () => {
     if (!orderId) return;
