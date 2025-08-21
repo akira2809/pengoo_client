@@ -112,7 +112,7 @@ const mapApiProductToProduct = (item: ApiProduct): Product => {
     product_price: productPrice,
     discount: discount,
     slug: item.slug || "",
-    status: item.status || "available", // Preserve original status as string
+    status: typeof item.status === "number" ? item.status : Number(item.status) || 0, // Ensure status is a number
     meta_title: item.meta_title || "",
     meta_description: item.meta_description || "",
     image_url: productImages[0]?.url || imageUrl, // Use first image URL or fallback to image_url
@@ -202,7 +202,11 @@ export const createProductSlice: StateCreator<ProductState> = (set) => ({
             }))
           : [],
         // Ensure tags is always an array of strings
-        tags: Array.isArray(item.tags) ? item.tags : [],
+        tags: Array.isArray(item.tags)
+          ? item.tags.map((tag) =>
+              typeof tag === "string" ? tag : String(tag)
+            )
+          : [],
       }));
 
       const products = apiProducts.map(mapApiProductToProduct);

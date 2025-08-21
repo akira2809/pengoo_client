@@ -6,7 +6,7 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 import { orderService } from "@/app/api/services/orderService";
 import InputField from "../../(public)/checkout/component/InputField";
-import RadioButton from "../../(public)/checkout/component/RadioButton";
+import RadioButton from "./component/RadioButton"; // Adjust import path as needed
 import Image from "next/image";
 import {
   showSuccessToast,
@@ -46,7 +46,8 @@ interface FormData {
   phone: string;
   saveInfo: boolean;
   delivery_id: number;
-  paymentMethod: "payos" | "cod";
+// ...in your FormData and related types...
+paymentMethod: "payos" | "cod" | "paypal";
   billingAddress: "sameAsShipping" | "different";
   note?: string;
   couponCode?: string;
@@ -470,6 +471,7 @@ const CheckoutPage: React.FC = () => {
     }
     setIsSubmitting(true);
     try {
+      // Prepare order data and create order
       const orderData: ImportedCheckoutFormData = {
         ...formData,
         total,
@@ -484,19 +486,41 @@ const CheckoutPage: React.FC = () => {
         user?.id ? parseInt(user.id.toString(), 10) : undefined
       );
       const response = await orderService.createOrder(preparedOrder);
-      if (response.payment_url) {
+
+      // PayPal flow
+      if (formData.paymentMethod === "paypal") {
+        // Call backend to create PayPal order
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/paypal/create-order/${response.order_id}`,
+          { method: "POST" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.approvalUrl) {
+            window.location.href = data.approvalUrl;
+            return;
+          } else {
+            toast.error("Không lấy được link thanh toán PayPal.");
+          }
+        } else {
+          toast.error("Không thể tạo đơn PayPal.");
+        }
+        setIsSubmitting(false);
+        return;
+      }
+
+      // PayOS: redirect to payment gateway
+      if (formData.paymentMethod === "payos" && response.payment_url) {
         window.location.href = response.payment_url;
         return;
       }
 
-      // Clear cart only if not in buy-now mode
+      // COD: clear cart/buy-now, then redirect to success page
       if (!isBuyNowMode) {
         clearCart();
       } else {
-        // Clear buy-now item from localStorage
         localStorage.removeItem("buy-now-item");
       }
-
       router.push(`/order/success?order_id=${response.order_id}`);
     } catch (error) {
       toast.error(
@@ -784,6 +808,7 @@ const CheckoutPage: React.FC = () => {
                 Toàn bộ các giao dịch được bảo mật và mã hóa.
               </p>
               <div className="space-y-3 mb-6">
+                {/* PayOS */}
                 <label
                   htmlFor="payos"
                   className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
@@ -804,7 +829,7 @@ const CheckoutPage: React.FC = () => {
                     <div className="mt-2 flex items-center space-x-2">
                       <Image
                         src="/Casso-payOSLogo-1.svg"
-                        alt="Visa"
+                        alt="PayOS"
                         width={130}
                         height={50}
                         className="object-contain"
@@ -813,25 +838,65 @@ const CheckoutPage: React.FC = () => {
                   </span>
                 </label>
 
-                {formData.paymentMethod === "payos" && (
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 mt-2">
-                    <p>
-                      Sau khi nhấp vào &quot;Thanh toán ngay&quot;, bạn sẽ được
-                      chuyển hướng đến PayOS để hoàn tất thanh toán một cách an
-                      toàn.
-                    </p>
-                  </div>
-                )}
+                {/* PayPal */}
+                <label
+                  htmlFor="paypal"
+                  className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
+                >
+                  <input
+                    type="radio"
+                    id="paypal"
+                    name="paymentMethod"
+                    value="paypal"
+                    checked={formData.paymentMethod === "paypal"}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                  />
+                  <span className="flex flex-col">
+                    <span className="block text-sm font-medium text-gray-900">
+                      Thanh toán qua PayPal
+                    </span>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <Image
+                        src="/pngegg.png"
+                        alt="PayPal"
+                        width={100}
+                        height={30}
+                        className="object-contain"
+                      />
+                    </div>
+                  </span>
+                </label>
 
-                <RadioButton
-                  id="cod"
-                  name="paymentMethod"
-                  value="cod"
-                  checked={formData.paymentMethod === "cod"}
-                  onChange={handleInputChange}
-                  label="Thanh toán khi nhận hàng (COD)"
-                  // icon={<CashIcon />}
-                />
+                {/* COD */}
+                <label
+                  htmlFor="cod"
+                  className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
+                >
+                  <input
+                    type="radio"
+                    id="cod"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={formData.paymentMethod === "cod"}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                  />
+                  <span className="flex flex-col">
+                    <span className="block text-sm font-medium text-gray-900">
+                      Thanh toán khi nhận hàng (COD)
+                    </span>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <Image
+                        src="/cod.png"
+                        alt="COD"
+                        width={80}
+                        height={30}
+                        className="object-contain"
+                      />
+                    </div>
+                  </span>
+                </label>
               </div>
 
               {/* Billing Address */}

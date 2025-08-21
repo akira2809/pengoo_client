@@ -45,13 +45,13 @@ interface OrderData {
 export default function OrderCancelContent() {
   const searchParams = useSearchParams();
   // Get all relevant parameters from the URL
-  const orderCode = searchParams.get('orderCode');
-  const code = searchParams.get('code');
-  // const transactionId = searchParams.get('id');
+  const orderCode = searchParams?.get('orderCode');
+  const code = searchParams?.get('code');
+  // const transactionId = searchParams?.get('id');
 
-  const orderIdFromUrl = searchParams.get("id") || searchParams.get("code");
-  const status = searchParams.get("status");
-  const isCancelled = searchParams.get("cancel") === "true";
+  const orderIdFromUrl = searchParams?.get("id") || searchParams?.get("code");
+  const status = searchParams?.get("status");
+  const isCancelled = searchParams?.get("cancel") === "true";
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState<string>("");
