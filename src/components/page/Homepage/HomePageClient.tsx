@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/common/UI/Skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "keen-slider/keen-slider.min.css";
 import ScratchMinigamePopup from "@/components/common/scratch-minigame/ScratchMinigamePopup";
+import InteractiveExperience from "@/components/layouts/HomePage/InteractiveExperience/InteractiveExperience";
 import { useKeenSlider } from "keen-slider/react";
 
 // Tạo một component fallback mặc định
@@ -366,9 +367,18 @@ function HomePage() {
         <TestimonialCarousel />
       </Suspense>
 
+      <Suspense
+        fallback={
+          <div className="h-[500px] w-full bg-gray-100 animate-pulse my-8" />
+        }
+      >
+        <InteractiveExperience />
+      </Suspense>
+
       <BlogSection />
 
-      {}
+      
+
       <ScratchMinigamePopup buttonImage="/images/minigame/greenssrb.png" />
     </>
   );

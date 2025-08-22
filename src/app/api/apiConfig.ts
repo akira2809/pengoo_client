@@ -38,6 +38,7 @@ export const API_CONFIG = {
       DELIVERY: '/orders/delivery',
       CANCEL_PAYMENT: (orderCoder: number) => `/orders/payos/order-cancel?orderCode=${orderCoder}`,
       SUCCESS_PAYMENT: (orderCoder: number) => `/orders/payos/order-success?orderCode=${orderCoder}`,
+      UPDATE_ADDRESS: (id: number) => `/orders/${id}/address`,
     },
 
     // User endpoints

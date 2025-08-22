@@ -45,9 +45,7 @@ export const orderService = {
     return cartItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
-      price: typeof item.product_price === 'string'
-        ? parseFloat(item.product_price)
-        : item.product_price,
+      price:  Number(item.product_price) * (1 - (Number(item.discount) || 0) / 100),
       orderId: orderId
     }));
   },
@@ -59,7 +57,7 @@ export const orderService = {
     userId?: number
   ): CreateOrderRequest {
     const isPayOS = formData.paymentMethod === 'payos';
-
+    console.log('Prepared order data:', formData);
     return {
       id: 0, // or generate/set appropriate id if available
       name: formData.name || '', // assuming name is in formData, otherwise set default
@@ -69,6 +67,7 @@ export const orderService = {
       delivery_id: formData.delivery_id,
       payment_type: isPayOS ? 'payos' : 'cod',
       total_price: formData.total,
+      phoneNumber: formData.phone_number,
       shipping_address: `${formData.address}, ${formData.city}`,
       payment_status: isPayOS ? 'pending' : 'pending',
       productStatus: 'pending',
@@ -148,5 +147,16 @@ export const orderService = {
   },
   async successPayment(orderCoder: number) {
     return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.SUCCESS_PAYMENT(orderCoder));
+  },
+
+  // Cập nhật địa chỉ đơn hàng
+  async updateOrderAddress(orderId: number, newAddress: string, newPhoneNumber: string) {
+    console.log('update address successfully', { newAddress, newPhoneNumber });
+    return apiClient.patch<unknown[]>(
+      API_CONFIG.ENDPOINTS.ORDERS.UPDATE_ADDRESS(orderId),
+      { shipping_address: newAddress, 
+        phone_number: newPhoneNumber 
+      }
+    );
   },
 };

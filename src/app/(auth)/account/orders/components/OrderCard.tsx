@@ -1,0 +1,65 @@
+import { OrderWithUser } from '@/app/type/order';
+import { OrderStatusBadge } from './OrderStatusBadge';
+import { OrderItemList } from './OrderItemList';
+import { formatOrderDate, formatPrice } from '@/app/utils/formatters';
+
+
+interface OrderCardProps {
+  order: OrderWithUser;
+  onViewDetails: (order: OrderWithUser) => void;
+  onEditAddress: (order: OrderWithUser) => void;
+  onReturnOrder: (order: OrderWithUser) => void;
+}
+
+export function OrderCard({ order, onViewDetails, onEditAddress, onReturnOrder }: OrderCardProps) {
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden divide-y divide-gray-200">
+      <div className="p-4 sm:p-5 flex justify-between items-center">
+        <div>
+          <h3 className="font-semibold text-gray-900">Mã đơn hàng: #{order.id}</h3>
+          {order.order_code && (
+            <p className="text-sm text-gray-600">Order Code: {order.order_code}</p>
+          )}
+          <p className="text-sm text-gray-500">Ngày đặt: {formatOrderDate(order.order_date)}</p>
+        </div>
+        <OrderStatusBadge status={order.productStatus} />
+      </div>
+
+      <div className="p-4 sm:p-5">
+        <OrderItemList items={order.details || []} />
+      </div>
+
+      <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center bg-gray-50 gap-3 sm:gap-0">
+        <div className="font-semibold text-lg text-gray-900">
+          <span>Tổng tiền: </span>
+          <span>{formatPrice(order.total_price)}</span>
+        </div>
+        <div className="flex gap-3">
+          {order.productStatus === 'pending' && (
+            <button
+              onClick={() => onEditAddress(order)}
+              className="px-4 py-2 text-sm font-medium text-text-800 bg-white border border-background-800 rounded-md hover:bg-background-800 hover:text-white transition-colors duration-200"
+            >
+              Cập nhật thông tin giao hàng
+            </button>
+          )}
+
+          {order.productStatus === 'delivered' && (
+            <button
+              onClick={() => onReturnOrder(order)}
+              className="px-4 py-2 text-sm font-medium text-yellow-600 bg-white border border-yellow-300 rounded-md hover:bg-yellow-500 hover:text-white transition-colors duration-200"
+            >
+              Hoàn đơn
+            </button>
+          )}
+          <button
+            onClick={() => onViewDetails(order)}
+            className="px-4 py-2 text-sm font-medium text-white bg-gray-800 border border-transparent rounded-md hover:bg-gray-900 transition-colors duration-200"
+          >
+            Xem chi tiết
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

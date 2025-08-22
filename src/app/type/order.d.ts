@@ -19,7 +19,8 @@ interface CheckoutFormData {
   email: string;
   phone: string;
   address: string;
-  city: string;
+  city: string;  
+  phone_number: string;
   apartment: string;
   note?: string;
   paymentMethod: 'cod' | 'payos' | 'paypal';
@@ -42,6 +43,7 @@ export interface CreateOrderRequest {
   fee: number;
   description: string;
   userId?: number | null;
+  phoneNumber: string;
   delivery_id: number;
   payment_type: 'cod' | 'payos' | 'paypal';
   total_price: number;
@@ -69,4 +71,37 @@ export interface CreateOrderResponse {
   order_code: string;
   total_price: number;
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+}
+
+export interface IBank {
+  name: string;
+  bin: string;
+  logo: string;
+  id: number;
+}
+
+export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
+  user?: {
+    id: number | string;
+    username?: string;
+    full_name?: string;
+    email?: string;
+    phone_number?: number;
+    avatar_url?: string;
+  };
+  delivery?: {
+    name?: string;
+    description?: string;
+    fee?: string | number;
+    estimatedTime?: string;
+  };
+  details?: OrderItemDetail[];
+  order_date?: string;
+  order_code: string; 
+  total_price: number;
+  shipping_address?: string;
+  payment_type?: string;
+  phone_number?: string;
+  productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  [key: string]: unknown;
 }
