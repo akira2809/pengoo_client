@@ -19,7 +19,8 @@ interface CheckoutFormData {
   email: string;
   phone: string;
   address: string;
-  city: string;
+  city: string;  
+  phone_number: string;
   apartment: string;
   note?: string;
   paymentMethod: 'cod' | 'payos' | 'paypal';
@@ -42,6 +43,7 @@ export interface CreateOrderRequest {
   fee: number;
   description: string;
   userId?: number | null;
+  phoneNumber: string;
   delivery_id: number;
   payment_type: 'cod' | 'payos' | 'paypal';
   total_price: number;
@@ -99,6 +101,7 @@ export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
   total_price: number;
   shipping_address?: string;
   payment_type?: string;
+  phone_number?: string;
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   [key: string]: unknown;
 }

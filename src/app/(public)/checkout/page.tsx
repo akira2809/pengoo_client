@@ -479,6 +479,7 @@ const CheckoutPage: React.FC = () => {
         name: "",
         fee: 0,
         description: "",
+        phone_number: formData.phone,
       };
       const preparedOrder = orderService.prepareOrderData(
         orderData,

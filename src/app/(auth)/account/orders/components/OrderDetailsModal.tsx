@@ -26,7 +26,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
           <h3 className="font-semibold text-gray-800">Thông tin khách hàng</h3>
           <p>Họ tên: {order.user?.full_name}</p>
           <p>Email: {order.user?.email}</p>
-          <p>SĐT: {order.user?.phone_number}</p>
+          <p>SĐT: {order?.phone_number}</p>
         </div>
 
         <div className="mb-4">

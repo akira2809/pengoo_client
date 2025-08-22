@@ -61,12 +61,12 @@ export function OrdersContent() {
     fetchListBank();
   }, []);
 
-  const handleUpdateAddress = async (orderId: number, newAddress: string) => {
+  const handleUpdateAddress = async (orderId: number, newAddress: string, newPhoneNumber: string) => {
     try {
-      await orderService.updateOrderAddress(orderId, newAddress);
+      await orderService.updateOrderAddress(orderId, newAddress, newPhoneNumber);
       setOrders((prev) =>
         prev.map((o) =>
-          o.id === orderId ? { ...o, shipping_address: newAddress } : o
+          o.id === orderId ? { ...o, shipping_address: newAddress, phone_number: newPhoneNumber } : o
         )
       );
       toast.success("Cập nhật địa chỉ thành công!");
@@ -135,7 +135,7 @@ export function OrdersContent() {
         <EditAddressModal
           order={editingOrder}
           onClose={() => setEditingOrder(null)}
-          onUpdateAddress={handleUpdateAddress}
+          updateOrderAddress={handleUpdateAddress}
         />
 
         <ReturnOrderModal

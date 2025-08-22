@@ -4,12 +4,12 @@ import { useState } from 'react';
 interface EditAddressModalProps {
   order: OrderWithUser | null;
   onClose: () => void;
-  onUpdateAddress: (orderId: number, newAddress: string, newPhoneNumber: string) => Promise<void>;
+  updateOrderAddress: (orderId: number, newAddress: string, newPhoneNumber: string) => Promise<void>;
 }
 
-export function EditAddressModal({ order, onClose, onUpdateAddress }: EditAddressModalProps) {
+export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAddressModalProps) {
   const [newAddress, setNewAddress] = useState(order?.shipping_address || "");
-  const [newPhoneNumber, setNewPhoneNumber] = useState(order?.user?.phone_number?.toString() || "");
+  const [newPhoneNumber, setNewPhoneNumber] = useState(order?.phone_number?.toString() || "");
   const [isUpdating, setIsUpdating] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
@@ -37,7 +37,8 @@ export function EditAddressModal({ order, onClose, onUpdateAddress }: EditAddres
     
     setIsUpdating(true);
     try {
-      await onUpdateAddress(order.id, newAddress, newPhoneNumber);
+      await updateOrderAddress(order.id, newAddress, newPhoneNumber);
+    //   console.log('update address successfully', { newAddress, newPhoneNumber });
       onClose();
     } catch (error) {
       console.error("Lỗi cập nhật thông tin:", error);
@@ -68,7 +69,7 @@ export function EditAddressModal({ order, onClose, onUpdateAddress }: EditAddres
               <span className="font-medium">Địa chỉ:</span> {order.shipping_address || "Chưa có địa chỉ"}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              <span className="font-medium">SĐT:</span> {order.user?.phone_number || "Chưa có số điện thoại"}
+              <span className="font-medium">SĐT:</span> {order?.phone_number || "Chưa có số điện thoại"}
             </p>
           </div>
         </div>
