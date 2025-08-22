@@ -149,4 +149,14 @@ export const orderService = {
   async successPayment(orderCoder: number) {
     return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.SUCCESS_PAYMENT(orderCoder));
   },
+
+  // Cập nhật địa chỉ đơn hàng
+  async updateOrderAddress(orderId: number, newAddress: string, newPhoneNumber: string) {
+    return apiClient.patch<unknown[]>(
+      API_CONFIG.ENDPOINTS.ORDERS.UPDATE_ADDRESS(orderId),
+      { shipping_address: newAddress, 
+        phone_number: newPhoneNumber 
+      }
+    );
+  },
 };

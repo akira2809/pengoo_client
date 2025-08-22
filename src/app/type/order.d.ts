@@ -70,3 +70,35 @@ export interface CreateOrderResponse {
   total_price: number;
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 }
+
+export interface IBank {
+  name: string;
+  bin: string;
+  logo: string;
+  id: number;
+}
+
+export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
+  user?: {
+    id: number | string;
+    username?: string;
+    full_name?: string;
+    email?: string;
+    phone_number?: number;
+    avatar_url?: string;
+  };
+  delivery?: {
+    name?: string;
+    description?: string;
+    fee?: string | number;
+    estimatedTime?: string;
+  };
+  details?: OrderItemDetail[];
+  order_date?: string;
+  order_code: string; 
+  total_price: number;
+  shipping_address?: string;
+  payment_type?: string;
+  productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  [key: string]: unknown;
+}

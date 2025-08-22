@@ -33,8 +33,8 @@ function Card() {
       rotation-x={0.1}
       rotation-z={0}
       onClick={() => setFlipped(!flipped)}
-      onPointerOver={(e) => (document.body.style.cursor = "pointer")}
-      onPointerOut={(e) => (document.body.style.cursor = "default")}
+      onPointerOver={() => (document.body.style.cursor = "pointer")}
+      onPointerOut={() => (document.body.style.cursor = "default")}
     >
       <boxGeometry args={[2.5, 3, 0.05]} />
       <meshStandardMaterial attach="material-0" {...edgeMaterial} />
