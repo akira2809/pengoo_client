@@ -6,8 +6,11 @@ import Link from "next/link";
 import { productService } from "@/app/api/services/productService";
 import { ProductData } from "@/app/type/product";
 import { Skeleton } from "@/components/common/UI/Skeleton";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import "keen-slider/keen-slider.min.css";
 import ScratchMinigamePopup from "@/components/common/scratch-minigame/ScratchMinigamePopup";
 import InteractiveExperience from "@/components/layouts/HomePage/InteractiveExperience/InteractiveExperience";
+import { useKeenSlider } from "keen-slider/react";
 
 // Tạo một component fallback mặc định
 const Fallback = ({ className = "" }: { className?: string }) => (
@@ -105,7 +108,26 @@ const DynamicProductCard = dynamic(
 );
 
 function HomePage() {
+  const [comingSoonSliderRef, comingSoonInstanceRef] = useKeenSlider<HTMLDivElement>({
+    loop: true,
+    slides: {
+      perView: 1.5,
+      spacing: 16,
+    },
+    breakpoints: {
+      "(min-width: 640px)": {
+        slides: { perView: 2, spacing: 16 },
+      },
+      "(min-width: 768px)": {
+        slides: { perView: 3, spacing: 20 },
+      },
+      "(min-width: 1024px)": {
+        slides: { perView: 4, spacing: 24 },
+      },
+    },
+  });
   const [featuredProducts, setFeaturedProducts] = useState<ProductData[]>([]);
+  const [comingSoonProducts, setComingSoonProducts] = useState<ProductData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,8 +142,14 @@ function HomePage() {
         const products = Array.isArray(response) ? response : response?.data;
 
         if (products && Array.isArray(products)) {
+          const availableProducts = products.filter(
+            (p) => p.status === "Available" && p.quantity_stock > 0
+          );
+          const comingSoon = products.filter((p) => p.status === "Coming Soon");
+
+          setComingSoonProducts(comingSoon.slice(0, 4));
           // Multi-criteria sorting for featured products
-          const sortedProducts = products.sort((a, b) => {
+          const sortedProducts = availableProducts.sort((a, b) => {
             // Priority 1: Products with discount (higher discount first)
             const discountA = Number(a.discount) || 0;
             const discountB = Number(b.discount) || 0;
@@ -172,12 +200,11 @@ function HomePage() {
 
       <section className="py-12 sm:py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-text-900 flex items-center justify-center gap-2">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-text-900 flex items-center  gap-2">
             <span className="text-red-500 text-3xl">🔥</span>
-            Sản phẩm nổi bật
+            BOARD GAME GIẢM GIÁ
             <span className="text-red-500 text-3xl">🔥</span>
           </h2>
-
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, index) => (
@@ -217,6 +244,64 @@ function HomePage() {
           )}
         </div>
       </section>
+
+      {(isLoading || comingSoonProducts.length > 0) && (
+        <section className="py-12 sm:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-text-900 flex items-center justify-center gap-2">
+                <span className="text-blue-500 text-3xl">🚀</span>
+                BOARD GAME SẮP RA MẮT
+                <span className="text-blue-500 text-3xl">🚀</span>
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => comingSoonInstanceRef.current?.prev()}
+                  className="bg-white hover:bg-gray-100 p-2 rounded-full shadow disabled:opacity-50"
+                  disabled={!comingSoonInstanceRef.current}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  onClick={() => comingSoonInstanceRef.current?.next()}
+                  className="bg-white hover:bg-gray-100 p-2 rounded-full shadow disabled:opacity-50"
+                  disabled={!comingSoonInstanceRef.current}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="flex flex-col space-y-3">
+                    <Skeleton className="h-64 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div ref={comingSoonSliderRef} className="keen-slider">
+                {comingSoonProducts.map((product) => (
+                  <div key={product.id} className="keen-slider__slide">
+                    <DynamicProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-center mt-10">
+              <Link
+                href="/products?status=Coming Soon"
+                className="px-6 py-3 border border-black rounded-full text-sm sm:text-base font-medium hover:bg-black hover:text-white transition-colors duration-300"
+              >
+                Xem tất cả sản phẩm
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <Suspense
         fallback={

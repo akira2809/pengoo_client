@@ -10,8 +10,6 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/app/api/services/wishlistService";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
-import router from "next/router";
-import Button from "../layouts/ProductDetail/component/Button";
 import { useRouter } from "next/navigation";
 
 interface ImageType {
@@ -73,8 +71,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const addItem = useCartStore((state) => state.addItem);
   const { user } = useAuthStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const routerNAV = useRouter();
-  
+  const router = useRouter();
 
   const userId = user ? user.id : null;
 
@@ -135,10 +132,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (Array.isArray(product.images) && product.images.length > 0) {
       // Find image with name "main" (case-insensitive)
       const mainImgObj = product.images.find(
-        (img) =>
-          img.name &&
-          img.name.trim().toLowerCase() === "main" &&
-          img.url
+        (img) => img.name && img.name.trim().toLowerCase() === "main" && img.url
       );
       if (mainImgObj && mainImgObj.url) {
         const normalized = getValidImageUrl(mainImgObj.url);
@@ -149,7 +143,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         //   source: "Main-Name",
         // });
         return (
-          normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+          normalized ||
+          "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
         );
       }
       // Fallback: use first image in array
@@ -163,7 +158,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           source: "First-Image-Fallback",
         });
         return (
-          normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+          normalized ||
+          "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
         );
       }
     }
@@ -188,10 +184,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   if (Array.isArray(product.images) && product.images.length > 1) {
     // Find main image index
     const mainImgIndex = product.images.findIndex(
-      (img) =>
-        img.name &&
-        img.name.trim().toLowerCase() === "main" &&
-        img.url
+      (img) => img.name && img.name.trim().toLowerCase() === "main" && img.url
     );
     // If no "main" image, use first image as main
     const usedMainIndex = mainImgIndex !== -1 ? mainImgIndex : 0;
@@ -209,17 +202,95 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   }
 
+  // Helper function to check if product is purchasable
+  const isPurchasable = () => {
+    const stock = Number(product.quantity_stock) || 0;
+    const status = product.status?.toString().toLowerCase().trim();
+
+    // Check status first - only allow if available
+    const isAvailable = !status || status === "available";
+
+    if (!isAvailable) {
+      return false;
+    }
+
+    // Then check stock
+    return stock > 0;
+  };
+
+  // Helper function to get status display info
+  const getStatusInfo = () => {
+    const stock = Number(product.quantity_stock) || 0;
+    const status = product.status?.toString().toLowerCase().trim();
+
+    // Status mapping - text only
+    switch (status) {
+      case "unavailable":
+        return {
+          show: true,
+          text: "Không khả dụng",
+          bgColor: "bg-gray-600",
+          textColor: "text-white",
+          description: "Sản phẩm tạm thời không khả dụng",
+        };
+      case "coming soon":
+      case "comingsoon":
+        return {
+          show: true,
+          text: "Sắp ra mắt",
+          bgColor: "bg-blue-600",
+          textColor: "text-white",
+          description: "Sản phẩm sẽ sớm có mặt",
+        };
+      case "discontinued":
+        return {
+          show: true,
+          text: "Ngừng sản xuất",
+          bgColor: "bg-orange-600",
+          textColor: "text-white",
+          description: "Sản phẩm đã ngừng sản xuất",
+        };
+      case "available":
+      default:
+        // For available status or undefined, check stock
+        if (stock <= 0) {
+          return {
+            show: true,
+            text: "Hết hàng",
+            bgColor: "bg-red-600",
+            textColor: "text-white",
+            description: "Sản phẩm sẽ sớm được cập nhật lại",
+          };
+        }
+        return { show: false };
+    }
+  };
+
   // ✅ Xử lý click thêm vào giỏ hàng
   const handleAddToCart = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const stock = Number(product.quantity_stock) || 0;
-
-    if (stock <= 0) {
-      toast.error("Sản phẩm đã hết hàng.");
+    if (!isPurchasable()) {
+      const status = product.status?.toString().toLowerCase().trim();
+      switch (status) {
+        case "unavailable":
+          toast.error("Sản phẩm hiện không khả dụng.");
+          break;
+        case "coming soon":
+        case "comingsoon":
+          toast.error("Sản phẩm sắp ra mắt, vui lòng chờ đợi.");
+          break;
+        case "discontinued":
+          toast.error("Sản phẩm đã ngừng sản xuất.");
+          break;
+        default:
+          toast.error("Sản phẩm đã hết hàng.");
+      }
       return;
     }
+
+    const stock = Number(product.quantity_stock) || 0;
 
     // Lấy số lượng hiện tại của sản phẩm trong giỏ (nếu có)
     const currentItem = useCartStore
@@ -279,7 +350,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       if (!isWishlisted) {
         await wishlistService.addToWishlist(
           Number(user.id),
-          Number(product.id),
+          Number(product.id)
         );
         toast.success(
           `Đã thêm "${product.product_name}" vào danh sách yêu thích`
@@ -305,193 +376,269 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
-const handleBuyNow = () => {
-  // e.preventDefault();
-  // e.stopPropagation();
+  // ✅ Xử lý click "Mua ngay" - chuyển thẳng đến checkout với sản phẩm này
+  const handleBuyNow = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  const stock = Number(product.quantity_stock) || 0;
-  if (stock <= 0) {
-    toast.error("Sản phẩm đã hết hàng.");
-    return;
-  }
+    if (!isPurchasable()) {
+      const status = product.status?.toString().toLowerCase().trim();
+      switch (status) {
+        case "unavailable":
+          toast.error("Sản phẩm hiện không khả dụng.");
+          break;
+        case "coming soon":
+        case "comingsoon":
+          toast.error("Sản phẩm sắp ra mắt, vui lòng chờ đợi.");
+          break;
+        case "discontinued":
+          toast.error("Sản phẩm đã ngừng sản xuất.");
+          break;
+        default:
+          toast.error("Sản phẩm đã hết hàng.");
+      }
+      return;
+    }
 
-  const currentItem = useCartStore.getState().items.find(
-    (item) => item.id === Number(product.id)
-  );
-  const currentQty = currentItem?.quantity || 0;
+    const stock = Number(product.quantity_stock) || 0;
 
-  if (currentQty + 1 > stock) {
-    toast.error(`Chỉ còn ${stock - currentQty} sản phẩm trong kho`);
-    return;
-  }
+    // Tạo item để lưu vào localStorage cho checkout
+    const buyNowItem = {
+      id: Number(product.id),
+      product_name: product.product_name,
+      product_price: Number(product.product_price),
+      quantity: 1,
+      image_url: mainImage,
+      discount: Number(product.discount) || 0,
+      slug: product.slug,
+      description: product.meta_description,
+      quantity_stock: stock,
+      timestamp: Date.now(), // Thêm timestamp để kiểm tra expire
+    };
 
-  // Thêm vào giỏ hàng
-  addItem({
-    id: Number(product.id),
-    product_name: product.product_name,
-    product_price: Number(product.product_price),
-    quantity: 1,
-    image_url: mainImage,
-    slug: product.slug,
-    description: product.meta_description,
-    discount: Number(product.discount) || 0,
-    quantity_stock: stock,
-  });
+    // Lưu vào localStorage với key riêng cho buy-now (expire sau 30 phút)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("buy-now-item", JSON.stringify(buyNowItem));
+    }
 
-  // Chuyển ngay sang checkout
-  routerNAV.push("/checkout");
-};
+    // Kiểm tra đăng nhập
+    if (!user || !user.id) {
+      toast.error("Bạn cần đăng nhập để mua hàng.");
+      router.push(
+        `/signin?redirect=${encodeURIComponent("/checkout?mode=buy-now")}`
+      );
+      return;
+    }
 
+    // Chuyển đến trang checkout
+    router.push("/checkout?mode=buy-now");
+  };
 
   return (
-  <article
-    ref={cardRef}
-    className="relative product-card bg-white border border-gray-200 rounded-xl flex flex-col justify-between min-h-[450px] max-h-[450px] shadow-sm hover:shadow-md transition-shadow"
-    itemScope
-    itemType="https://schema.org/Product"
-  >
-    {/* Nội dung card có thể click dẫn sang trang chi tiết */}
-    <Link
-      href={`/products/${product.slug}`}
-      className="flex flex-col flex-1 group"
-      passHref
-    >
-      {/* Badges */}
-      <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">
-        {hasDiscount && (
-          <div className="bg-red-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
-            {Math.min(99, discountPercentage)}% OFF
-          </div>
-        )}
-        {Number(product.quantity_sold) >= 10 && (
-          <div className="bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
-            Best Seller
-          </div>
-        )}
-      </div>
-
-      {/* Ảnh sản phẩm */}
-      <div className="relative w-full h-64 flex items-center justify-center rounded-xl overflow-hidden group bg-gray-50 p-4">
-        <div className="relative w-full h-full">
-          <Image
-            src={mainImage}
-            alt={product.product_name}
-            fill
-            className="object-contain transition-opacity rounded-t-xl duration-300 group-hover:opacity-0"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority
-          />
-          {hoverImage && (
-            <Image
-              src={hoverImage}
-              alt={`${product.product_name} - Hover`}
-              fill
-              className="object-contain opacity-0 transition-opacity rounded-t-xl duration-300 group-hover:opacity-100 absolute inset-0"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          )}
-          {/* Overlay hết hàng */}
-          {Number(product.quantity_stock) <= 0 && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
-              <div className="bg-white text-red-600 font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-red-600">
-                Hết hàng
-              </div>
-              <p className="mt-2 text-xs text-white italic opacity-80">
-                Sản phẩm sẽ sớm được cập nhật lại
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Nút wishlist + giỏ hàng (hover) */}
-        <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={handleAddToWishlist}
-            className={`p-2 rounded-full shadow border transition-colors duration-200 ${
-              isWishlisted ? "bg-red-500 border-red-500" : "bg-white border-gray-300"
-            }`}
-            aria-label="Yêu thích"
-          >
-            <Heart
-              className={`w-5 h-5 ${isWishlisted ? "text-white fill-white" : "text-gray-500"}`}
-            />
-          </button>
-
-          <button
-            onClick={handleAddToCart}
-            className="p-2 bg-white rounded-full shadow hover:bg-background-50"
-            aria-label="Thêm vào giỏ hàng"
-          >
-            <Plus className="w-5 h-5 text-text-900" />
-          </button>
-        </div>
-      </div>
-
-      {/* Thông tin sản phẩm */}
-      <div
-        className="flex flex-col flex-1 px-2 overflow-hidden mt-2 pb-2"
-        itemProp="offers"
+    <Link href={`/products/${product.slug}`} className="block group" passHref>
+      <article
+        ref={cardRef}
+        className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[440px] max-h-[440px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         itemScope
-        itemType="https://schema.org/Offer"
+        itemType="https://schema.org/Product"
       >
-        <h2
-          className="text-xl sm:text-lg min-h-[55px] font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
-          itemProp="name"
-        >
-          {product.product_name}
-        </h2>
-        <p className="text-xs text-gray-500 line-clamp-2 mx-auto">
-          {product.description}
-        </p>
-        <div className="mt-auto">
-          {hasDiscount ? (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="text-red-500 font-semibold text-base">
-                  {formatPrice(finalPrice)}
-                </span>
-                <span className="text-gray-400 text-xs line-through">
-                  {formatPrice(product.product_price)}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <div className="text-green-600">
-                  Tiết kiệm: {formatPrice(Number(product.product_price) - finalPrice)}
-                </div>
-                <div className="text-gray-500">
-                  Đã bán: {product.quantity_sold ?? 0}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 ">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-800 font-semibold text-base">
-                  {formatPrice(product.product_price)}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <div className="text-xs text-green-600">(Đã bao gồm VAT)</div>
-                <div className="text-gray-500">
-                  Đã bán: {product.quantity_sold ?? 0}
-                </div>
-              </div>
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">
+          {hasDiscount && (
+            <div className="bg-red-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
+              {Math.min(99, discountPercentage)}% OFF
             </div>
           )}
+          {Number(product.quantity_sold) >= 10 && (
+            <div className="bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full font-semibold">
+              Best Seller
+            </div>
+          )}
+        
         </div>
-      </div>
+
+        {/* Ảnh sản phẩm */}
+        <div className="relative w-full h-64 flex items-center justify-center rounded-xl overflow-hidden group bg-gray-50 p-4">
+          <div className="relative w-full h-full">
+            <Image
+              src={mainImage}
+              alt={product.product_name}
+              fill
+              className="object-contain transition-opacity rounded-t-xl duration-300 group-hover:opacity-0"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src =
+                  "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
+              }}
+            />
+            {hoverImage && (
+              <Image
+                src={hoverImage}
+                alt={`${product.product_name} - Hover`}
+                fill
+                className="object-contain opacity-0 transition-opacity rounded-t-xl duration-300 group-hover:opacity-100 absolute inset-0"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.style.display = "none";
+                }}
+              />
+            )}
+            {/* Hiển thị trạng thái sản phẩm */}
+            {(() => {
+              const statusInfo = getStatusInfo();
+              if (!statusInfo.show) return null;
+
+              return (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
+                  <div
+                    className={`${statusInfo.bgColor} ${statusInfo.textColor} font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-current`}
+                  >
+                    {statusInfo.text}
+                  </div>
+                  <p className="mt-2 text-xs text-white italic opacity-80">
+                    {statusInfo.description}
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+
+          <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Nút trái tim */}
+            <button
+              onClick={handleAddToWishlist}
+              className={`p-2 rounded-full shadow hover:bg-background-50 border transition-colors duration-200
+                ${
+                  isWishlisted
+                    ? "bg-red-500 border-red-500"
+                    : "bg-white border-gray-300"
+                }`}
+              aria-label="Yêu thích"
+            >
+              <Heart
+                className={`w-5 h-5 transition-colors duration-200
+                  ${isWishlisted ? "text-white fill-white" : "text-gray-500"}`}
+                fill={isWishlisted ? "#ef4444" : "none"}
+              />
+            </button>
+
+            {/* Nút giỏ hàng */}
+            <button
+              onClick={handleAddToCart}
+              className="p-2 bg-white rounded-full shadow hover:bg-background-50"
+              aria-label="Thêm vào giỏ hàng"
+            >
+              <Plus className="w-5 h-5 text-text-900" />
+            </button>
+          </div>
+        </div>
+
+        {/* Thông tin sản phẩm */}
+        <div
+          className="flex flex-col flex-1 px-2 overflow-hidden mt-2 pb-2"
+          itemProp="offers"
+          itemScope
+          itemType="https://schema.org/Offer"
+        >
+          <h2
+            className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
+            itemProp="name"
+          >
+            {product.product_name}
+          </h2>
+          <p className="text-xs text-gray-500 line-clamp-2 mt-1">
+            {product.description}
+          </p>
+          <div className="mt-auto">
+            {hasDiscount ? (
+              // Display when there's a discount
+              <div className="flex flex-col gap-1">
+                <div className="flex itemsx`-center gap-2">
+                  <span className="text-red-500 font-semibold text-base">
+                    {formatPrice(finalPrice)}
+                  </span>
+                  <span className="text-gray-400 text-xs line-through">
+                    {formatPrice(product.product_price)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <div className="text-green-600">
+                    Tiết kiệm:{" "}
+                    {formatPrice(Number(product.product_price) - finalPrice)}
+                  </div>
+                  <div className="text-gray-500">
+                    Đã bán: {product.quantity_sold ?? 0}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Display when there's no discount
+              <div className="flex flex-col gap-1 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-800 font-semibold text-base">
+                    {formatPrice(product.product_price)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <div className="text-xs text-green-600">(Đã bao gồm VAT)</div>
+                  <div className="text-gray-500">
+                    Đã bán: {product.quantity_sold ?? 0}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Hiển thị các tag */}
+        {/* {Array.isArray(product.tags) && product.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-4 px-2 mb-2">
+            {product.tags.map((tag) => (
+              <span
+                key={tag.id}
+                className="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded-full text-gray-700 capitalize"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        )} */}
+        {/* Nút Mua ngay */}
+        <button
+          onClick={handleBuyNow}
+          disabled={!isPurchasable()}
+          className={`w-full py-2 rounded-b-xl transition ${
+            isPurchasable()
+              ? "bg-background-900 text-white hover:bg-background-800"
+              : "bg-gray-400 text-gray-600 cursor-not-allowed"
+          }`}
+        >
+          {(() => {
+            const status = product.status?.toString().toLowerCase().trim();
+            if (!isPurchasable()) {
+              switch (status) {
+                case "unavailable":
+                  return "Không khả dụng";
+                case "coming soon":
+                case "comingsoon":
+                  return "Sắp ra mắt";
+                case "discontinued":
+                  return "Ngừng sản xuất";
+                default:
+                  return "Hết hàng";
+              }
+            }
+            return "Mua ngay";
+          })()}
+        </button>
+      </article>
     </Link>
-
-    {/* Button mua ngay (tách riêng, không nằm trong Link) */}
-    <Button
-      className="w-full bg-background-900 text-white py-2 rounded-b-xl hover:bg-background-800 transition"
-      onClick={handleBuyNow}
-    >
-      Mua ngay
-    </Button>
-  </article>
-);
-
+  );
 };
 
 export default ProductCard;

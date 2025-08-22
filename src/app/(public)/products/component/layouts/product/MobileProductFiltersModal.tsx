@@ -4,6 +4,7 @@ import { MobileFilterModal } from '@/components/common/MobileFilterModal'; // Đ
 import { Listbox, Transition, Switch } from '@headlessui/react';
 import { FaCheck, FaChevronDown } from 'react-icons/fa';
 import { FilterDropdown } from '@/components/common/FilterDropdown'; // Đảm bảo đường dẫn đúng
+import { StatusFilter } from './StatusFilter';
 
 interface SortOption {
   id: number;
@@ -40,6 +41,8 @@ interface MobileProductFiltersModalProps {
   tags: Tag[];
   selectedTags: string[];
   onTagChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  selectedStatus: string[];
+  onStatusChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   priceRange: PriceRange;
   displayRange: { min: string; max: string; }; // Display range for inputs
   handlePriceChange: (e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => void;
@@ -48,6 +51,8 @@ interface MobileProductFiltersModalProps {
   showOutOfStock: boolean;
   setShowOutOfStock: Dispatch<SetStateAction<boolean>>;
   formatPrice: (price: number | string) => string;
+  onClearFilters: () => void;
+  isAnyFilterActive: boolean;
 }
 
 export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps> = ({
@@ -62,6 +67,8 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
   tags,
   selectedTags, 
   onTagChange,
+  selectedStatus,
+  onStatusChange,
   priceRange,
   displayRange,
   handlePriceChange,
@@ -70,6 +77,8 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
   showOutOfStock,
   setShowOutOfStock,
   formatPrice,
+  onClearFilters,
+  isAnyFilterActive,
 }) => {
   return (
     <MobileFilterModal
@@ -219,6 +228,14 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
           </FilterDropdown>
         </div>
 
+        {/* Status Filter */}
+        <div className="mb-6">
+          <StatusFilter
+            selectedStatus={selectedStatus}
+            onStatusChange={onStatusChange}
+          />
+        </div>
+
         {/* Price Range Filter */}
         <div className="mb-6">
           {/* Tái sử dụng logic của PriceRangeFilter, nhưng UI có thể khác một chút do MobileFilterModal */}
@@ -268,6 +285,20 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
             </div>
           </FilterDropdown>
         </div>
+
+        {isAnyFilterActive && (
+          <div className="mt-6">
+            <button
+              onClick={() => {
+                onClearFilters();
+                onClose(); // Close modal after clearing
+              }}
+              className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md"
+            >
+              Xóa tất cả bộ lọc
+            </button>
+          </div>
+        )}
       </div>
     </MobileFilterModal>
   );
