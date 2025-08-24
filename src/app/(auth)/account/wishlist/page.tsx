@@ -51,6 +51,10 @@ export default function WishlistPage() {
       if (!user?.id) return;
       try {
         const res = await wishlistService.getWishlist(Number(user.id));
+
+        console.log("API Response:", res.data);
+
+
         setWishlist(
           (res.data ?? []).map((item: {
             id: number;

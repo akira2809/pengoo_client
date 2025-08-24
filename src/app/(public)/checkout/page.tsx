@@ -396,14 +396,18 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleShowCouponList = async () => {
+    console.log('123');
     const result = await Promise.all(
       myVouchers.map(async (voucher: Voucher) => {
         const data = await applyVoucher(voucher.coupon.code, subtotal);
+      console.log('data', data)
         return data !== undefined && data !== null
           ? { ...voucher, active: true }
           : { ...voucher, active: false };
       })
     );
+    console.log('My voucher', result)
+    console.log('subtotal', subtotal)
     result.sort((a: Voucher, b: Voucher) => {
       if (a.active && !b.active) return -1;
       if (!a.active && b.active) return 1;
