@@ -8,6 +8,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const orderService = {
   createOrder: async (orderData: CreateOrderRequest): Promise<CreateOrderResponse> => {
+    console.log("check", orderData)
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
@@ -45,7 +46,7 @@ export const orderService = {
     return cartItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
-      price:  Number(item.product_price) * (1 - (Number(item.discount) || 0) / 100),
+      price: Number(item.product_price) * (1 - (Number(item.discount) || 0) / 100),
       orderId: orderId
     }));
   },
@@ -154,8 +155,9 @@ export const orderService = {
     console.log('update address successfully', { newAddress, newPhoneNumber });
     return apiClient.patch<unknown[]>(
       API_CONFIG.ENDPOINTS.ORDERS.UPDATE_ADDRESS(orderId),
-      { shipping_address: newAddress, 
-        phone_number: newPhoneNumber 
+      {
+        shipping_address: newAddress,
+        phone_number: newPhoneNumber
       }
     );
   },

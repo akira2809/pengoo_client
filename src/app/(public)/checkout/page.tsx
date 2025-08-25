@@ -46,8 +46,8 @@ interface FormData {
   phone: string;
   saveInfo: boolean;
   delivery_id: number;
-// ...in your FormData and related types...
-paymentMethod: "payos" | "cod" | "paypal";
+  // ...in your FormData and related types...
+  paymentMethod: "payos" | "cod" | "paypal";
   billingAddress: "sameAsShipping" | "different";
   note?: string;
   couponCode?: string;
@@ -99,8 +99,6 @@ const CheckoutPage: React.FC = () => {
   const [isCartReady, setIsCartReady] = useState(false);
   const [delivery, setDelivery] = useState<DeliveryMethod[]>([]);
   const [listVouchers, setListVouchers] = useState<Voucher[]>([]);
-  const [isFetchingVouchers, setIsFetchingVouchers] = useState(false);
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
     {}
   );
@@ -397,72 +395,53 @@ const CheckoutPage: React.FC = () => {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-const handleShowCouponList = async () => {
-  if (myVouchers.length === 0) {
-    setIsFetchingVouchers(true);
-    try {
-      await fetchMyVouchers();
-    } catch (error) {
-      console.error("Error fetching vouchers:", error);
-      showErrorToast("Không thể tải danh sách mã giảm giá");
-    } finally {
-      setIsFetchingVouchers(false);
+  const handleShowCouponList = async () => {
+    console.log('123');
+    const result = await Promise.all(
+      myVouchers.map(async (voucher: Voucher) => {
+        const data = await applyVoucher(voucher.coupon.code, subtotal);
+        console.log('data', data)
+        return data !== undefined && data !== null
+          ? { ...voucher, active: true }
+          : { ...voucher, active: false };
+      })
+    );
+    console.log('My voucher', result)
+    console.log('subtotal', subtotal)
+    result.sort((a: Voucher, b: Voucher) => {
+      if (a.active && !b.active) return -1;
+      if (!a.active && b.active) return 1;
+      return 0;
+    });
+    setListVouchers(result);
+    setShowCouponList(true);
+  };
+
+  const handleApplyCoupon = async () => {
+    const code = formData.couponCode?.trim();
+    if (!code) {
+      showErrorToast("Vui lòng nhập mã giảm giá.");
+      return;
     }
-  }
-
-  // Xử lý apply voucher với subtotal hiện tại
-  const result = await Promise.all(
-    myVouchers.map(async (voucher: Voucher) => {
-      const data = await applyVoucher(voucher.coupon.code, subtotal);
-      return data !== undefined && data !== null
-        ? { ...voucher, active: true }
-        : { ...voucher, active: false };
-    })
-  );
-  
-  result.sort((a: Voucher, b: Voucher) => {
-    if (a.active && !b.active) return -1;
-    if (!a.active && b.active) return 1;
-    return 0;
-  });
-  setListVouchers(result);
-  setShowCouponList(true);
-};
-
-const handleApplyCoupon = async () => {
-  const code = formData.couponCode?.trim();
-  if (!code) {
-    showErrorToast("Vui lòng nhập mã giảm giá.");
-    return;
-  }
-  
-  setIsApplyingCoupon(true); // Bắt đầu loading
-  try {
     const data = (await applyVoucher(code, subtotal)) as
       | { discount: number; coupon: { code: string } }
       | null
       | undefined;
-      
     if (data === undefined || data === null) {
       showErrorToast(`Mã khuyến mãi không hợp lệ hoặc đã hết hạn.`);
       setDiscountAmount(0);
       setIsCouponApplied(false);
+      return;
     } else {
       const discount = Number(data.discount) || 0;
+      // console.log(
+      //   `Setting discount amount: ${discount} (type: ${typeof discount})`
+      // );
       setDiscountAmount(discount);
       setIsCouponApplied(true);
       showSuccessToast(`Áp dụng mã khuyến mãi ${data.coupon.code} thành công!`);
     }
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      showErrorToast(`Có lỗi xảy ra khi áp dụng mã giảm giá: ${error.message}`);
-    } else {
-      showErrorToast("Có lỗi xảy ra khi áp dụng mã giảm giá.");
-    }
-  } finally {
-    setIsApplyingCoupon(false); // Kết thúc loading
-  }
-};
+  };
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
@@ -506,6 +485,7 @@ const handleApplyCoupon = async () => {
         description: "",
         phone_number: formData.phone,
       };
+      // console.log("total", total)
       const preparedOrder = orderService.prepareOrderData(
         orderData,
         typedCartItems,
@@ -954,9 +934,8 @@ const handleApplyCoupon = async () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
-                  isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
               >
                 {isSubmitting ? "Đang xử lý..." : `Thanh toán ngay`}
               </button>
@@ -1007,100 +986,63 @@ const handleApplyCoupon = async () => {
                     <span className="text-gray-900">
                       {formatCurrency(
                         (item.price ?? item.product_price) *
-                          item.quantity *
-                          (1 - (item.discount || 0) / 100)
+                        item.quantity *
+                        (1 - (item.discount || 0) / 100)
                       )}
                     </span>
                   </div>
                 ))}
               </div>
-
-              {/* voucher */}
               <div className="px-4 py-4 border-t border-gray-200 relative">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Mã giảm giá"
-                    value={formData.couponCode}
-                    onFocus={() => handleShowCouponList()}
-                    onBlur={() => setTimeout(() => setShowCouponList(false), 150)}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        couponCode: e.target.value,
-                      }))
-                    }
-                    className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3 pr-10"
-                    disabled={isApplyingCoupon || isFetchingVouchers}
-                  />
-                  {(isApplyingCoupon || isFetchingVouchers) && (
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
-                    </div>
-                  )}
-                </div>
-                
-                {showCouponList && (
-                  <div className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
-                    {isFetchingVouchers ? (
-                      <div className="px-4 py-3 text-sm text-center text-gray-500">
-                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                        Đang tải mã giảm giá...
-                      </div>
-                    ) : listVouchers.length > 0 ? (
-                      listVouchers.map((uc: Voucher) => (
-                        <li
-                          key={uc.id}
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              couponCode: uc.coupon.code,
-                            }));
-                            setShowCouponList(false);
-                          }}
-                          className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 list-none
-                            ${
-                              uc.active
-                                ? "bg-green-50 hover:bg-green-100 text-green-800"
-                                : "bg-red-50 hover:bg-red-100 text-red-700"
-                            }
-                          `}
-                        >
-                          <div className="font-semibold">{uc.coupon.code}</div>
-                          <div className="text-xs italic">
-                            {uc.coupon.description || "Không có mô tả"}
-                          </div>
-                          {uc.active && (
-                            <div className="text-xs text-green-600 font-medium mt-1">
-                              Giảm {formatCurrency(uc.discount || 0)}
-                            </div>
-                          )}
-                        </li>
-                      ))
-                    ) : (
-                      <div className="px-4 py-3 text-sm text-center text-gray-500">
-                        Không có mã giảm giá khả dụng
-                      </div>
-                    )}
-                  </div>
+                <input
+                  type="text"
+                  placeholder="Mã giảm giá"
+                  value={formData.couponCode}
+                  onFocus={() => handleShowCouponList()}
+                  onBlur={() => setTimeout(() => setShowCouponList(false), 150)}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      couponCode: e.target.value,
+                    }))
+                  }
+                  className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3"
+                />
+                {showCouponList && listVouchers.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
+                    {listVouchers.map((uc: Voucher) => (
+                      <li
+                        key={uc.id}
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            couponCode: uc.coupon.code,
+                          }));
+                          setShowCouponList(false);
+                        }}
+                        className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
+                          ${uc.active
+                            ? "bg-green-50 hover:bg-green-100 text-green-800"
+                            : "bg-red-50 hover:bg-red-100 text-red-700"
+                          }
+                        `}
+                      >
+                        <div className="font-semibold">{uc.coupon.code}</div>
+                        <div className="text-xs italic">
+                          {uc.coupon.description || "Không có mô tả"}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-                
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
-                  disabled={isApplyingCoupon || isFetchingVouchers}
-                  className={`mt-2 w-full ${
-                    isApplyingCoupon || isFetchingVouchers
-                      ? 'bg-gray-300 cursor-not-allowed' 
-                      : 'bg-gray-200 hover:bg-gray-300'
-                  } text-gray-700 font-medium py-2 px-4 rounded-md text-sm transition-colors`}
+                  className="mt-2 w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-300 transition-colors"
                 >
-                  {isApplyingCoupon ? 'Đang xử lý...' : 'Áp dụng'}
+                  Áp dụng
                 </button>
               </div>
-              {/* voucher */}
-
-              
               <div className="px-4 py-4 border-t border-gray-200 text-sm">
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Tổng phụ</span>
