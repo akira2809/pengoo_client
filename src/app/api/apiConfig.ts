@@ -28,7 +28,7 @@ export const API_CONFIG = {
 
     // Order endpoints
     ORDERS: {
-      BASE: '/orders',
+      BASE: '/orders/get-order-by-userId',
       BY_ID: (id: number) => `/orders/${id}`,
       BY_ORDER_CODE: (order_code: number) => `/orders/order-code/${order_code}`,
       USER_ORDERS: '/orders/user',
