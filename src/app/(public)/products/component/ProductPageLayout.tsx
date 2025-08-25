@@ -470,6 +470,15 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
           handleBlur={handleBlur}
           setShowOutOfStock={setShowOutOfStock}
           formatPrice={formatPrice}
+          onClearFilters={handleClearFilters}
+          isAnyFilterActive={
+            selectedCategories.length > 0 ||
+            selectedTags.length > 0 ||
+            selectedStatus.length > 0 ||
+            priceRange.min > 0 ||
+            priceRange.max < 5000000 ||
+            showOutOfStock
+          }
         />
 
         {/* Khu vực hiển thị sản phẩm */}
@@ -560,6 +569,15 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
         showOutOfStock={showOutOfStock}
         setShowOutOfStock={setShowOutOfStock}
         formatPrice={formatPrice}
+        onClearFilters={handleClearFilters}
+        isAnyFilterActive={
+          selectedCategories.length > 0 ||
+          selectedTags.length > 0 ||
+          selectedStatus.length > 0 ||
+          priceRange.min > 0 ||
+          priceRange.max < 5000000 ||
+          showOutOfStock
+        }
       />
     </div>
   );
