@@ -21,6 +21,7 @@ function OrderSuccessContentInner() {
 
   const orderCode = searchParams?.get('orderCode');
   const order_id = searchParams?.get('order_id');
+  const paypalOrderId = searchParams?.get("token");
 
   useEffect(() => {
     // Prefer orderCode (PayOS), fallback to order_id (COD)
@@ -46,6 +47,11 @@ function OrderSuccessContentInner() {
           setOrder(null);
         }
       });
+    } else if (paypalOrderId) {
+      fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/paypal/capture-order/${paypalOrderId}`,
+        { method: "POST" }
+      );
     }
     // Track successful order conversion
     if (orderId && window.gtag) {
@@ -53,7 +59,7 @@ function OrderSuccessContentInner() {
         transaction_id: orderId,
       });
     }
-  }, [orderId, orderCode, order_id]);
+  }, [orderId, orderCode, order_id, paypalOrderId]);
 
   const handleResendInvoice = async () => {
     if (!orderId) return;

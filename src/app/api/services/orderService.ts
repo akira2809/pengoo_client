@@ -56,24 +56,28 @@ export const orderService = {
     cartItems: CartItem[],
     userId?: number
   ): CreateOrderRequest {
-    const isPayOS = formData.paymentMethod === 'payos';
-    console.log('Prepared order data:', formData);
-    return {
-      id: 0, // or generate/set appropriate id if available
-      name: formData.name || '', // assuming name is in formData, otherwise set default
-      fee: formData.fee || 0, // assuming fee is in formData, otherwise set default
-      description: formData.description || '', // assuming description is in formData, otherwise set default
+    let payment_type: "cod" | "payos" | "paypal" = 'cod';
+    if (formData.paymentMethod === 'payos') payment_type = 'payos';
+    else if (formData.paymentMethod === 'paypal') payment_type = 'paypal';
+
+    const orderData: CreateOrderRequest = {
+      id: 0,
+      name: formData.name || '',
+      fee: formData.fee || 0,
+      description: formData.description || '',
       userId: userId || null,
       delivery_id: formData.delivery_id,
-      payment_type: isPayOS ? 'payos' : 'cod',
+      payment_type, // <-- now supports 'paypal'
       total_price: formData.total,
       phoneNumber: formData.phone_number,
       shipping_address: `${formData.address}, ${formData.city}`,
-      payment_status: isPayOS ? 'pending' : 'pending',
+      payment_status: payment_type === 'payos' || payment_type === 'paypal' ? 'pending' : 'pending',
       productStatus: 'pending',
       couponCode: formData.couponCode,
       details: this.mapCartItemsToOrderItems(cartItems)
     };
+
+    return orderData;
   },
 
   // Xóa đơn hàng
