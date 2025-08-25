@@ -52,8 +52,6 @@ interface ProductSidebarFiltersProps {
   onTagChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   selectedStatus: string[];
   onStatusChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onClearFilters: () => void;
-  isAnyFilterActive: boolean;
 }
 
 export const ProductSidebarFilters: React.FC<ProductSidebarFiltersProps> = ({
@@ -73,8 +71,6 @@ export const ProductSidebarFilters: React.FC<ProductSidebarFiltersProps> = ({
   onTagChange,
   selectedStatus,
   onStatusChange,
-  onClearFilters,
-  isAnyFilterActive,
 }) => {
   return (
     <aside
@@ -109,14 +105,6 @@ export const ProductSidebarFilters: React.FC<ProductSidebarFiltersProps> = ({
         setShowOutOfStock={setShowOutOfStock}
         formatPrice={formatPrice}
       />
-      {isAnyFilterActive && (
-        <button
-          onClick={onClearFilters}
-          className="w-full mt-6 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md"
-        >
-          Xóa tất cả bộ lọc
-        </button>
-      )}
     </aside>
   );
 };

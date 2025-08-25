@@ -51,8 +51,6 @@ interface MobileProductFiltersModalProps {
   showOutOfStock: boolean;
   setShowOutOfStock: Dispatch<SetStateAction<boolean>>;
   formatPrice: (price: number | string) => string;
-  onClearFilters: () => void;
-  isAnyFilterActive: boolean;
 }
 
 export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps> = ({
@@ -77,8 +75,6 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
   showOutOfStock,
   setShowOutOfStock,
   formatPrice,
-  onClearFilters,
-  isAnyFilterActive,
 }) => {
   return (
     <MobileFilterModal
@@ -285,20 +281,6 @@ export const MobileProductFiltersModal: React.FC<MobileProductFiltersModalProps>
             </div>
           </FilterDropdown>
         </div>
-
-        {isAnyFilterActive && (
-          <div className="mt-6">
-            <button
-              onClick={() => {
-                onClearFilters();
-                onClose(); // Close modal after clearing
-              }}
-              className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md"
-            >
-              Xóa tất cả bộ lọc
-            </button>
-          </div>
-        )}
       </div>
     </MobileFilterModal>
   );
