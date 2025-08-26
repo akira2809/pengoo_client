@@ -4,6 +4,7 @@ import { OrderWithUser, IBank } from '@/app/type/order';
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { orderService } from '../../../../api/services/orderService';
 
 interface ReturnOrderModalProps {
   order: OrderWithUser | null;
@@ -20,10 +21,10 @@ interface ReturnOrderModalProps {
   }) => void;
 }
 
-const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "diishpkrl";
-const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "your_unsigned_preset";
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "do6lj4onq";
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default";
 
-export function ReturnOrderModal({ order, onClose, listBank, onSubmitReturn }: ReturnOrderModalProps) {
+export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalProps) {
   const [returnReason, setReturnReason] = useState('');
   const [returnMessage, setReturnMessage] = useState('');
   const [selectedBank, setSelectedBank] = useState<IBank | null>(null);
@@ -34,7 +35,7 @@ export function ReturnOrderModal({ order, onClose, listBank, onSubmitReturn }: R
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [returnOrder, setReturnOrder] = useState<OrderWithUser | null>(null);
+  const [] = useState<OrderWithUser | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -137,14 +138,19 @@ export function ReturnOrderModal({ order, onClose, listBank, onSubmitReturn }: R
     setReturnVideo(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const newErrors: {[key: string]: string} = {};
 
     if (!returnReason) {
       newErrors.reason = 'Vui lòng chọn lý do hoàn đơn';
     }
-    if (returnReason === 'other' && !returnMessage.trim()) {
-      newErrors.message = 'Vui lòng nhập lý do chi tiết';
+    // Only require 10+ characters if "other" is selected
+    if (returnReason === 'other') {
+      if (!returnMessage.trim()) {
+        newErrors.message = 'Vui lòng nhập lý do chi tiết';
+      } else if (returnMessage.trim().length < 10) {
+        newErrors.message = 'Lý do chi tiết phải từ 10 ký tự trở lên';
+      }
     }
     if (!selectedBank) {
       newErrors.bank = 'Vui lòng chọn ngân hàng';
@@ -157,60 +163,45 @@ export function ReturnOrderModal({ order, onClose, listBank, onSubmitReturn }: R
     if (returnImages.length > 5) {
       newErrors.images = 'Bạn chỉ được chọn tối đa 5 hình ảnh';
     }
+    // Ensure at least one evidence file
+    if (returnImages.length === 0 && !returnVideo) {
+      newErrors.evidence = 'Vui lòng upload ít nhất một hình ảnh hoặc video';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
-    } 
+    }
 
-    // Clear error nếu hợp lệ
     setErrors({});
 
     if (!order) return;
 
-    // Gửi formdata
-    const formData = new FormData();
-    formData.append('orderId', String(returnOrder?.id));
-    formData.append('reason', returnReason);
-    formData.append('message', returnMessage);
-    formData.append('bank', selectedBank?.name || '');
-    formData.append('accountNumber', accountNumber);
-    if (returnVideo) {
-      formData.append('video', returnVideo);
+    const mapPaymentType = (type: string): "paypal" | "payos" | "on_delivery" => {
+      if (type === "paypal") return "paypal";
+      if (type === "payos") return "payos";
+      if (type === "on_delivery" || type === "cod") return "on_delivery";
+      return "on_delivery"; // fallback
+    };
+
+    try {
+      await orderService.submitRefundRequest({
+        orderId: order.id,
+        userId: typeof order.user?.id === 'string' ? parseInt(order.user.id, 10) : order.user?.id ?? 0,
+        reason: returnReason === 'other' ? returnMessage : returnReason,
+        images: returnImages,
+        video: returnVideo,
+        paymentMethod: mapPaymentType(order.payment_type ?? "on_delivery"), // <-- mapped value
+        toAccountNumber: accountNumber,
+        toBin: selectedBank?.bin || '',
+        bank: selectedBank?.name || '',
+      });
+      toast.success('Yêu cầu hoàn đơn đã được gửi!');
+      onClose();
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Gửi yêu cầu hoàn đơn thất bại';
+      toast.error(errorMessage);
     }
-    returnImages.forEach((file, idx) => {
-      formData.append(`images[${idx}]`, file);
-    });
-
-    console.log('FormData gửi đi:', { 
-      reason: returnReason, 
-      message: returnMessage, 
-      bank: selectedBank, 
-      accountNumber,
-      video: returnVideo,
-      images: returnImages
-    });
-
-    // Gọi hàm submit từ props
-    onSubmitReturn({
-      orderId: order.id,
-      reason: returnReason,
-      message: returnMessage,
-      bank: selectedBank,
-      accountNumber,
-      video: returnVideo,
-      images: returnImages
-    });
-
-    alert('Yêu cầu hoàn đơn đã được gửi!');
-    setReturnOrder(null);
-    setReturnReason('');
-    setReturnMessage('');
-    setReturnVideo(null);
-    setReturnImages([]);
-    setSelectedBank(null);
-    setAccountNumber('');
-    setErrors({});
   };
 
   if (!order) return null;
@@ -279,7 +270,7 @@ export function ReturnOrderModal({ order, onClose, listBank, onSubmitReturn }: R
                 >
                   {selectedBank ? (
                     <span className="flex items-center gap-2">
-                      <img src={selectedBank.logo} alt={selectedBank.name} className="w-6 h-6" />
+                      <Image src={selectedBank.logo} alt={selectedBank.name} width={24} height={24} className="w-6 h-6" />
                       {selectedBank.name}
                     </span>
                   ) : (
@@ -297,7 +288,7 @@ export function ReturnOrderModal({ order, onClose, listBank, onSubmitReturn }: R
                           setShowBankList(false);
                         }}
                       >
-                        <img src={bank.logo} alt={bank.name} className="w-6 h-6" />
+                        <Image src={bank.logo} alt={bank.name} width={24} height={24} className="w-6 h-6" />
                         {bank.name}
                       </li>
                     ))}

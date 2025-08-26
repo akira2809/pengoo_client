@@ -163,4 +163,44 @@ export const orderService = {
       }
     );
   },
+
+  async submitRefundRequest({
+    orderId,
+    userId,
+    reason,
+    images,
+    video,
+    paymentMethod,
+    toAccountNumber,
+    toBin,
+    bank,
+  }: {
+    orderId: number;
+    userId: number;
+    reason: string;
+    images: string[];
+    video: string | null;
+    paymentMethod: string;
+    toAccountNumber: string;
+    toBin: string;
+    bank: string;
+  }) {
+    const evidence: { type: string; url: string }[] = [
+      ...images.map(url => ({ type: 'image', url })),
+      ...(video ? [{ type: 'video', url: video }] : []),
+    ];
+
+    const payload = {
+      order_id: orderId,
+      user_id: userId,
+      reason,
+      uploadFiles: evidence,
+      paymentMethod,
+      toAccountNumber,
+      toBin,
+      bank,
+    };
+
+    return apiClient.post('/orders/refund-request', payload);
+  },
 };
