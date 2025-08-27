@@ -81,6 +81,7 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>({
     min: 0,
     max: 5000000,
@@ -143,6 +144,15 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
 
     // ❌ Không cần setFilters nếu lọc client-side
     // setFilters((prev) => ({ ...prev, tags: tagId }));
+  }, []);
+
+  const handleStatusChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const statusId = e.target.value;
+    setSelectedStatus((prev) =>
+      prev.includes(statusId)
+        ? prev.filter((id) => id !== statusId)
+        : [...prev, statusId]
+    );
   }, []);
 
 
@@ -235,9 +245,11 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
 
   const handleClearFilters = useCallback(() => {
     setSelectedCategories([]);
+    setSelectedTags([]);
+    setSelectedStatus([]);
     setPriceRange({ min: 0, max: 5000000 });
     setDisplayRange({ min: "", max: "" });
-    setShowOutOfStock(true);
+    setShowOutOfStock(false);
     setCurrentPage(1);
     setFilters({
       name: "",
@@ -283,53 +295,127 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   }, [selectedCategories, priceRange, showOutOfStock, sortSelected]); // Dependencies của bộ lọc/sắp xếp
 
   // --- Memoized Filtered and Sorted Products ---
-  // Remove the problematic useEffect and move its logic into the filteredAndSortedProducts useMemo
   const filteredAndSortedProducts = useMemo(() => {
+    console.log('--- Starting product filtering ---');
     let currentProducts = [...sortedProducts];
-    // console.log("Filtered and Sorted Products:", currentProducts);
-    // Filter by category
-    if (selectedCategories.length > 0) {
-      currentProducts = currentProducts.filter((product) => {
-        const categoryId =
-          typeof product.category_ID === "object"
-            ? String(product.category_ID.id)
-            : String(product.category_ID);
-        return selectedCategories.includes(categoryId);
-      });
-    }
+    console.log('Initial products count:', currentProducts.length);
 
-    // Filter by tags
-    if (selectedTags.length > 0) {
-      currentProducts = currentProducts.filter((product) => {
-        const productTagIds = product.tags?.map((tag) => Number(tag.id)) || [];
-        console.log("Selected productTagIds:", product.tags);
-
-        return selectedTags.some((tagId) => productTagIds.includes(Number(tagId)));
-      });
-    }
-
-    console.log("Filtered Products:", currentProducts);
-
-    // Filter out of stock if needed
-    if (!showOutOfStock) {
-      currentProducts = currentProducts.filter((product) => {
-        const stock = product.quantity_stock ?? 1;
-        return stock > 0;
-      });
-    }
-
-    // Filter by price range
+    // 1. Filter by price range first (cheapest operation)
     currentProducts = currentProducts.filter((product) => {
       const price = Number(product.product_price) || 0;
       return price >= priceRange.min && price <= priceRange.max;
     });
+    console.log('After price filter:', currentProducts.length);
+
+    // 2. Filter by category
+    if (selectedCategories.length > 0) {
+      currentProducts = currentProducts.filter((product) => {
+        const categoryId = String(
+          typeof product.category_ID === 'object' 
+            ? product.category_ID?.id 
+            : product.category_ID || ''
+        );
+        return selectedCategories.includes(categoryId);
+      });
+      console.log('After category filter:', currentProducts.length);
+    }
+
+    // 3. Filter by tags
+    if (selectedTags.length > 0) {
+      currentProducts = currentProducts.filter((product) => {
+        const productTagIds = product.tags?.map((tag) => Number(tag.id)) || [];
+        return selectedTags.some((tagId) => productTagIds.includes(Number(tagId)));
+      });
+      console.log('After tag filter:', currentProducts.length);
+    }
+
+    // 4. Filter by status and stock
+    if (selectedStatus.length > 0 || showOutOfStock !== undefined) {
+      console.log('--- Status/Stock Filtering ---');
+      console.log('Selected Statuses:', selectedStatus);
+      console.log('Show Out of Stock:', showOutOfStock);
+      
+      currentProducts = currentProducts.filter((product) => {
+        const stock = Number(product.quantity_stock) || 0;
+        const rawStatus = String(product.status || '');
+        const status = rawStatus.toLowerCase().trim();
+        
+        // Clean and normalize the status string
+        const cleanStatus = status.replace(/[\"\']/g, '').toLowerCase().trim();
+        
+        // Map status to standard values
+        let productStatus = 'available';
+        
+        if (cleanStatus === 'unavailable' || 
+            cleanStatus.includes('không khả dụng') || 
+            cleanStatus.includes('khong kha dung') ||
+            cleanStatus === 'hết hàng' ||
+            cleanStatus === 'het hang') {
+          productStatus = 'unavailable';
+        } else if (cleanStatus.includes('coming') || 
+                  cleanStatus.includes('sap ra mat') || 
+                  cleanStatus.includes('sắp ra mắt') ||
+                  cleanStatus === 'coming soon') {
+          productStatus = 'coming soon';
+        } else if (cleanStatus.includes('discontinued') || 
+                  cleanStatus.includes('ngừng sản xuất') || 
+                  cleanStatus.includes('ngung san xuat') ||
+                  cleanStatus === 'discontinued') {
+          productStatus = 'discontinued';
+        } else if (stock <= 0) {
+          productStatus = 'unavailable';
+        }
+        
+        // Special handling for status filters that should ignore stock
+        const statusFiltersToIgnoreStock = ['coming soon', 'unavailable'];
+        if (statusFiltersToIgnoreStock.some(status => 
+            selectedStatus.includes(status) && productStatus === status)) {
+          console.log(`Product ${product.id} (${product.name}): '${productStatus}' status - showing regardless of stock`);
+          return true;
+        }
+
+        // Check stock status for all other cases
+        const isInStock = stock > 0;
+        const stockFilterPass = showOutOfStock ? !isInStock : isInStock;
+        
+        // If no status filter is selected, only apply stock filter
+        if (selectedStatus.length === 0) {
+          console.log(`Product ${product.id} (${product.name}): Status='${rawStatus}' → '${productStatus}', Stock=${stock}, StockFilterPass=${stockFilterPass}`);
+          return stockFilterPass;
+        }
+        
+        // Check status filter
+        const statusFilterPass = selectedStatus.some(selected => {
+          const selectedNormalized = selected.toLowerCase().trim();
+          const matches = selectedNormalized === productStatus || 
+                         (selectedNormalized === 'available' && productStatus === 'available' && isInStock);
+          
+          console.log(`Product ${product.id} (${product.name}): ` +
+                     `Status='${rawStatus}' → '${productStatus}', ` +
+                     `Selected='${selectedNormalized}', ` +
+                     `Stock=${stock}, ` +
+                     `StatusMatch=${matches}, ` +
+                     `StockFilterPass=${stockFilterPass}`);
+          
+          return matches;
+        });
+
+        // For status filters other than 'coming soon', apply both status and stock filters
+        const result = statusFilterPass && (productStatus === 'coming soon' || stockFilterPass);
+        console.log(`Product ${product.id} (${product.name}): Final result=${result}`);
+        return result;
+      });
+      console.log('After status/stock filter:', currentProducts.length);
+    }
+
+    console.log('Final filtered products:', currentProducts);
     return currentProducts;
-  }, [sortedProducts, showOutOfStock, selectedCategories, selectedTags, priceRange]);
+  }, [sortedProducts, showOutOfStock, selectedCategories, selectedTags, selectedStatus, priceRange]);
 
   // Add this new useEffect to handle page reset when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategories, priceRange, showOutOfStock, sortSelected, selectedTags]);
+  }, [selectedCategories, priceRange, showOutOfStock, sortSelected, selectedTags, selectedStatus]);
 
   // --- Loading and Error States ---
   if (isLoading) {
@@ -374,6 +460,8 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
           tags={tags}
           selectedTags={selectedTags}
           onTagChange={handleTagChange}
+          selectedStatus={selectedStatus}
+          onStatusChange={handleStatusChange}
           priceRange={priceRange}
           displayRange={displayRange}
           showOutOfStock={showOutOfStock}
@@ -382,6 +470,15 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
           handleBlur={handleBlur}
           setShowOutOfStock={setShowOutOfStock}
           formatPrice={formatPrice}
+          onClearFilters={handleClearFilters}
+          isAnyFilterActive={
+            selectedCategories.length > 0 ||
+            selectedTags.length > 0 ||
+            selectedStatus.length > 0 ||
+            priceRange.min > 0 ||
+            priceRange.max < 5000000 ||
+            showOutOfStock
+          }
         />
 
         {/* Khu vực hiển thị sản phẩm */}
@@ -462,6 +559,8 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
         tags={tags}
         selectedTags={selectedTags}
         onTagChange={handleTagChange}
+        selectedStatus={selectedStatus}
+        onStatusChange={handleStatusChange}
         priceRange={priceRange}
         displayRange={displayRange}
         handlePriceChange={handlePriceChange}
@@ -470,6 +569,15 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
         showOutOfStock={showOutOfStock}
         setShowOutOfStock={setShowOutOfStock}
         formatPrice={formatPrice}
+        onClearFilters={handleClearFilters}
+        isAnyFilterActive={
+          selectedCategories.length > 0 ||
+          selectedTags.length > 0 ||
+          selectedStatus.length > 0 ||
+          priceRange.min > 0 ||
+          priceRange.max < 5000000 ||
+          showOutOfStock
+        }
       />
     </div>
   );

@@ -7,21 +7,23 @@ const PaypalSuccessPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paypalOrderId = searchParams ? searchParams.get("token") : null;
-  const orderId = searchParams ? searchParams.get("orderId") : null;
+  const orderId =
+    searchParams?.get("orderId") ||
+    searchParams?.get("order_id") ||
+    null;
   const [status, setStatus] = useState("Đang xác nhận thanh toán PayPal...");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const capturePaypalOrder = async () => {
-      if (!paypalOrderId) return;
+      if (!paypalOrderId || !orderId) return;
       try {
         setStatus("Đang xác nhận thanh toán PayPal...");
         setLoading(true);
+        // Use the token-based endpoint, which is idempotent and does not require user info
         const res = await fetch(
-          `/api/payments/paypal/capture-order/${paypalOrderId}`,
-          {
-            method: "POST",
-          }
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/paypal/capture-order/${paypalOrderId}`,
+          { method: "POST" }
         );
         if (res.ok) {
           setStatus(

@@ -6,7 +6,7 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
 import { orderService } from "@/app/api/services/orderService";
 import InputField from "../../(public)/checkout/component/InputField";
-import RadioButton from "../../(public)/checkout/component/RadioButton";
+import RadioButton from "./component/RadioButton"; // Adjust import path as needed
 import Image from "next/image";
 import {
   showSuccessToast,
@@ -46,7 +46,8 @@ interface FormData {
   phone: string;
   saveInfo: boolean;
   delivery_id: number;
-  paymentMethod: "payos" | "cod";
+// ...in your FormData and related types...
+paymentMethod: "payos" | "cod" | "paypal";
   billingAddress: "sameAsShipping" | "different";
   note?: string;
   couponCode?: string;
@@ -56,6 +57,33 @@ interface FormData {
 const getShippingMethodString = (id: number): "localHCM" | "outsideHCM" => {
   if (id === 1) return "localHCM";
   return "outsideHCM";
+};
+
+// Helper to check and clean expired buy-now items
+const getBuyNowItem = (): ImportedCartItem | null => {
+  try {
+    const buyNowData = localStorage.getItem("buy-now-item");
+    if (!buyNowData) return null;
+
+    const item = JSON.parse(buyNowData) as ImportedCartItem & {
+      timestamp?: number;
+    };
+
+    // Kiểm tra expire (30 phút)
+    const EXPIRE_TIME = 30 * 60 * 1000;
+    const now = Date.now();
+
+    if (item.timestamp && now - item.timestamp > EXPIRE_TIME) {
+      localStorage.removeItem("buy-now-item");
+      return null;
+    }
+
+    return item;
+  } catch (error) {
+    console.error("Error parsing buy-now item:", error);
+    localStorage.removeItem("buy-now-item");
+    return null;
+  }
 };
 
 const CheckoutPage: React.FC = () => {
@@ -77,6 +105,9 @@ const CheckoutPage: React.FC = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [shippingCost, setShippingCost] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
+  const [buyNowItem, setBuyNowItem] = useState<ImportedCartItem | null>(null);
+  const [isBuyNowMode, setIsBuyNowMode] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: user?.email || "",
     country: "Vietnam",
@@ -181,11 +212,11 @@ const CheckoutPage: React.FC = () => {
     );
   };
 
-  // Explicitly type cartItems as ImportedCartItem[]
-  const typedCartItems: ImportedCartItem[] = cartItems as ImportedCartItem[];
-
-  // Debug cart items
-
+  // Get items based on mode (buy-now or cart)
+  const typedCartItems: ImportedCartItem[] =
+    isBuyNowMode && buyNowItem
+      ? [buyNowItem]
+      : (cartItems as ImportedCartItem[]);
 
   // Calculate subtotal
   const subtotal = typedCartItems.reduce((sum, item) => {
@@ -215,16 +246,41 @@ const CheckoutPage: React.FC = () => {
   //   `Subtotal: ${numericSubtotal}, Discount: ${numericDiscountAmount}, Shipping: ${numericShippingCost}, Total: ${total}`
   // );
 
-  // Handle cart initialization
+  // Handle cart initialization and buy-now mode
   useEffect(() => {
+    // Check if this is buy-now mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get("mode");
+
+    if (mode === "buy-now") {
+      setIsBuyNowMode(true);
+      // Load buy-now item using helper function
+      const item = getBuyNowItem();
+      if (item) {
+        setBuyNowItem(item);
+      }
+    }
+
     // Mark cart as ready after initial render
     // This ensures we've had a chance to load from localStorage
     const timer = setTimeout(() => {
       setIsCartReady(true);
+      setIsInitialized(true);
     }, 100);
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Theo dõi khi user đăng nhập thành công trong buy-now mode
+  useEffect(() => {
+    if (isBuyNowMode && isAuthenticated && isInitialized && !buyNowItem) {
+      // User vừa đăng nhập thành công, thử load lại buy-now item
+      const item = getBuyNowItem();
+      if (item) {
+        setBuyNowItem(item);
+      }
+    }
+  }, [isBuyNowMode, isAuthenticated, isInitialized, buyNowItem]);
 
   // Handle authentication and cart validation
   useEffect(() => {
@@ -232,12 +288,27 @@ const CheckoutPage: React.FC = () => {
     if (!isCartReady || authChecked) return;
 
     const checkAuthAndCart = async () => {
-      // Check if cart is empty using getTotalItems to ensure we have the latest count
-      if (getTotalItems() === 0) {
-        showErrorToast(
-          "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ."
-        );
-        router.push("/");
+      // Check if items are empty (either cart or buy-now item)
+      const hasItems = isBuyNowMode ? buyNowItem !== null : getTotalItems() > 0;
+
+      if (!hasItems) {
+        // Nếu là buy-now mode và không có item, có thể do expire hoặc chưa có
+        if (isBuyNowMode) {
+          showErrorToast(
+            "Phiên mua hàng đã hết hạn hoặc không tìm thấy sản phẩm. Vui lòng thử lại."
+          );
+          // Redirect về trang trước hoặc trang chủ
+          if (typeof window !== "undefined" && window.history.length > 1) {
+            router.back();
+          } else {
+            router.push("/");
+          }
+        } else {
+          showErrorToast(
+            "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ."
+          );
+          router.push("/");
+        }
         return;
       }
 
@@ -249,7 +320,10 @@ const CheckoutPage: React.FC = () => {
       // If not authenticated after loading is complete
       if (!isAuthenticated) {
         toast.error("Vui lòng đăng nhập để thanh toán.");
-        router.push(`/signin?redirect=${encodeURIComponent("/checkout")}`);
+        const redirectUrl = isBuyNowMode
+          ? `/signin?redirect=${encodeURIComponent("/checkout?mode=buy-now")}`
+          : `/signin?redirect=${encodeURIComponent("/checkout")}`;
+        router.push(redirectUrl);
         return;
       }
 
@@ -260,6 +334,8 @@ const CheckoutPage: React.FC = () => {
   }, [
     isCartReady,
     cartItems,
+    buyNowItem,
+    isBuyNowMode,
     router,
     isAuthenticated,
     isAuthLoading,
@@ -289,7 +365,9 @@ const CheckoutPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg text-gray-600">
-            Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ...
+            {isBuyNowMode
+              ? "Không tìm thấy sản phẩm để mua. Đang chuyển hướng..."
+              : "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ..."}
           </p>
         </div>
       </div>
@@ -381,7 +459,11 @@ const CheckoutPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (typedCartItems.length === 0) {
-      showErrorToast("Giỏ hàng của bạn đang trống.");
+      showErrorToast(
+        isBuyNowMode
+          ? "Không tìm thấy sản phẩm để mua."
+          : "Giỏ hàng của bạn đang trống."
+      );
       return;
     }
     if (!validateForm()) {
@@ -389,6 +471,7 @@ const CheckoutPage: React.FC = () => {
     }
     setIsSubmitting(true);
     try {
+      // Prepare order data and create order
       const orderData: ImportedCheckoutFormData = {
         ...formData,
         total,
@@ -396,6 +479,7 @@ const CheckoutPage: React.FC = () => {
         name: "",
         fee: 0,
         description: "",
+        phone_number: formData.phone,
       };
       const preparedOrder = orderService.prepareOrderData(
         orderData,
@@ -403,11 +487,41 @@ const CheckoutPage: React.FC = () => {
         user?.id ? parseInt(user.id.toString(), 10) : undefined
       );
       const response = await orderService.createOrder(preparedOrder);
-      if (response.payment_url) {
+
+      // PayPal flow
+      if (formData.paymentMethod === "paypal") {
+        // Call backend to create PayPal order
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/paypal/create-order/${response.order_id}`,
+          { method: "POST" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.approvalUrl) {
+            window.location.href = data.approvalUrl;
+            return;
+          } else {
+            toast.error("Không lấy được link thanh toán PayPal.");
+          }
+        } else {
+          toast.error("Không thể tạo đơn PayPal.");
+        }
+        setIsSubmitting(false);
+        return;
+      }
+
+      // PayOS: redirect to payment gateway
+      if (formData.paymentMethod === "payos" && response.payment_url) {
         window.location.href = response.payment_url;
         return;
       }
-      clearCart();
+
+      // COD: clear cart/buy-now, then redirect to success page
+      if (!isBuyNowMode) {
+        clearCart();
+      } else {
+        localStorage.removeItem("buy-now-item");
+      }
       router.push(`/order/success?order_id=${response.order_id}`);
     } catch (error) {
       toast.error(
@@ -432,7 +546,9 @@ const CheckoutPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600">
-                <span className="hidden sm:inline">Bước 2/2: </span>
+                <span className="hidden sm:inline">
+                  {isBuyNowMode ? "Mua ngay: " : "Bước 2/2: "}
+                </span>
                 <span className="font-medium">Thanh toán</span>
               </div>
               <div className="relative">
@@ -450,9 +566,9 @@ const CheckoutPage: React.FC = () => {
                     d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                   />
                 </svg>
-                {cartItems.length > 0 && (
+                {typedCartItems.length > 0 && (
                   <span className="absolute -top-2 -right-2 bg-amber-800 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                    {cartItems.length}
+                    {typedCartItems.length}
                   </span>
                 )}
               </div>
@@ -693,6 +809,7 @@ const CheckoutPage: React.FC = () => {
                 Toàn bộ các giao dịch được bảo mật và mã hóa.
               </p>
               <div className="space-y-3 mb-6">
+                {/* PayOS */}
                 <label
                   htmlFor="payos"
                   className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
@@ -713,7 +830,7 @@ const CheckoutPage: React.FC = () => {
                     <div className="mt-2 flex items-center space-x-2">
                       <Image
                         src="/Casso-payOSLogo-1.svg"
-                        alt="Visa"
+                        alt="PayOS"
                         width={130}
                         height={50}
                         className="object-contain"
@@ -722,25 +839,65 @@ const CheckoutPage: React.FC = () => {
                   </span>
                 </label>
 
-                {formData.paymentMethod === "payos" && (
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 mt-2">
-                    <p>
-                      Sau khi nhấp vào &quot;Thanh toán ngay&quot;, bạn sẽ được
-                      chuyển hướng đến PayOS để hoàn tất thanh toán một cách an
-                      toàn.
-                    </p>
-                  </div>
-                )}
+                {/* PayPal */}
+                <label
+                  htmlFor="paypal"
+                  className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
+                >
+                  <input
+                    type="radio"
+                    id="paypal"
+                    name="paymentMethod"
+                    value="paypal"
+                    checked={formData.paymentMethod === "paypal"}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                  />
+                  <span className="flex flex-col">
+                    <span className="block text-sm font-medium text-gray-900">
+                      Thanh toán qua PayPal
+                    </span>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <Image
+                        src="/pngegg.png"
+                        alt="PayPal"
+                        width={100}
+                        height={30}
+                        className="object-contain"
+                      />
+                    </div>
+                  </span>
+                </label>
 
-                <RadioButton
-                  id="cod"
-                  name="paymentMethod"
-                  value="cod"
-                  checked={formData.paymentMethod === "cod"}
-                  onChange={handleInputChange}
-                  label="Thanh toán khi nhận hàng (COD)"
-                // icon={<CashIcon />}
-                />
+                {/* COD */}
+                <label
+                  htmlFor="cod"
+                  className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
+                >
+                  <input
+                    type="radio"
+                    id="cod"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={formData.paymentMethod === "cod"}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                  />
+                  <span className="flex flex-col">
+                    <span className="block text-sm font-medium text-gray-900">
+                      Thanh toán khi nhận hàng (COD)
+                    </span>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <Image
+                        src="/cod.png"
+                        alt="COD"
+                        width={80}
+                        height={30}
+                        className="object-contain"
+                      />
+                    </div>
+                  </span>
+                </label>
               </div>
 
               {/* Billing Address */}
@@ -772,8 +929,9 @@ const CheckoutPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
+                  isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                }`}
               >
                 {isSubmitting ? "Đang xử lý..." : `Thanh toán ngay`}
               </button>
@@ -786,6 +944,11 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white rounded-md overflow-hidden">
               <div className="px-4 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">
+                  {isBuyNowMode && (
+                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-2">
+                      Mua ngay
+                    </span>
+                  )}
                   <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-200 text-sm font-bold mr-2">
                     {typedCartItems.length}
                   </span>
@@ -819,8 +982,8 @@ const CheckoutPage: React.FC = () => {
                     <span className="text-gray-900">
                       {formatCurrency(
                         (item.price ?? item.product_price) *
-                        item.quantity *
-                        (1 - (item.discount || 0) / 100)
+                          item.quantity *
+                          (1 - (item.discount || 0) / 100)
                       )}
                     </span>
                   </div>
@@ -854,9 +1017,10 @@ const CheckoutPage: React.FC = () => {
                           setShowCouponList(false);
                         }}
                         className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
-                          ${uc.active
-                            ? "bg-green-50 hover:bg-green-100 text-green-800"
-                            : "bg-red-50 hover:bg-red-100 text-red-700"
+                          ${
+                            uc.active
+                              ? "bg-green-50 hover:bg-green-100 text-green-800"
+                              : "bg-red-50 hover:bg-red-100 text-red-700"
                           }
                         `}
                       >

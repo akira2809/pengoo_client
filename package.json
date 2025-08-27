@@ -29,6 +29,9 @@
     "@mui/material": "^7.1.0",
     "@n8n/chat": "^0.45.0",
     "@payos/node": "^1.0.10",
+    "@react-spring/three": "^10.0.1",
+    "@react-three/drei": "^10.7.3",
+    "@react-three/fiber": "^9.3.0",
     "@studio-freight/lenis": "^1.0.42",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/line-clamp": "^0.4.4",
@@ -58,6 +61,7 @@
     "react-use": "^17.6.0",
     "sweetalert2": "^11.22.2",
     "tailwind-merge": "^3.3.0",
+    "three": "^0.179.1",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

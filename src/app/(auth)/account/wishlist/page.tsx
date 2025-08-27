@@ -95,7 +95,8 @@ export default function WishlistPage() {
               discount: item.discount,
             }
           }))
-        );
+        );  
+        console.log("Fetched wishlist:", res);
       } finally {
         setLoading(false);
       }

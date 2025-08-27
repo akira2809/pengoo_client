@@ -45,9 +45,7 @@ export const orderService = {
     return cartItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
-      price: typeof item.product_price === 'string'
-        ? parseFloat(item.product_price)
-        : item.product_price,
+      price:  Number(item.product_price) * (1 - (Number(item.discount) || 0) / 100),
       orderId: orderId
     }));
   },
@@ -58,23 +56,28 @@ export const orderService = {
     cartItems: CartItem[],
     userId?: number
   ): CreateOrderRequest {
-    const isPayOS = formData.paymentMethod === 'payos';
+    let payment_type: "cod" | "payos" | "paypal" = 'cod';
+    if (formData.paymentMethod === 'payos') payment_type = 'payos';
+    else if (formData.paymentMethod === 'paypal') payment_type = 'paypal';
 
-    return {
-      id: 0, // or generate/set appropriate id if available
-      name: formData.name || '', // assuming name is in formData, otherwise set default
-      fee: formData.fee || 0, // assuming fee is in formData, otherwise set default
-      description: formData.description || '', // assuming description is in formData, otherwise set default
+    const orderData: CreateOrderRequest = {
+      id: 0,
+      name: formData.name || '',
+      fee: formData.fee || 0,
+      description: formData.description || '',
       userId: userId || null,
       delivery_id: formData.delivery_id,
-      payment_type: isPayOS ? 'payos' : 'cod',
+      payment_type, // <-- now supports 'paypal'
       total_price: formData.total,
+      phoneNumber: formData.phone_number,
       shipping_address: `${formData.address}, ${formData.city}`,
-      payment_status: isPayOS ? 'pending' : 'pending',
+      payment_status: payment_type === 'payos' || payment_type === 'paypal' ? 'pending' : 'pending',
       productStatus: 'pending',
       couponCode: formData.couponCode,
       details: this.mapCartItemsToOrderItems(cartItems)
     };
+
+    return orderData;
   },
 
   // Xóa đơn hàng
@@ -148,5 +151,56 @@ export const orderService = {
   },
   async successPayment(orderCoder: number) {
     return apiClient.post<unknown[]>(API_CONFIG.ENDPOINTS.ORDERS.SUCCESS_PAYMENT(orderCoder));
+  },
+
+  // Cập nhật địa chỉ đơn hàng
+  async updateOrderAddress(orderId: number, newAddress: string, newPhoneNumber: string) {
+    console.log('update address successfully', { newAddress, newPhoneNumber });
+    return apiClient.patch<unknown[]>(
+      API_CONFIG.ENDPOINTS.ORDERS.UPDATE_ADDRESS(orderId),
+      { shipping_address: newAddress, 
+        phone_number: newPhoneNumber 
+      }
+    );
+  },
+
+  async submitRefundRequest({
+    orderId,
+    userId,
+    reason,
+    images,
+    video,
+    paymentMethod,
+    toAccountNumber,
+    toBin,
+    bank,
+  }: {
+    orderId: number;
+    userId: number;
+    reason: string;
+    images: string[];
+    video: string | null;
+    paymentMethod: string;
+    toAccountNumber: string;
+    toBin: string;
+    bank: string;
+  }) {
+    const evidence: { type: string; url: string }[] = [
+      ...images.map(url => ({ type: 'image', url })),
+      ...(video ? [{ type: 'video', url: video }] : []),
+    ];
+
+    const payload = {
+      order_id: orderId,
+      user_id: userId,
+      reason,
+      uploadFiles: evidence,
+      paymentMethod,
+      toAccountNumber,
+      toBin,
+      bank,
+    };
+
+    return apiClient.post('/orders/refund-request', payload);
   },
 };

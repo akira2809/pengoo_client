@@ -70,7 +70,7 @@ const Cart: React.FC = () => {
         Giỏ hàng
       </h1>
 
-      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 xl:gap-12">
+      <div className="flex flex-col lg:flex-row gap-2 sm:gap-4 lg:gap-6 xl:gap-12">
         {/* Phần danh sách sản phẩm */}
         <div className="w-full lg:flex-1 bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           {cartItems.map((item) => {
@@ -116,24 +116,59 @@ const Cart: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="sm:col-span-7 grid grid-cols-3 gap-2 sm:gap-4 items-center">
-                  <p className="hidden sm:block text-gray-700 text-right sm:text-center">
-                    {formatCurrency(item.product_price)}
-                  </p>
-                  <div className="flex items-center justify-center">
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      className="w-16 sm:w-20 border border-gray-300 rounded text-center py-1 text-sm sm:text-base"
-                      onChange={(e) =>
-                        handleQuantityChange(item.id, e.target.value)
-                      }
-                      onBlur={(e) =>
-                        handleQuantityChange(item.id, e.target.value)
-                      }
-                    />
+                <div className="sm:col-span-7 grid grid-cols-3 gap-2 sm:gap-6 items-center">
+                  <div className="hidden sm:flex flex-col items-center text-center">
+                    {Number(item.discount) > 0 ? (
+                      <>
+                        <span className="text-red-600 font-semibold text-sm sm:text-base">
+                          {formatCurrency(
+                            Number(item.product_price) * (1 - (Number(item.discount) || 0) / 100)
+                          )}
+                        </span>
+                        <span className="text-xs text-gray-400 line-through">
+                          {formatCurrency(Number(item.product_price))}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-gray-800 text-sm sm:text-base font-medium">
+                        {formatCurrency(Number(item.product_price))}
+                      </span>
+                    )}
                   </div>
+                  
+                  <div className="flex items-center border border-gray-300 rounded overflow-hidden text-sm sm:text-base">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleQuantityChange(item.id, Number(item.quantity) - 1)
+                    }
+                    className="w-10 h-8 flex items-center justify-center hover:bg-gray-100 rounded-l-md"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      handleQuantityChange(item.id, e.target.value)
+                    }
+                    onBlur={(e) =>
+                      handleQuantityChange(item.id, e.target.value)
+                    }
+                    className="w-14 text-center focus:outline-none appearance-none hide-arrow"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleQuantityChange(item.id, Number(item.quantity) + 1)
+                    }
+                    className="w-10 h-8 flex items-center justify-center hover:bg-gray-100 rounded-r-md"
+                  >
+                    +
+                  </button>
+                </div>
+
                   <div className="flex items-center justify-end space-x-3">
                     <p className="font-medium text-gray-800 text-sm sm:text-base">
                       {formatCurrency(

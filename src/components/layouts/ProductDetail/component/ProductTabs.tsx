@@ -20,9 +20,9 @@ function getFixedTabs(tabs: TabSection[]): TabSection[] {
       ? { title, content: "", references: [] }
       : { title, content: "", images: [] });
   return [
-    getTab("Specifications"),
-    getTab("How To Play"),
-    getTab("Reference"),
+    getTab("Thông số kĩ thuật"),
+    getTab("Cách chơi"),
+    getTab("Tài liệu tham khảo"),
   ];
 }
 
