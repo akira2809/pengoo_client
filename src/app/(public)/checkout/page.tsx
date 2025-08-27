@@ -46,8 +46,8 @@ interface FormData {
   phone: string;
   saveInfo: boolean;
   delivery_id: number;
-// ...in your FormData and related types...
-paymentMethod: "payos" | "cod" | "paypal";
+  // ...in your FormData and related types...
+  paymentMethod: "payos" | "cod" | "paypal";
   billingAddress: "sameAsShipping" | "different";
   note?: string;
   couponCode?: string;
@@ -396,14 +396,18 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleShowCouponList = async () => {
+    console.log('123');
     const result = await Promise.all(
       myVouchers.map(async (voucher: Voucher) => {
         const data = await applyVoucher(voucher.coupon.code, subtotal);
+        console.log('data', data)
         return data !== undefined && data !== null
           ? { ...voucher, active: true }
           : { ...voucher, active: false };
       })
     );
+    console.log('My voucher', result)
+    console.log('subtotal', subtotal)
     result.sort((a: Voucher, b: Voucher) => {
       if (a.active && !b.active) return -1;
       if (!a.active && b.active) return 1;
@@ -481,6 +485,7 @@ const CheckoutPage: React.FC = () => {
         description: "",
         phone_number: formData.phone,
       };
+      // console.log("total", total)
       const preparedOrder = orderService.prepareOrderData(
         orderData,
         typedCartItems,
@@ -929,9 +934,8 @@ const CheckoutPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${
-                  isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-background-900 hover:bg-background-800 text-white py-3 px-4 rounded-md text-base font-medium hover:bg-brown-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brown-500 transition-colors ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
               >
                 {isSubmitting ? "Đang xử lý..." : `Thanh toán ngay`}
               </button>
@@ -982,8 +986,8 @@ const CheckoutPage: React.FC = () => {
                     <span className="text-gray-900">
                       {formatCurrency(
                         (item.price ?? item.product_price) *
-                          item.quantity *
-                          (1 - (item.discount || 0) / 100)
+                        item.quantity *
+                        (1 - (item.discount || 0) / 100)
                       )}
                     </span>
                   </div>
@@ -1017,10 +1021,9 @@ const CheckoutPage: React.FC = () => {
                           setShowCouponList(false);
                         }}
                         className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
-                          ${
-                            uc.active
-                              ? "bg-green-50 hover:bg-green-100 text-green-800"
-                              : "bg-red-50 hover:bg-red-100 text-red-700"
+                          ${uc.active
+                            ? "bg-green-50 hover:bg-green-100 text-green-800"
+                            : "bg-red-50 hover:bg-red-100 text-red-700"
                           }
                         `}
                       >

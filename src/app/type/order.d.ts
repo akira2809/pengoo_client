@@ -67,10 +67,11 @@ export interface CreateOrderResponse {
   error?: string;
   details: OrderItemDetail[];
   order_date?: string;
-  order_id: number;
-  order_code: string;
   total_price: number;
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  couponCode?: string;
+  coupon_discount?: number;
+  phone_number?: string;
 }
 
 export interface IBank {
@@ -101,7 +102,9 @@ export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
   total_price: number;
   shipping_address?: string;
   payment_type?: string;
-  phone_number?: string;
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  couponCode?: string;
+  coupon_discount?: number; // Thêm dòng này
+  phone_number?: string; // Thêm dòng này nếu chưa có
   [key: string]: unknown;
 }

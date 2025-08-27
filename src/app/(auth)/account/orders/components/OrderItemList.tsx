@@ -17,6 +17,7 @@ export function OrderItemList({ items }: OrderItemListProps) {
         type ProductInfo = {
           product_name?: string;
           images?: { url: string; name?: string }[];
+          original_price?: number;
         };
 
         const product: ProductInfo = (item as { product?: ProductInfo }).product || {};
@@ -31,6 +32,8 @@ export function OrderItemList({ items }: OrderItemListProps) {
           imageUrl = mainImgObj?.url || productImages[0].url || imageUrl;
         }
         
+        const itemTotal = item.price * item.quantity;
+        
         return (
           <div key={`${item.productId}-${index}`} className="flex items-center space-x-4 py-3">
             <Image
@@ -43,9 +46,12 @@ export function OrderItemList({ items }: OrderItemListProps) {
             <div className="flex-1">
               <h4 className="font-semibold text-gray-800">{productName}</h4>
               <p className="text-sm text-gray-500">Số lượng: {item.quantity ?? 0}</p>
+              <p className="text-sm text-gray-600">
+                Đơn giá: {formatPrice(item.price)}
+              </p>
             </div>
             <div className="text-right">
-              <p className="font-medium text-gray-800">{formatPrice(item.price)}</p>
+              <p className="font-medium text-gray-800">{formatPrice(itemTotal)}</p>
             </div>
           </div>
         );

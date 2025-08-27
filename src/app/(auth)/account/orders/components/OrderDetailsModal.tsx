@@ -10,6 +10,12 @@ interface OrderDetailsModalProps {
 export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
   if (!order) return null;
 
+  // Tính toán các thành phần giá
+  const subtotal = order.details?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+  const discountAmount = order.coupon_discount || 0;
+  const shippingFee = order.delivery?.fee ? Number(order.delivery.fee) : 0;
+  const total = order.total_price || subtotal - discountAmount + shippingFee;
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -40,7 +46,14 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
         <div className="mb-4">
           <h3 className="font-semibold text-gray-800">Thanh toán</h3>
           <p>Phương thức: {order.payment_type}</p>
-          <p>Tổng tiền: {formatPrice(order.total_price)}</p>
+          
+          {/* Hiển thị mã giảm giá nếu có */}
+          {order.couponCode && (
+            <p className="text-green-600">
+              Mã giảm giá: {order.couponCode}
+              {discountAmount > 0 && ` (-${formatPrice(discountAmount)})`}
+            </p>
+          )}
         </div>
 
         <div className="mb-4">
@@ -48,7 +61,36 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
           <OrderItemList items={order.details || []} />
         </div>
 
-        <div className="flex justify-end">
+        {/* Chi tiết giá */}
+        <div className="border-t pt-4 mt-4">
+          <h3 className="font-semibold text-gray-800 mb-3">Chi tiết thanh toán</h3>
+          
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Tạm tính:</span>
+              <span>{formatPrice(subtotal)}</span>
+            </div>
+            
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Giảm giá ({order.couponCode}):</span>
+                <span>-{formatPrice(discountAmount)}</span>
+              </div>
+            )}
+            
+            <div className="flex justify-between">
+              <span>Phí vận chuyển:</span>
+              <span>{formatPrice(shippingFee)}</span>
+            </div>
+            
+            <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+              <span>Tổng cộng:</span>
+              <span className="text-blue-600">{formatPrice(total)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"

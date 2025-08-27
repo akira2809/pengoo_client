@@ -246,7 +246,7 @@ function HomePage() {
       </section>
 
       {(isLoading || comingSoonProducts.length > 0) && (
-        <section className="py-12 sm:py-20">
+        <section className="pb-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-text-900 flex items-center justify-center gap-2">
