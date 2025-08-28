@@ -189,7 +189,6 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
               </div>
             );
           })()}
-
           {/* Modal open button */}
           <button
             className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-blue-50 transition-colors border border-gray-200 z-20"
