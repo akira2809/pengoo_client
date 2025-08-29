@@ -1,5 +1,5 @@
 import { OrderWithUser } from '@/app/type/order';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface EditAddressModalProps {
   order: OrderWithUser | null;
@@ -11,10 +11,16 @@ export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAdd
   const [newAddress, setNewAddress] = useState(order?.shipping_address || "");
   const [newPhoneNumber, setNewPhoneNumber] = useState(order?.phone_number?.toString() || "");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  useEffect(() => {
+    if (order) {
+      setNewAddress(order.shipping_address || "");
+      setNewPhoneNumber(order.phone_number?.toString() || "");
+    }
+  }, [order]);
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!newAddress.trim()) {
       newErrors.address = 'Vui lòng nhập địa chỉ';
@@ -34,11 +40,11 @@ export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAdd
 
   const handleSubmit = async () => {
     if (!order || !validateForm()) return;
-    
+
     setIsUpdating(true);
     try {
       await updateOrderAddress(order.id, newAddress, newPhoneNumber);
-    //   console.log('update address successfully', { newAddress, newPhoneNumber });
+      //   console.log('update address successfully', { newAddress, newPhoneNumber });
       onClose();
     } catch (error) {
       console.error("Lỗi cập nhật thông tin:", error);
@@ -60,7 +66,7 @@ export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAdd
       >
         <h2 className="text-xl font-bold mb-4">Sửa thông tin giao hàng</h2>
         <p className="text-sm text-gray-500 mb-4">Mã đơn hàng: #{order.id}</p>
-        
+
         {/* Thông tin hiện tại */}
         <div className="mb-4">
           <h3 className="font-semibold text-gray-700 mb-2">Thông tin hiện tại</h3>
@@ -73,7 +79,7 @@ export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAdd
             </p>
           </div>
         </div>
-        
+
         {/* Form cập nhật */}
         <div className="space-y-4">
           {/* Số điện thoại */}
@@ -83,9 +89,8 @@ export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAdd
             </label>
             <input
               type="text"
-              className={`w-full border rounded px-3 py-2 ${
-                errors.phone ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full border rounded px-3 py-2 ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                }`}
               placeholder="Nhập số điện thoại..."
               value={newPhoneNumber}
               onChange={(e) => setNewPhoneNumber(e.target.value)}
@@ -103,9 +108,8 @@ export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAdd
             </label>
             <textarea
               rows={3}
-              className={`w-full border rounded px-3 py-2 ${
-                errors.address ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full border rounded px-3 py-2 ${errors.address ? 'border-red-500' : 'border-gray-300'
+                }`}
               placeholder="Nhập địa chỉ mới đầy đủ..."
               value={newAddress}
               onChange={(e) => setNewAddress(e.target.value)}
@@ -119,7 +123,7 @@ export function EditAddressModal({ order, onClose, updateOrderAddress }: EditAdd
             </p>
           </div>
         </div>
-        
+
         {/* Nút hành động */}
         <div className="flex justify-end gap-3 mt-6">
           <button
