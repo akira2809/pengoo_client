@@ -19,6 +19,7 @@ export function OrdersContent() {
   const [selectedOrder, setSelectedOrder] = useState<OrderWithUser | null>(null);
   const [editingOrder, setEditingOrder] = useState<OrderWithUser | null>(null);
   const [returnOrder, setReturnOrder] = useState<OrderWithUser | null>(null);
+  const [cancelOrder, setCancelOrder] = useState<number | null>(0);
   const [listBank, setListBank] = useState<IBank[]>([]);
 
   const ITEMS_PER_PAGE = 3;
@@ -45,7 +46,7 @@ export function OrdersContent() {
     };
 
     fetchOrders();
-  }, [user?.id]);
+  }, [user?.id, cancelOrder]);
 
   useEffect(() => {
     const fetchListBank = async () => {
@@ -76,6 +77,21 @@ export function OrdersContent() {
       throw err;
     }
   };
+  const handleCancelOrder = async (orderId: number) => {
+    const confirmCancel = window.confirm("Bạn có chắc chắn muốn hủy đơn này không?");
+    if (!confirmCancel) return;
+
+    try {
+      await orderService.cancelOrder(orderId);
+      toast.success("Hủy đơn thành công!");
+      setCancelOrder(orderId)
+    } catch (err) {
+      console.error("Lỗi hủy đơn:", err);
+      toast.error("Hủy đơn thất bại, thử lại sau!");
+      throw err;
+    }
+  };
+
 
   const handleSubmitReturn = (data: {
     orderId: number;
@@ -116,7 +132,7 @@ export function OrdersContent() {
     <div className="bg-gray-50 p-4 sm:p-6 lg:p-8 min-h-screen">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6 pb-4 border-b">Đơn hàng của tôi</h1>
-        
+
         <OrderList
           orders={orders}
           currentPage={currentPage}
@@ -125,6 +141,7 @@ export function OrdersContent() {
           onViewDetails={setSelectedOrder}
           onEditAddress={setEditingOrder}
           onReturnOrder={setReturnOrder}
+          onCancelOrder={handleCancelOrder}
         />
 
         <OrderDetailsModal
