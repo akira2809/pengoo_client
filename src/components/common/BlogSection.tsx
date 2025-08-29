@@ -90,7 +90,8 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   const formattedPosts = React.useMemo<BlogPost[]>(() => {
     if (!posts || posts.length === 0) return [];
 
-    return posts.map((post) => {
+    // Only take the first 3 posts
+    return posts.slice(0, 3).map((post) => {
       // Format date in Vietnamese locale
       const postDate = post.updated_at ? new Date(post.updated_at) : new Date();
       const formattedDate = postDate.toLocaleDateString('vi-VN', {
@@ -128,7 +129,33 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
     return (
       <section className="py-16 px-4 md:py-24">
         <div className="max-w-screen-xl mx-auto">
-          <div className="h-[500px] w-full bg-gray-100 animate-pulse rounded-lg"></div>
+          <div className="flex justify-between items-center mb-8">
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-md">
+                <div className="aspect-w-16 aspect-h-9 relative">
+                  <div className="w-full h-48 bg-gray-200 animate-pulse"></div>
+                </div>
+                <div className="p-4">
+                  <div className="h-4 w-20 bg-gray-200 rounded-full mb-3 animate-pulse"></div>
+                  <div className="h-6 w-3/4 bg-gray-200 rounded mb-3 animate-pulse"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                  </div>
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-6 w-6 bg-gray-200 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );

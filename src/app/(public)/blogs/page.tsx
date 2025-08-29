@@ -70,7 +70,14 @@ const PLACEHOLDER_IMAGE = '/placeholder.jpg';
 export default async function BlogsPage() {
   try {
     const posts = await fetchAllPosts();
-
+    
+    
+    if (!Array.isArray(posts)) {
+      console.error('Expected posts to be an array, got:', typeof posts, posts);
+      throw new Error('Invalid posts data format');
+    }
+    
+    
     const mappedPosts: BlogPost[] = posts.map((post: {
       id: number;
       image?: string;
@@ -135,7 +142,8 @@ export default async function BlogsPage() {
       </div>
     );
   } catch (error) {
-    console.error('Error fetching blog posts:', error);
+    // Log the error for debugging
+    console.error('Error loading blog posts:', error);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 bg-white rounded-lg shadow-md">
