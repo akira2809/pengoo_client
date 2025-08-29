@@ -10,20 +10,44 @@ import { ProductPagination } from "@/app/(public)/products/component/layouts/pro
 // import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
 // import { confirmRemoveAll, confirmRemoveSelected } from '@/components/common/UI/confirmDialog';
 
+type Product = {
+  id: number;
+  product_name: string;
+  product_price: number | string;
+  description?: string;
+  slug?: string;
+  status?: string;
+  discount?: number;
+  meta_title?: string;
+  meta_description?: string;
+  quantity_sold?: number;
+  quantity_stock: number;
+  rating?: number;
+  reviewCount?: number;
+  images: Array<{
+    id: number;
+    url: string;
+    name?: string;
+    folder?: string | null;
+    ord?: number | null;
+    deletedAt?: string | null;
+  }>;
+  category_ID?: number | { id: number; name: string };
+  publisher_ID?: number | { id: number; name: string };
+  tags?: Array<{
+    id: number;
+    name: string;
+    type: string;
+    deletedAt?: string | null;
+  }>;
+  cmsContent?: {
+    [key: string]: unknown;
+  };
+};
+
 type WishlistItem = {
   id: number;
-  product: {
-    id: number;
-    product_name: string;
-    product_price: number;
-    image?: string;
-    quantity_stock: number;
-    rating: number;
-    reviewCount: number;
-    slug?: string;
-    meta_description?: string;
-    discount?: number;
-  };
+  product: Product;
 };
 
 // --- Helper Icons ---
@@ -55,52 +79,44 @@ export default function WishlistPage() {
         console.log("API Response:", res.data);
 
 
-        setWishlist(
-          (res.data ?? []).map((item: {
-            id: number;
-            product_id?: number;
-            product_name?: string;
-            product_price?: number;
-            images?: Array<{ url: string }>;
-            quantity_stock?: number;
-            rating?: number;
-            reviewCount?: number;
-            slug?: string;
-            meta_description?: string;
-            discount?: number;
-            product?: {
-              id: number;
-              product_name: string;
-              product_price: number;
-              images?: Array<{ url: string }>;
-              quantity_stock: number;
-              rating: number;
-              reviewCount: number;
-              slug?: string;
-              meta_description?: string;
-              discount?: number;
-            };
-          }) => ({
+        console.log('Raw API response:', JSON.stringify(res.data, null, 2));
+        
+        const data = (res.data ?? []).map((item, index) => {
+          console.log(`Processing item ${index}:`, JSON.stringify(item, null, 2));
+          // The item itself is the product data
+          const productData = item.product || item;
+          
+          // Get the main image (look for image with name 'main' or take the first one)
+          const mainImage = productData.images?.find(img => img.name === 'main') || productData.images?.[0];
+          const imageUrl = mainImage?.url || '';
+          
+          const transformedItem = {
             id: item.id,
-            product: item.product ? {
-              ...item.product,
-              product_price: Number(item.product.product_price),
-              image: item.product.images?.[0]?.url || '',
-            } : {
-              id: item.product_id ?? item.id,
-              product_name: item.product_name || '',
-              product_price: Number(item.product_price || 0),
-              image: item.images?.[0]?.url || '',
-              quantity_stock: item.quantity_stock || 0,
-              rating: item.rating || 0,
-              reviewCount: item.reviewCount || 0,
-              slug: item.slug,
-              meta_description: item.meta_description,
-              discount: item.discount,
+            product: {
+              ...productData,
+              id: productData.id,
+              product_name: productData.product_name || '',
+              product_price: Number(productData.product_price || 0),
+              images: productData.images || [],
+              image: imageUrl,
+              quantity_stock: productData.quantity_stock || 0,
+              description: productData.description || '',
+              slug: productData.slug || `product-${productData.id}`,
+              status: productData.status || 'Available',
+              discount: productData.discount || 0,
+              reviewCount: productData.reviewCount || 0,
+              meta_description: productData.meta_description || '',
+              cmsContent: productData.cmsContent
             }
-          }))
-        );  
-        console.log("Fetched wishlist:", res);
+          };
+          
+          console.log(`Transformed item ${index}:`, JSON.stringify(transformedItem, null, 2));
+          return transformedItem;
+        })
+        console.log('Final transformed data:', JSON.stringify(data, null, 2));
+        console.log('Number of wishlist items:', data.length);
+        setWishlist(data);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -117,10 +133,43 @@ export default function WishlistPage() {
     };
   };
 
-  const getValidImageUrl = (url: string | undefined | null): string | null => {
-    if (!url || typeof url !== 'string' || url.trim() === '') return null;
-    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) return url;
-    return `/${url.replace(/^\//, '')}`;
+  interface ProductImage {
+    url: string;
+    name?: string;
+    // Add other image properties if needed
+  }
+
+  interface Product {
+    id: number;
+    product_name: string;
+    product_price: number | string;
+    images: ProductImage[];
+    image?: string;
+    // Add other product properties as needed
+  }
+
+  const getValidImageUrl = (product: Product): string => {
+    // First try to get the main image (with name 'main' or first image in the array)
+    if (product.images && product.images.length > 0) {
+      const mainImage = product.images.find((img: { name?: string }) => img.name === 'main') || product.images[0];
+      if (mainImage?.url) {
+        const url = mainImage.url.trim();
+        if (url) {
+          return url.startsWith('http') ? url : `https:${url}`;
+        }
+      }
+    }
+    
+    // Fallback to product.image if exists
+    if (product.image) {
+      const url = product.image.trim();
+      if (url) {
+        return url.startsWith('http') ? url : `https:${url}`;
+      }
+    }
+    
+    // Default fallback
+    return 'https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image';
   };
 
   const formatPrice = (price: number) =>
@@ -180,19 +229,17 @@ export default function WishlistPage() {
 
   const handleAddToCart = (e: MouseEvent, product: WishlistItem['product']) => {
     e.preventDefault();
-    e.stopPropagation();
-
-    addItem({
-      id: product.id,
-      product_name: product.product_name,
-      product_price: product.product_price,
-      quantity: 1,
-      image_url: product.image || '',
-      slug: product.slug || '',
-      description: product.meta_description || '',
-      discount: product.discount || 0
-    });
-
+    const addToCart = (product: Product) => {
+      addItem({
+        id: product.id,
+        name: product.product_name,
+        price: Number(product.product_price),
+        quantity: 1,
+        image: getValidImageUrl(product),
+        stock: product.quantity_stock || 0,
+      });
+    };
+    addToCart(product);
     // Toast notification is commented out as the import is not available
     // showSuccessToast(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
   };
@@ -275,7 +322,7 @@ export default function WishlistPage() {
                 />
                 <div className="ml-4 w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
                   <Image
-                    src={getValidImageUrl(product.image) || 'https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image'}
+                    src={getValidImageUrl(product)}
                     alt={product.product_name}
                     width={96}
                     height={96}

@@ -13,6 +13,19 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, onViewDetails, onEditAddress, onReturnOrder, onCancelOrder }: OrderCardProps) {
+  // Ensure refundRequests is always an array
+  const refundRequests = Array.isArray(order.refundRequests) ? order.refundRequests : [];
+
+  // Explicitly type r as { status?: string }
+  const hasPendingRefund = refundRequests.some((r: { status?: string }) => r.status === 'PENDING');
+  const hasRefunded = refundRequests.some((r: { status?: string }) => r.status === 'REFUNDED');
+  const maxRefundRequestsReached = refundRequests.length >= 3;
+
+  const canRequestRefund =
+    order.productStatus === 'delivered' &&
+    !hasPendingRefund &&
+    !hasRefunded &&
+    !maxRefundRequestsReached;
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden divide-y divide-gray-200">
       <div className="p-4 sm:p-5 flex justify-between items-center">
@@ -53,12 +66,29 @@ export function OrderCard({ order, onViewDetails, onEditAddress, onReturnOrder, 
             </div>
           )}
 
-          {order.productStatus === 'delivered' && (
+          {canRequestRefund && (
             <button
               onClick={() => onReturnOrder(order)}
               className="px-4 py-2 text-sm font-medium text-yellow-600 bg-white border border-yellow-300 rounded-md hover:bg-yellow-500 hover:text-white transition-colors duration-200"
             >
               Hoàn đơn
+            </button>
+          )}
+          {!canRequestRefund && order.productStatus === 'delivered' && (
+            <button
+              disabled
+              className="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-md cursor-not-allowed"
+              title={
+                hasPendingRefund
+                  ? 'Đã có yêu cầu hoàn đơn đang chờ xử lý'
+                  : hasRefunded
+                  ? 'Đơn hàng đã được hoàn tiền'
+                  : maxRefundRequestsReached
+                  ? 'Bạn đã đạt giới hạn số lần yêu cầu hoàn đơn'
+                  : ''
+              }
+            >
+              Hoàn đơn không khả dụng
             </button>
           )}
           <button

@@ -16,7 +16,6 @@ import { ProductGrid } from "@/app/(public)/products/component/layouts/product/P
 import { ProductPagination } from "@/app/(public)/products/component/layouts/product/ProductPagination";
 import { MobileProductFiltersModal } from "@/app/(public)/products/component/layouts/product/MobileProductFiltersModal";
 import { IoFilter } from "react-icons/io5"; // Icon filter
-import { useSearchParams } from "next/navigation";
 
 interface ProductPageLayoutProps {
   products: ProductData[];
@@ -94,30 +93,6 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(22); // Số sản phẩm mỗi trang
-
-  const isAnyFilterActive = useMemo(() => {
-    return (
-      selectedCategories.length > 0 ||
-      selectedTags.length > 0 ||
-      selectedStatus.length > 0 ||
-      priceRange.min !== 0 ||
-      priceRange.max !== 5000000 ||
-      showOutOfStock
-    );
-  }, [selectedCategories, selectedTags, selectedStatus, priceRange, showOutOfStock]);
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const statusFromUrl = searchParams.get("status");
-    if (statusFromUrl) {
-      setSelectedStatus((prev) => {
-        if (!prev.includes(statusFromUrl)) {
-          return [...prev, statusFromUrl];
-        }
-        return prev;
-      });
-    }
-  }, [searchParams]);
 
   // --- Handlers for Filters ---
   // const handleCategoryChange = useCallback(
@@ -496,7 +471,14 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
           setShowOutOfStock={setShowOutOfStock}
           formatPrice={formatPrice}
           onClearFilters={handleClearFilters}
-          isAnyFilterActive={isAnyFilterActive}
+          isAnyFilterActive={
+            selectedCategories.length > 0 ||
+            selectedTags.length > 0 ||
+            selectedStatus.length > 0 ||
+            priceRange.min > 0 ||
+            priceRange.max < 5000000 ||
+            showOutOfStock
+          }
         />
 
         {/* Khu vực hiển thị sản phẩm */}
@@ -588,7 +570,14 @@ export const ProductPageLayout: React.FC<ProductPageLayoutProps> = ({
         setShowOutOfStock={setShowOutOfStock}
         formatPrice={formatPrice}
         onClearFilters={handleClearFilters}
-        isAnyFilterActive={isAnyFilterActive}
+        isAnyFilterActive={
+          selectedCategories.length > 0 ||
+          selectedTags.length > 0 ||
+          selectedStatus.length > 0 ||
+          priceRange.min > 0 ||
+          priceRange.max < 5000000 ||
+          showOutOfStock
+        }
       />
     </div>
   );

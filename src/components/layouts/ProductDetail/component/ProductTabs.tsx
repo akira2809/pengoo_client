@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
-
 export type TabSection = {
   title: string;
   content: string | JSX.Element;
@@ -12,18 +11,40 @@ export type TabSection = {
   references?: { title: string; link: string }[];
 };
 
+// Utility: robust tab finder
+export function findTabByTitle(
+  tabs: { title: string }[],
+  candidates: string[]
+) {
+  return (
+    tabs.find((t) =>
+      candidates.some(
+        (c) =>
+          t.title.trim().toLowerCase() === c.trim().toLowerCase()
+      )
+    ) || null
+  );
+}
+
 function getFixedTabs(tabs: TabSection[]): TabSection[] {
-  const getTab = (title: string): TabSection =>
-    tabs.find(
-      (t) => t.title.trim().toLowerCase() === title.toLowerCase()
-    ) || (title === "Reference"
-      ? { title, content: "", references: [] }
-      : { title, content: "", images: [] });
-  return [
-    getTab("Thông số kĩ thuật"),
-    getTab("Cách chơi"),
-    getTab("Tài liệu tham khảo"),
+  // Define all possible variants for each tab
+  const TAB_VARIANTS = [
+    ["Nội dung", "Thông số kĩ thuật", "Specifications", "specifications", "spec", "chi tiết", "details"],
+    ["Cách chơi", "How to Play", "how to play", "hướng dẫn chơi", "play guide"],
+    ["Tham Khảo", "Reference", "Tài liệu tham khảo", "reference", "tham khảo"],
   ];
+
+  return TAB_VARIANTS.map((variants, idx) => {
+    const tab = findTabByTitle(tabs, variants);
+    if (tab) return tab as TabSection;
+    // Fallback: empty tab with canonical title
+    return {
+      title: variants[0],
+      content: "",
+      images: [],
+      references: idx === 2 ? [] : undefined,
+    };
+  });
 }
 
 export default function ProductTabs({ tabs = [] }: { tabs: TabSection[] }) {
@@ -54,32 +75,46 @@ export default function ProductTabs({ tabs = [] }: { tabs: TabSection[] }) {
   // How To Play tab display (only embed, no raw link)
   function renderHowToPlay(content: string) {
     if (!content) return <span className="text-gray-400 italic">No video link provided.</span>;
-    const isYoutube =
-      content.includes("youtube.com") || content.includes("youtu.be");
-    const isVimeo = content.includes("vimeo.com");
-    let embedUrl = content;
-    if (isYoutube) {
+    // YouTube
+    let embedUrl = "";
+    if (content.includes("youtube.com") || content.includes("youtu.be")) {
+      // Extract video ID
+      let videoId = "";
       if (content.includes("watch?v=")) {
-        embedUrl = content.replace("watch?v=", "embed/");
+        videoId = content.split("watch?v=")[1].split("&")[0];
       } else if (content.includes("youtu.be/")) {
-        embedUrl = content.replace("youtu.be/", "youtube.com/embed/");
+        videoId = content.split("youtu.be/")[1].split("?")[0];
+      }
+      if (videoId) {
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        // Add start time if present
+        const tMatch = content.match(/[?&]t=(\d+)s?/);
+        if (tMatch) embedUrl += `?start=${tMatch[1]}`;
       }
     }
-    return (isYoutube || isVimeo) ? (
+    // Vimeo
+    else if (content.includes("vimeo.com")) {
+      const match = content.match(/vimeo\.com\/(\d+)/);
+      if (match) embedUrl = `https://player.vimeo.com/video/${match[1]}`;
+    }
+
+    if (!embedUrl) {
+      return <span className="text-gray-400 italic">Invalid or unsupported video link.</span>;
+    }
+
+    return (
       <div className="w-full flex justify-center">
         <iframe
-          width="560"
-          height="315"
+          width="800"
+          height="450"
           src={embedUrl}
           title="How To Play Video"
           frameBorder={0}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          className="rounded-xl border shadow w-full max-w-2xl aspect-video"
+          className="rounded-xl border shadow w-full max-w-3xl aspect-video min-h-[320px] min-w-[320px]"
         />
       </div>
-    ) : (
-      <span className="text-gray-400 italic">Invalid video link.</span>
     );
   }
 
