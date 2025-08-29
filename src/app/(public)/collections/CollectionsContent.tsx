@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { collectionService } from "@/app/api/services/collectionService";
 import CategoryGrid from "@/components/layouts/collection/CategoryGrid";
 import { BlogSection } from "@/components/common/BlogSection";
+import { Skeleton } from "@/components/common/UI/Skeleton";
 
 interface RawCollection {
   id: string | number;
@@ -78,7 +79,21 @@ export default function CollectionsContent() {
         <h1 className="text-3xl font-bold mb-6">Danh mục Collections</h1>
 
         {loading ? (
-          <div className="text-gray-500">Đang tải danh mục...</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
+                <Skeleton 
+                  variant="card" 
+                  className="w-full h-full rounded-xl"
+                  effect="pulse"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Skeleton variant="text" className="h-8 w-32 mb-4" />
+                  <div className="w-10 h-10 rounded-full bg-white/20" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : collections.length > 0 ? (
           <CategoryGrid collections={collections} />
         ) : (

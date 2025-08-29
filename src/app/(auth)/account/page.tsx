@@ -1,9 +1,11 @@
 "use client";
 
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "do6lj4onq";
+const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || "ml_default";
 import {
   PencilIcon,
   CheckIcon,
@@ -14,7 +16,7 @@ import {
   EnvelopeIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
-import Image from "next/image";
+// Regular img tag will be used instead of Next.js Image
 import { apiClient } from "@/app/api/apiClient";
 
 // Ensure User interface is available (can be imported from useAuthStore if defined there)
@@ -39,6 +41,8 @@ export default function ModernAccountPage() {
   const [formData, setFormData] = useState<Partial<User>>({});
   const [accountData, setAccountData] = useState<User | null>(null);
   const [displayedUserPoints, setDisplayedUserPoints] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchUserPoints = async () => {
@@ -279,12 +283,16 @@ export default function ModernAccountPage() {
                   <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 to-purple-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
                   <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl">
                     {formData.avatar_url ? (
-                      <Image
+                      <img
                         src={formData.avatar_url}
                         alt="Ảnh đại diện"
-                        width={128}
-                        height={128}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        onError={(e) => {
+                          // Fallback to default avatar if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = '';
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center">
@@ -296,23 +304,72 @@ export default function ModernAccountPage() {
                   </div>
                   {isEditing && (
                     <label className="absolute bottom-0 right-0 p-1.5 sm:p-2 bg-white rounded-full text-indigo-600 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                      {isUploading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
                       <PencilIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    )}
                       <input
                         type="file"
                         className="sr-only"
                         accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                avatar_url: reader.result as string,
-                              }));
-                            };
-                            reader.readAsDataURL(file);
+                        ref={fileInputRef}
+                        onChange={async (e) => {
+                          const files = e.target.files;
+                          if (!files || files.length === 0) return;
+                          
+                          const file = files[0];
+                          
+                          // Validate file type
+                          if (!file.type.match('image.*')) {
+                            toast.error('Vui lòng chọn file ảnh hợp lệ');
+                            return;
                           }
+                          
+                          // Validate file size (max 20MB to match ReturnOrderModal)
+                          if (file.size > 20 * 1024 * 1024) {
+                            toast.error('File quá lớn! Tối đa 20MB.');
+                            return;
+                          }
+                          
+                          setIsUploading(true);
+                          
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                          formData.append('folder', 'avatars');
+                          
+                          const xhr = new XMLHttpRequest();
+                          xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`);
+                          
+                          // Progress tracking can be added here if needed
+                          
+                          xhr.onload = () => {
+                            if (xhr.status === 200) {
+                              const data = JSON.parse(xhr.responseText);
+                              setFormData(prev => ({
+                                ...prev,
+                                avatar_url: data.secure_url
+                              }));
+                              toast.success('Tải ảnh đại diện lên thành công');
+                            } else {
+                              toast.error('Có lỗi xảy ra khi tải ảnh lên');
+                            }
+                            setIsUploading(false);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          };
+                          
+                          xhr.onerror = () => {
+                            toast.error('Lỗi kết nối mạng');
+                            setIsUploading(false);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          };
+                          
+                          xhr.send(formData);
                         }}
                       />
                     </label>

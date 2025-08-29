@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
-import Image from "next/image";
 import { apiClient } from "@/app/api/apiClient";
 import toast from "react-hot-toast";
 import {
@@ -159,10 +158,15 @@ export function Sidebar() {
                 <div className="relative">
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
                     {user?.avatar_url ? (
-                      <Image
+                      <img
                         src={user.avatar_url}
                         alt="Avatar"
                         className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = '';
+                        }}
                       />
                     ) : (
                       <UserIcon className="w-6 h-6 text-white" />

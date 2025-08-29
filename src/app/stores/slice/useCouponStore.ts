@@ -12,7 +12,7 @@ export interface CouponState {
   fetchCoupons: () => Promise<void>;
   fetchMyVouchers: () => Promise<void>;
   verifyVoucher: (code: string) => Promise<boolean>;
-  applyVoucher: (code: string,orderValue:number) => Promise<void>;
+  applyVoucher: (code: string, orderValue: number) => Promise<unknown>;
 }
 
 export const createCouponSlice: StateCreator<CouponState> = (set) => ({
@@ -56,14 +56,17 @@ verifyVoucher: async (code: string) => {
         return false;
     }
 },
-applyVoucher: async (code: string, orderValue: number) => {
+applyVoucher: async (code: string, orderValue: number)=> {
     set({ isLoading: true, error: null });
     try {
-        await couponService.validateAndApply(code, orderValue);
-        set({ isLoading: false });
+      const data = await couponService.validateAndApply(code, orderValue);
+      console.log('dataService', data);
+      set({ isLoading: false });
+      return data;
     } catch (error) {
         const message = error instanceof Error && error.message ? error.message : 'Verification failed';
         set({ error: message, isLoading: false });
+        return null;
     }
 }
 });

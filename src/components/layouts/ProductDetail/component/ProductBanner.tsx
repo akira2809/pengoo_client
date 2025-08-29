@@ -13,6 +13,10 @@ export default function ProductBanner({ title, subtitle, images }: { title?: str
         backgroundImage: images && images.length > 0 ? `url('${images[0]}')` : "url('/Banner_GoD_4000x2000_min.webp')",
       }}
     >
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow mb-2">{title}</h1>
+        <p className="text-lg md:text-2xl text-white drop-shadow">{subtitle}</p>
+      </div>
       <button
         onClick={() => setOpen(true)}
         className="absolute top-[35%] left-[10%] sm:top-[38%] sm:left-[12%] md:top-[40%] md:left-[12%] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 border border-gray-300 flex items-center justify-center text-black text-xl sm:text-2xl font-bold shadow-md transition-all duration-200"
