@@ -10,6 +10,7 @@ interface OrderListProps {
   onViewDetails: (order: OrderWithUser) => void;
   onEditAddress: (order: OrderWithUser) => void;
   onReturnOrder: (order: OrderWithUser) => void;
+  onCancelOrder: (id: number) => void;
 }
 
 export function OrderList({
@@ -19,7 +20,8 @@ export function OrderList({
   onPageChange,
   onViewDetails,
   onEditAddress,
-  onReturnOrder
+  onReturnOrder,
+  onCancelOrder,
 }: OrderListProps) {
   const paginatedOrders = orders.slice(
     (currentPage - 1) * itemsPerPage,
@@ -35,6 +37,7 @@ export function OrderList({
           onViewDetails={onViewDetails}
           onEditAddress={onEditAddress}
           onReturnOrder={onReturnOrder}
+          onCancelOrder={onCancelOrder}
         />
       ))}
 
