@@ -9,7 +9,6 @@ import AboutSectionRight from "@/components/layouts/About/section/AboutSectionRi
 import CoreValuesSection from "@/components/layouts/About/section/CoreValuesSection";
 import  Layout  from "@/components/common/UI/85%";
 import TimelineSection from "@/components/layouts/About/section/TimelineSection";
-import ShuffleHero from "@/components/layouts/About/section/ShuffleHero";
 
 const AboutPageContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState("pengoo"); // State để theo dõi tab đang hoạt động
@@ -112,7 +111,6 @@ const AboutPageContent: React.FC = () => {
           {/* Đây là nội dung cho tab "Nghệ thuật thủ công" */}
           <CoreValuesSection values={coreValuesData} />
           <TimelineSection timelineData={timelineData} />
-          <ShuffleHero />
           {/* Bạn có thể thêm các AboutSection hoặc các component khác dành riêng cho tab "Nghệ thuật thủ công" tại đây */}
         </>
         
