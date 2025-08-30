@@ -32,7 +32,7 @@ export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalP
   const [showBankList, setShowBankList] = useState(false);
   const [returnVideo, setReturnVideo] = useState<string | null>(null);
   const [returnImages, setReturnImages] = useState<string[]>([]);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [] = useState<OrderWithUser | null>(null);
@@ -61,14 +61,14 @@ export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalP
 
           const xhr = new XMLHttpRequest();
           xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`);
-          
+
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
               const percent = (event.loaded / event.total) * 100;
               setUploadProgress(Math.round(percent));
             }
           };
-          
+
           xhr.onload = () => {
             if (xhr.status === 200) {
               const data = JSON.parse(xhr.responseText);
@@ -77,7 +77,7 @@ export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalP
               reject(new Error("Upload failed"));
             }
           };
-          
+
           xhr.onerror = () => reject(new Error("Upload failed"));
           xhr.send(formData);
         });
@@ -99,7 +99,7 @@ export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalP
     } finally {
       setUploading(false);
       setUploadProgress(0);
-      
+
       // Reset input values
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (videoInputRef.current) videoInputRef.current.value = '';
@@ -139,7 +139,7 @@ export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalP
   };
 
   const handleSubmit = async () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!returnReason) {
       newErrors.reason = 'Vui lòng chọn lý do hoàn đơn';
@@ -232,9 +232,9 @@ export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalP
                 onChange={(e) => setReturnReason(e.target.value)}
               >
                 <option value="">-- Chọn lý do --</option>
-                <option value="defective">Sản phẩm bị lỗi</option>
-                <option value="missing">Thiếu sản phẩm</option>
-                <option value="wrong">Giao sai sản phẩm</option>
+                <option value="Sản phẩm bị lỗ">Sản phẩm bị lỗi</option>
+                <option value="Thiếu sản phẩm">Thiếu sản phẩm</option>
+                <option value="Giao sai sản phẩm">Giao sai sản phẩm</option>
                 <option value="other">Khác</option>
               </select>
               {errors.reason && (
@@ -328,7 +328,7 @@ export function ReturnOrderModal({ order, onClose, listBank }: ReturnOrderModalP
                 disabled={uploading || !!returnVideo}
               />
               {uploading && <p className="text-sm text-blue-600 mt-1">Đang upload... {uploadProgress}%</p>}
-              
+
               {/* Preview video */}
               {returnVideo && (
                 <div className="relative mt-2">
