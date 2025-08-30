@@ -5,8 +5,8 @@ interface CartItem {
   id: number;
   productId: mumber;
   quantity: number;
-  price:number;
-  product_price:number;
+  price: number;
+  product_price: number;
 }
 
 // Define form data interface for checkout
@@ -19,7 +19,7 @@ interface CheckoutFormData {
   email: string;
   phone: string;
   address: string;
-  city: string;  
+  city: string;
   phone_number: string;
   apartment: string;
   note?: string;
@@ -52,9 +52,9 @@ export interface CreateOrderRequest {
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   couponCode?: string;
   details: OrderItemDetail[];
-//   order_date?: string;
-//   order_id: number;
-//   order_code: string;
+  //   order_date?: string;
+  //   order_id: number;
+  //   order_code: string;
 }
 
 export interface CreateOrderResponse {
@@ -98,10 +98,11 @@ export interface OrderWithUser extends Omit<CreateOrderResponse, 'details'> {
   };
   details?: OrderItemDetail[];
   order_date?: string;
-  order_code: string; 
+  order_code: string;
   total_price: number;
   shipping_address?: string;
   payment_type?: string;
+  payment_status?: string;
   productStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   couponCode?: string;
   coupon_discount?: number; // Thêm dòng này

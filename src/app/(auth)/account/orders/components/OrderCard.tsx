@@ -50,20 +50,24 @@ export function OrderCard({ order, onViewDetails, onEditAddress, onReturnOrder, 
         </div>
         <div className="flex gap-3">
           {order.productStatus === 'pending' && (
-            <div>
-              <button
-                onClick={() => onCancelOrder(order.id)}
-                className="px-4 mr-3 py-2 text-sm font-medium text-red-500 bg-white border border-red-500 rounded-md hover:bg-red-500 hover:text-white transition-colors duration-200"
-              >
-                Hủy đơn
-              </button>
-              <button
-                onClick={() => onEditAddress(order)}
-                className="px-4 py-2 text-sm font-medium text-text-800 bg-white border border-background-800 rounded-md hover:bg-background-800 hover:text-white transition-colors duration-200"
-              >
-                Cập nhật thông tin giao hàng
-              </button>
-            </div>
+
+            <button
+              onClick={() => onEditAddress(order)}
+              className="px-4 py-2 text-sm font-medium text-text-800 bg-white border border-background-800 rounded-md hover:bg-background-800 hover:text-white transition-colors duration-200"
+            >
+              Cập nhật thông tin giao hàng
+            </button>
+
+          )}
+          {(order.productStatus === 'pending' && order.payment_status === 'pending') && (
+
+            <button
+              onClick={() => onCancelOrder(order.id)}
+              className="px-4 py-2 text-sm font-medium text-red-500 bg-white border border-red-500 rounded-md hover:bg-red-500 hover:text-white transition-colors duration-200"
+            >
+              Hủy đơn
+            </button>
+
           )}
 
           {canRequestRefund && (
@@ -82,10 +86,10 @@ export function OrderCard({ order, onViewDetails, onEditAddress, onReturnOrder, 
                 hasPendingRefund
                   ? 'Đã có yêu cầu hoàn đơn đang chờ xử lý'
                   : hasRefunded
-                  ? 'Đơn hàng đã được hoàn tiền'
-                  : maxRefundRequestsReached
-                  ? 'Bạn đã đạt giới hạn số lần yêu cầu hoàn đơn'
-                  : ''
+                    ? 'Đơn hàng đã được hoàn tiền'
+                    : maxRefundRequestsReached
+                      ? 'Bạn đã đạt giới hạn số lần yêu cầu hoàn đơn'
+                      : ''
               }
             >
               Hoàn đơn không khả dụng

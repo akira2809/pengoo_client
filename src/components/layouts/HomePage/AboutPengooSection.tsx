@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import React from 'react';
 
 export const AboutPengooSection = () => {
@@ -8,12 +9,15 @@ export const AboutPengooSection = () => {
           Về Pengoo
         </h2>
         <p className="text-lg text-text-800leading-relaxed mb-8">
-          Pengoo là thương hiệu cung cấp và kinh doanh boardgame cao cấp. 
+          Pengoo là thương hiệu cung cấp và kinh doanh boardgame cao cấp.
           Mong muốn lớn nhất của chúng tôi là mang đến những trải nghiệm chơi game tuyệt vời cùng những khoảng khắc khó quên nhất cho khách hàng.
         </p>
-        <button className="bg-background-400 hover:bg-amber-700 text-text-50 font-semibold py-3 px-8 rounded-md transition-colors duration-300">
-          Tìm hiểu thêm
-        </button>
+        <Link
+          href="https://pengoo.store/about">
+          <button className="bg-background-800 hover:bg-background-700 text-text-50 font-semibold py-3 px-8 rounded-md transition-colors duration-300">
+            Tìm hiểu thêm
+          </button>
+        </Link>
       </div>
     </section>
   );
