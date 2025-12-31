@@ -1,4 +1,5 @@
 // 📁 src/app/stores/store.ts
+
 import { create } from 'zustand';
 import { createProductSlice } from './slice/useProductStore';
 import { createCouponSlice } from './slice/useCouponStore';
@@ -11,10 +12,10 @@ type StoreState = ProductState & CartState & AuthState & CouponState & {
   fetchProductsByCategory: (categoryId: string) => Promise<void>;
 };
 
-// Create the store
-export const useStore = create<StoreState>((set, get) => ({
-  ...createProductSlice(set, get),
-  ...createCouponSlice(set),
+// Fix: Pass 3 arguments to slices (set, get, api) for Zustand compatibility
+export const useStore = create<StoreState>((set, get, api) => ({
+  ...createProductSlice(set, get, api),
+  ...createCouponSlice(set, get, api),
 
   // Cart state
   items: [],

@@ -17,27 +17,28 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: 22
         script: |
+          echo "📦 Pulling latest code..."
           cd /root/services/pengoo_client
           git fetch origin
-          git checkout production
+          git checkout main
           git pull
 
-          # Stop and clean up old containers
-          docker stop pengoo_client-container 2>/dev/null || true
-          docker rm pengoo_client-container 2>/dev/null || true
-          docker rmi pengoo_client 2>/dev/null || true
+          echo "🧹 Cleaning up old Docker stuff..."
+          docker stop pengoo_client-container || true
+          docker rm pengoo_client-container || true
+          docker rmi pengoo_client || true
 
-          # Build with environment variables
-          docker build \
+          echo "🐳 Building Docker image..."
+          docker build -t pengoo_client \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
-            -t pengoo_client .
+            .
 
-          # Run the container
+          echo "🚀 Running new container..."
           docker run -d \
             --name pengoo_client-container \
             -p 4000:3000 \
@@ -49,6 +50,8 @@ jobs:
             -e NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
             pengoo_client
 
-          # Clean up
+          echo "🧼 Pruning..."
           docker image prune -af
           docker container prune -f
+
+          echo "✅ Done!"

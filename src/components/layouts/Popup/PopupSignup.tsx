@@ -60,11 +60,18 @@ export default function PopupSignup({ isOpen, onClose }: PopUpProps) {
             <p className="text-sm mb-6">Áp dụng cho đơn hàng đầu tiên của bạn</p>
 
             <button
-              onClick={() => router.push('/signup')}
-              className="bg-[#D2AE7E] text-black font-semibold py-2 px-6 rounded"
+              onClick={() => {
+                setIsVisible(false);
+                setTimeout(() => {
+                  onClose();         
+                  router.push('/signup'); 
+                }, 500); 
+              }}
+              className="bg-background-800 hover:bg-background-700 text-black font-semibold py-2 px-6 rounded"
             >
               THAM GIA NGAY
             </button>
+
 
             <button
               onClick={() => {

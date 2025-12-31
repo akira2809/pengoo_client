@@ -7,23 +7,23 @@ const TESTIMONIALS_DATA = [
   {
     id: 1,
     rating: 5, // Số sao
-    quote: "Dạo một vòng những sản phẩm của Pengoo`, chúng ta có thể tìm thấy những bộ trò chơi từ 'tây' với tuổi đời lên đến cả trăm năm như cờ vua, cờ tướng, cờ caro,...",
+    quote: "Dạo một vòng những sản phẩm của Pengoo, chúng ta có thể tìm thấy những bộ trò chơi với xuất xứ và câu chuyện vô cùng đặc biệt",
     authorInitial: "A", // Chữ cái đầu của tác giả
-    authorName: "Advertising Vietnam",
+    authorName: "ZeroRyuk",
   },
   {
     id: 2,
     rating: 4,
-    quote: "Sản phẩm thủ công rất tinh xảo, chất lượng vượt trội. Tôi rất hài lòng với các sản phẩm của Pengoo`.",
+    quote: "Sản phẩm đa dạng, chất lượng vượt trội. Tôi rất hài lòng với các sản phẩm của Pengoo`.",
     authorInitial: "B",
-    authorName: "Khách hàng B",
+    authorName: "TomCrypton",
   },
   {
     id: 3,
     rating: 5,
-    quote: "Thiết kế độc đáo và ý nghĩa. Mỗi bộ board game không chỉ là trò chơi mà còn là một tác phẩm nghệ thuật.",
+    quote: "Với Pengoo, mỗi bộ board game không chỉ là trò chơi mà còn là một tác phẩm nghệ thuật.",
     authorInitial: "C",
-    authorName: "Đối tác C",
+    authorName: "Rea Eclair",
   },
 ];
 

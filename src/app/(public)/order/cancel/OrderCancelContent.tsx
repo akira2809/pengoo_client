@@ -1,30 +1,65 @@
+
 'use client';
+import { orderService } from '@/app/api/services/orderService';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
+
 declare global {
   interface Window {
-    gtag?: (event: string, eventName: string, params: Record<string, unknown>) => void;
+    gtag?: (
+      event: string,
+      eventName: string,
+      params: Record<string, unknown>
+    ) => void;
   }
+}
+
+interface OrderData {
+  id: number;
+  order_code: string;
+  payment_status: string;
+  productStatus: string;
+  total_price: number;
+  paypal_order_id?: string;
+  payment_type: string;
+  order_date: string;
+  shipping_address: string;
+  user: {
+    id: number;
+    full_name: string;
+    email: string;
+    username: string;
+  };
+  delivery: {
+    id: number;
+    name: string;
+    description: string;
+    fee: string;
+  };
 }
 
 export default function OrderCancelContent() {
   const searchParams = useSearchParams();
   // Get all relevant parameters from the URL
-  const orderCode = searchParams.get('orderCode') || searchParams.get('code');
-  const transactionId = searchParams.get('id');
-  const status = searchParams.get('status');
-  const isCancelled = searchParams.get('cancel') === 'true';
-  
+  const orderCode = searchParams?.get('orderCode');
+  const code = searchParams?.get('code');
+  // const transactionId = searchParams?.get('id');
+
+  const orderIdFromUrl = searchParams?.get("id") || searchParams?.get("code");
+  const status = searchParams?.get("status");
+  const isCancelled = searchParams?.get("cancel") === "true";
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cancellationReason, setCancellationReason] = useState<string>('');
+  const [cancellationReason, setCancellationReason] = useState<string>("");
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
 
   useEffect(() => {
     const handleOrderCancellation = async () => {
+
       if (!orderCode) {
         setIsLoading(false);
         setError('Mã đơn hàng không hợp lệ');
@@ -32,37 +67,63 @@ export default function OrderCancelContent() {
       }
 
       try {
-        // Determine cancellation reason based on status
-        let reason = 'Đơn hàng đã bị hủy';
-        if (status === 'CANCELLED') {
-          reason = 'Đơn hàng đã bị hủy';
-        } else if (isCancelled) {
-          reason = 'Bạn đã hủy thanh toán';
+        await orderService.cancelPayment(Number(orderCode));
+        const response = await orderService.getOrderByOrderCode(Number(orderCode));
+        console.log("Order data:", response);
+
+        if (response?.data) {
+          let order: OrderData;
+
+
+          if (!Array.isArray(response.data)) {
+            order = response.data as OrderData;
+          } else {
+            throw new Error("Không tìm thấy thông tin đơn hàng");
+          }
+
+          setOrderData(order);
+          console.log("Parsed order data:", order);
         } else {
-          reason = 'Thanh toán không thành công';
+          throw new Error("Không tìm thấy thông tin đơn hàng");
+        }
+        // if (!res.success) {
+        //   throw new Error('Không thể cập nhật trạng thái đơn hàng');
+        // }
+
+
+        // Determine cancellation reason based on status
+        let reason = "Đơn hàng đã bị hủy";
+        if (status === "CANCELLED") {
+          reason = "Đơn hàng đã bị hủy";
+        } else if (isCancelled) {
+          reason = "Bạn đã hủy thanh toán";
+        } else {
+          reason = "Thanh toán không thành công";
         }
         setCancellationReason(reason);
 
         // Track order cancellation in analytics
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'order_cancelled', {
-            transaction_id: orderCode,
-            transaction_status: status || 'cancelled',
-            transaction_cancelled: isCancelled,
-            payment_gateway: 'payos',
-          });
-        }
+
+        // if (typeof window !== 'undefined' && window.gtag) {
+        //   window.gtag('event', 'order_cancelled', {
+        //     transaction_id: code,
+        //     transaction_status: status || 'cancelled',
+
+        //     transaction_cancelled: isCancelled,
+        //     payment_gateway: "payos",
+        //   });
+        // }
       } catch (err) {
-        console.error('Error handling order cancellation:', err);
-        toast.error('Có lỗi xảy ra khi xử lý đơn hàng');
-        setError('Có lỗi xảy ra khi xử lý đơn hàng');
+        console.error("Error handling order cancellation:", err);
+        toast.error("Có lỗi xảy ra khi xử lý đơn hàng");
+        setError("Có lỗi xảy ra khi xử lý đơn hàng");
       } finally {
         setIsLoading(false);
       }
     };
 
     handleOrderCancellation();
-  }, [orderCode, status, isCancelled, transactionId]);
+  }, [orderCode, code, status, isCancelled]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -72,9 +133,11 @@ export default function OrderCancelContent() {
             <XCircleIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
           </div>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">
-            {isLoading ? 'Đang xử lý...' : cancellationReason || 'Đơn hàng đã bị hủy'}
+            {isLoading
+              ? "Đang xử lý..."
+              : cancellationReason || "Đơn hàng đã bị hủy"}
           </h1>
-          
+
           {isLoading ? (
             <div className="mt-4 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
@@ -83,13 +146,79 @@ export default function OrderCancelContent() {
           ) : error ? (
             <div className="mt-4 text-red-600">{error}</div>
           ) : (
-            <div className="mt-4">
-              <p className="text-gray-600">
-                Mã đơn hàng: <span className="font-medium">{orderCode}</span>
-              </p>
-              {transactionId && (
-                <p className="text-gray-600 mt-2">
-                  Mã giao dịch: <span className="font-medium">{transactionId}</span>
+            <div className="mt-6">
+              {orderData && (
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <h3 className="font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-300">
+                    Thông tin đơn hàng
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900">
+                          Mã đơn hàng:
+                        </span>{" "}
+                        #{orderData.order_code}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900">
+                          Order Code:
+                        </span>{" "}
+                        {orderData.order_code}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900">
+                          Ngày đặt hàng:
+                        </span>{" "}
+                        {new Date(orderData.order_date).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </p>
+                      {orderData.paypal_order_id && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium text-gray-900">
+                            PayPal Order ID:
+                          </span>{" "}
+                          {orderData.paypal_order_id}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900">
+                          Tổng tiền:
+                        </span>
+                        <span className="font-semibold text-red-600 ml-1">
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(orderData.total_price)}
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900">
+                          Phương thức thanh toán:
+                        </span>
+                        <span className="uppercase ml-1">
+                          {orderData.payment_type}
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900">
+                          Trạng thái thanh toán:
+                        </span>
+                        <span className="capitalize text-red-600 font-medium ml-1">
+                          {orderData.payment_status}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!orderData && orderIdFromUrl && (
+                <p className="text-gray-600">
+                  Mã tham chiếu:{" "}
+                  <span className="font-medium">{orderIdFromUrl}</span>
                 </p>
               )}
             </div>
@@ -102,12 +231,12 @@ export default function OrderCancelContent() {
             >
               Quay lại trang chủ
             </Link>
-            {orderCode && (
+            {orderData && (
               <Link
-                href={`/account/orders/${orderCode}`}
+                href={`/account/orders`}
                 className="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                Xem chi tiết đơn hàng
+                Xem đơn hàng của tôi
               </Link>
             )}
           </div>

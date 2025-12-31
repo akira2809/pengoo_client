@@ -15,18 +15,20 @@ export default function ScratchPlayActions({
   onPlay,
   loading,
   playing,
+  dailyClaimed,
 }: {
   tickets: number | null;
   isAuthenticated: boolean;
   earnLoading: TicketEarningType | null;
   earnMsg: Record<TicketEarningType, string>;
-  onEarn: (type: TicketEarningType, tickets?: number) => void;
+  onEarn: (type: TicketEarningType, tickets?: number) => Promise<void>;
   claimLoading: boolean;
   claimMsg: string | null;
   onClaim: () => void;
   onPlay: () => void;
   loading: boolean;
   playing: boolean;
+  dailyClaimed: boolean;
 }) {
   return (
     <div className="mb-2 text-center">
@@ -46,6 +48,7 @@ export default function ScratchPlayActions({
         claimLoading={claimLoading}
         claimMsg={claimMsg}
         onClaim={onClaim}
+        dailyClaimed={dailyClaimed}
       />
       <div className="mt-3">
         <button

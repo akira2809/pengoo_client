@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     openGraph: {
       title: 'PENGOO - Board Game Cho Gia Đình & Bạn Bè',
       description: 'Khám phá bộ sưu tập board game đa dạng tại PENGOO - Nơi kết nối mọi người thông qua những trò chơi thú vị',
-      url: 'https://pengoo.vn',
+      url: 'https://pengoo.store',
       siteName: 'PENGOO',
       images: [
         {
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     },
     // Add canonical URL
     alternates: {
-      canonical: 'https://pengoo.vn',
+      canonical: 'https://pengoo.store',
     },
     // Add viewport (if not in layout)
     viewport: {
@@ -70,7 +70,6 @@ export const metadata: Metadata = {
     generator: 'Next.js',
     applicationName: 'PENGOO Board Game',
     themeColor: '#ffffff',
-    colorScheme: 'light',
     // Add manifest
     manifest: '/site.webmanifest',
     // Add icons
@@ -92,10 +91,10 @@ export const metadata: Metadata = {
         "@context": "https://schema.org/",
         "@type": "WebSite",
         "name": "PENGOO Board Game",
-        "url": "https://pengoo.vn",
+        "url": "https://pengoo.store",
         "potentialAction": {
           "@type": "SearchAction",
-          "target": "https://pengoo.vn/search?q={search_term_string}",
+          "target": "https://pengoo.store/search?q={search_term_string}",
           "query-input": "required name=search_term_string"
         }
       }`

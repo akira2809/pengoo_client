@@ -13,13 +13,41 @@ import { useSearchStore } from "@/app/stores/slice/searchStore";
 import type { Product } from "@/app/stores/type";
 import { Skeleton } from "@/components/common/UI/Skeleton";
 
+// Helper to get main image for a product
+function getMainImage(product: Product): string {
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    // Fix: Check if image has a 'name' property, otherwise fallback to first image
+    const mainImgObj = product.images.find(
+      (img: unknown) =>
+        img !== null &&
+        typeof img === "object" &&
+        "name" in img &&
+        (img as { name?: unknown }).name &&
+        typeof (img as { name?: unknown }).name === "string" &&
+        ((img as { name: string }).name.trim().toLowerCase() === "main")
+    );
+    if (mainImgObj && mainImgObj.url) {
+      return mainImgObj.url;
+    }
+    // Fallback: first image
+    return product.images[0].url;
+  }
+  return product.image_url || "/images/placeholder-product.png";
+}
+
 interface SearchSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 // Inner component that uses useSearchParams
-function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen: boolean }) {
+function SearchSidebarContent({
+  onClose,
+  isOpen,
+}: {
+  onClose: () => void;
+  isOpen: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<
@@ -193,7 +221,7 @@ function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       // Đặt giá trị ban đầu từ URL nếu có
-      const query = searchParams.get("name") || "";
+      const query = searchParams?.get("name") || "";
       if (query) {
         setSearchQuery(query);
         // Không thực hiện tìm kiếm ngay lập tức để tránh load liên tục
@@ -290,7 +318,7 @@ function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen
   return (
     <div
       ref={searchPopupRef}
-      className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[999] flex flex-col overflow-hidden"
+      className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[999999999999] flex flex-col overflow-hidden"
       style={{ display: "none" }}
     >
       {/* Header */}
@@ -375,42 +403,18 @@ function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen
                     tabIndex={0}
                   >
                     <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 relative">
-                      {product.images?.[0]?.url || product.image_url ? (
-                        <Image
-                          src={
-                            product.images?.[0]?.url ||
-                            product.image_url ||
-                            "/images/placeholder-product.png"
-                          }
-                          alt={product.product_name}
-                          fill
-                          sizes="64px"
-                          className="object-cover"
-                          onError={(e) => {
-                            // Fallback to placeholder if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "/images/placeholder-product.png";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <svg
-                            className="w-6 h-6 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      )}
+                      <Image
+                        src={getMainImage(product)}
+                        alt={product.product_name}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = "/images/placeholder-product.png";
+                        }}
+                      />
                     </div>
                     <div className="ml-4 flex-1">
                       <h3 className="text-sm font-medium text-gray-900">
@@ -530,15 +534,17 @@ function SearchSidebarContent({ onClose, isOpen }: { onClose: () => void; isOpen
 export default function SearchSidebar({ isOpen, onClose }: SearchSidebarProps) {
   return (
     <div
-      className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+      className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-[99999999999999999] ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      <Suspense fallback={
-        <div className="h-full w-full bg-white flex items-center justify-center">
-          <div className="animate-pulse">Đang tải tìm kiếm...</div>
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="h-full w-full bg-white flex items-center justify-center">
+            <div className="animate-pulse">Đang tải tìm kiếm...</div>
+          </div>
+        }
+      >
         <SearchSidebarContent onClose={onClose} isOpen={isOpen} />
       </Suspense>
     </div>

@@ -1,7 +1,8 @@
+
 // Base API configuration
 export const API_CONFIG = {
   // Base URL for all API requests
-  BASE_URL: 'http://localhost:3000',
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
 
   // API endpoints
   ENDPOINTS: {
@@ -27,13 +28,17 @@ export const API_CONFIG = {
 
     // Order endpoints
     ORDERS: {
-      BASE: '/orders',
-      BY_ID: (id: string) => `/orders/${id}`,
+      BASE: '/orders/get-order-by-userId',
+      BY_ID: (id: number) => `/orders/${id}`,
+      BY_ORDER_CODE: (order_code: number) => `/orders/order-code/${order_code}`,
       USER_ORDERS: '/orders/user',
       UPDATE_STATUS: (id: number) => `/orders/${id}/status`,
       PAYOS_SUCCESS: '/orders/payos/order-success',
       PAYOS_CANCEL: '/orders/payos/order-cancel',
       DELIVERY: '/orders/delivery',
+      CANCEL_PAYMENT: (orderCoder: number) => `/orders/payos/order-cancel?orderCode=${orderCoder}`,
+      SUCCESS_PAYMENT: (orderCoder: number) => `/orders/payos/order-success?orderCode=${orderCoder}`,
+      UPDATE_ADDRESS: (id: number) => `/orders/${id}/address`,
     },
 
     // User endpoints

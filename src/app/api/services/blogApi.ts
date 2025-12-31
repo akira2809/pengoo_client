@@ -46,18 +46,20 @@ export async function fetchAllPosts(): Promise<ApiBlogPost[]> {
           revalidate: 3600, // Revalidate every hour
           tags: ['posts']
         },
-      
-        // Use 'force-cache' for production, 'no-store' for development
         cache: process.env.NODE_ENV === 'development' ? 'no-store' : 'force-cache'
       });
-      
+
       if (!res.ok) {
         throw new Error(`Failed to fetch posts: ${res.status} ${res.statusText}`);
       }
-      
+
       const data = await res.json();
+      // If the API returns an array directly, return it
+      // Otherwise, check if it's an object with a data property
+      const allPosts = Array.isArray(data) ? data : (data.data || data);
+
       lastFetchTime = Date.now();
-      return data;
+      return allPosts;
     })();
 
     // Cache the promise

@@ -14,5 +14,6 @@ export default function OrdersClient() {
     <Suspense fallback={<div className="text-center py-12">Đang tải...</div>}>
       <OrdersContent />
     </Suspense>
+    
   );
 }

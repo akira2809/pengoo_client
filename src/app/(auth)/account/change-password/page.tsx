@@ -23,10 +23,10 @@ const EyeOffIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
 );
 
 const LockIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
 );
 
 // --- Reusable Password Input Component ---
@@ -44,7 +44,7 @@ function PasswordInput({ label, id, ...props }: PasswordInputProps) {
       </label>
       <div className="relative">
         <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <LockIcon className="text-gray-400"/>
+          <LockIcon className="text-gray-400" />
         </span>
         <input
           type={showPassword ? 'text' : 'password'}
@@ -68,7 +68,7 @@ function PasswordInput({ label, id, ...props }: PasswordInputProps) {
 // --- Main Change Password Component ---
 function ChangePasswordContent() {
   const router = useRouter();
-  const { updatePassword, isLoading } = useAuthStore();
+  const { updatePassword, isLoading, loginMethod, isAuthenticated } = useAuthStore();
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -76,6 +76,46 @@ function ChangePasswordContent() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Redirect if user logged in with Google/social login
+  if (!isAuthenticated) {
+    router.push('/signin');
+    return null;
+  }
+
+  if (loginMethod === 'google') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-6 text-center">
+          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Không thể đổi mật khẩu</h1>
+          <p className="text-gray-600">
+            Bạn đã đăng nhập bằng tài khoản mạng xã hội (Google/Facebook). Để thay đổi mật khẩu, vui lòng truy cập tài khoản tương ứng của bạn.
+          </p>
+          <div className="flex flex-col gap-3">
+            <a
+              href="https://myaccount.google.com/security"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              Quản lý tài khoản Google
+            </a>
+            <button
+              onClick={() => router.push('/account')}
+              className="inline-flex justify-center px-4 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              Quay lại trang tài khoản
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,12 +133,12 @@ function ChangePasswordContent() {
 
     try {
       const result = await updatePassword(formData.oldPassword, formData.newPassword);
-      if (result.success) {
+      if (result.status == 200) {
         setSuccess('Đổi mật khẩu thành công! Bạn sẽ được chuyển hướng sau giây lát.');
         setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
         setTimeout(() => router.push('/account'), 2500);
       } else {
-        setError(result.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.');
+        setError(result?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại.');
       }
     } catch (err) {
       console.error('Lỗi khi đổi mật khẩu:', err);
@@ -116,8 +156,8 @@ function ChangePasswordContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-6">
         <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Đổi mật khẩu</h1>
-            <p className="mt-2 text-sm text-gray-600">Để bảo mật, hãy chọn một mật khẩu mạnh.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Đổi mật khẩu</h1>
+          <p className="mt-2 text-sm text-gray-600">Để bảo mật, hãy chọn một mật khẩu mạnh.</p>
         </div>
 
         {error && (
@@ -167,7 +207,7 @@ function ChangePasswordContent() {
             disabled={isLoading}
             autoComplete="new-password"
           />
-          
+
           <div className="flex flex-col sm:flex-row-reverse gap-3 pt-2">
             <button
               type="submit"

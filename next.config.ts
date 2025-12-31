@@ -6,39 +6,52 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
-    formats: ["image/webp", "image/avif"] as const,
-    domains: [
-      "res.cloudinary.com",
-      "picsum.photos",
-      "loremflickr.com",
-      "assets.awwwards.com",
-      "placehold.co",
-      "localhost",
-
-      // 'https://example.com/image.jpg', // BỎ DÒNG NÀY ĐI
-    ],
+    // Use custom loader for Cloudinary, but only for production
+    ...(process.env.NODE_ENV === 'production' && {
+      loader: 'custom',
+      loaderFile: './src/lib/cloudinary-loader.ts',
+    }),
+    
+    // Image formats and settings
+    formats: ["image/webp", "image/avif"],
     dangerouslyAllowSVG: true,
-
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
+    
+    // Allowed remote patterns for images
+    remotePatterns: [
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
+      { protocol: 'https', hostname: 'loremflickr.com' },
+      { protocol: 'https', hostname: 'assets.awwwards.com' },
+      { protocol: 'https', hostname: 'placehold.co' },
+    ],
+    
+    // In development, this block will override the remotePatterns above
+    ...(process.env.NODE_ENV !== 'production' && {
+      remotePatterns: [
+        { protocol: 'https', hostname: '**' },
+      ],
+      // Disable image optimization in development for local images
+      unoptimized: true,
+    }),
+    
     contentDispositionType: "attachment",
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox:",
+    
+    // IMPORTANT FIX: Updated Content Security Policy to allow image sources
+    contentSecurityPolicy: "default-src 'self'; img-src 'self' https://res.cloudinary.com https://picsum.photos https://loremflickr.com https://assets.awwwards.com https://placehold.co data:; script-src 'none'; sandbox:",
   },
   experimental: {
     scrollRestoration: true,
     optimizeCss: true,
-    // turbopack: true, // NẾU BẠN MUỐN THỬ VÔ HIỆU HÓA TURBOPACK ĐỂ LOẠI BỎ CẢNH BÁO `params`
   },
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
     ignoreBuildErrors: true,
   },
 };
 
-const withBundleAnalyzerConfig = withBundleAnalyzer({
+export default withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
   openAnalyzer: true,
-});
-
-export default withBundleAnalyzerConfig(nextConfig);
+})(nextConfig);

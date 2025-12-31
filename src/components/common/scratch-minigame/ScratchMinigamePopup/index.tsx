@@ -30,7 +30,7 @@ export default function ScratchMinigamePopup({
             width={56}
             height={56}
             className="w-14 h-14 object-contain drop-shadow-lg"
-            unoptimized={true}
+            unoptimized={process.env.NODE_ENV !== 'production'}
             priority
             loading="eager"
             draggable={false}

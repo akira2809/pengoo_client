@@ -17,7 +17,7 @@ export interface User {
   role: string;
   points?: number;
   mfaCode?: number | null;
-  provider: string;
+  provider?: string;
 }
 
 // Định nghĩa AuthState chứa tất cả các trạng thái và hàm liên quan đến xác thực
@@ -41,7 +41,7 @@ interface AuthState {
     avatar_url?: string;
     address?: string;
     role?: string;
-    points?: number; 
+    points?: number;
   }) => Promise<{ success: boolean; message: string }>;
   verifyToken: (token: string) => Promise<{ success: boolean; user?: User; message?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -91,8 +91,9 @@ export const useAuthStore = create<AuthState>()(
             avatar_url: verifyData.decoded.avatar_url || verifyData.decoded.picture || '',
             address: verifyData.decoded.address || '',
             role: verifyData.decoded.role || 'user',
-            points: verifyData.decoded.points || 0, 
-            mfaCode: verifyData.mfaCode || null, 
+            points: verifyData.decoded.points || 0,
+            mfaCode: verifyData.mfaCode || null,
+            provider: verifyData.decoded.provider || '',
           };
 
           set({
@@ -122,7 +123,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const data = await authService.register(userData); // Gọi qua authService
-          
+
           console.log("Register API raw response:", data);
 
           // Nếu backend trả về thông tin người dùng (ví dụ: data.id) hoặc không ném lỗi
@@ -143,8 +144,8 @@ export const useAuthStore = create<AuthState>()(
               return { success: false, message: `Đăng ký thành công nhưng không thể tự động đăng nhập: ${loginResult.message}` };
             }
           } else {
-              // Nếu không có 'id' hoặc 'message' và không có lỗi từ authService.register
-              throw new Error('Đăng ký thành công nhưng phản hồi từ máy chủ không rõ ràng.');
+            // Nếu không có 'id' hoặc 'message' và không có lỗi từ authService.register
+            throw new Error('Đăng ký thành công nhưng phản hồi từ máy chủ không rõ ràng.');
           }
 
         } catch (error: unknown) {
@@ -206,7 +207,9 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           // Gửi id của user cùng với các thông tin cập nhật
-          const result = await authService.updateUser({ ...userDataToUpdate, id: user.id }, token);
+          // Loại bỏ mfaCode nếu nó là null hoặc undefined để tránh lỗi kiểu
+          const {  ...restUserData } = userDataToUpdate;  // xoa mfacode do k sai never used
+          const result = await authService.updateUser({ ...restUserData, id: user.id }, token);
 
           if (result.success && result.user) {
             // Chuyển đổi result.user về kiểu User nếu cần thiết
@@ -285,26 +288,34 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Cập nhật mật khẩu người dùng
        */
-      updatePassword: async ( oldPassword:string, newPassword: string) => {
+      updatePassword: async (oldPassword: string, newPassword: string) => {
         const { token } = get();
-        console.log('token',token)
+
         if (!token) {
           return { success: false, message: 'Người dùng chưa đăng nhập.' };
         }
+
         set({ isLoading: true, error: null });
+
         try {
           const result = await authService.updatePassword(oldPassword, newPassword, token);
-          console.log(result) // ✅ chỉ truyền 2 tham số
-        // ✅ chỉ truyền 2 tham số
+
           set({ isLoading: false });
-          return { success: true, message: result.message || 'Cập nhật mật khẩu thành công.' };
+
+          return {
+            success: result.status === 200,
+            message: result.message || 'Cập nhật mật khẩu thành công.',
+          };
         } catch (error: unknown) {
-            console.log(error) 
-          const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Đã xảy ra lỗi khi đổi mật khẩu.';
+
           set({ error: errorMessage, isLoading: false });
+
           return { success: false, message: errorMessage };
         }
       },
+
 
 
       /**
@@ -318,7 +329,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         set({ isLoading: true, error: null });
-        
+
         try {
           const data = await authService.verifyToken(token);
           console.log('Verify Token API Response Data:', data);
@@ -335,16 +346,18 @@ export const useAuthStore = create<AuthState>()(
               address: data.decoded.address || '',
               role: data.decoded.role || 'user',
               points: data.decoded.points || 0,
-              provider: data.decoded.provider || '',
+
             };
 
-            set({
+            set((state) => ({
               user: userData,
               isAuthenticated: true,
               token: token,
               isLoading: false,
               error: null,
-            });
+              // Preserve existing loginMethod if it exists
+              loginMethod: state.loginMethod,
+            }));
             return { success: true, user: userData, message: data.message || 'Token hợp lệ.' };
           } else {
             console.log('Token verification failed:', data.message);
@@ -355,8 +368,8 @@ export const useAuthStore = create<AuthState>()(
             }
             // For other cases, don't clear auth state to prevent logout on temporary issues
             set({ isLoading: false });
-            return { 
-              success: false, 
+            return {
+              success: false,
               message: data.message || 'Không thể xác minh token. Vui lòng thử lại sau.',
               isNetworkError: true
             };
@@ -365,14 +378,14 @@ export const useAuthStore = create<AuthState>()(
           console.error('Lỗi khi xác minh token:', error);
           // Don't clear auth state on network errors
           set({ isLoading: false });
-          
+
           let errorMessage = 'Lỗi mạng khi xác minh token. Vui lòng kiểm tra kết nối của bạn.';
           if (error instanceof Error) {
             errorMessage = error.message || errorMessage;
           }
-          
-          return { 
-            success: false, 
+
+          return {
+            success: false,
             message: errorMessage,
             isNetworkError: true
           };
@@ -412,6 +425,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        loginMethod: state.loginMethod,
       }),
     }
   )

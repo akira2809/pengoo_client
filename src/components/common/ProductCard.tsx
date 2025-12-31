@@ -10,7 +10,7 @@ import { useCartStore } from "@/app/stores/slice/cartStore";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/app/api/services/wishlistService";
 import { useAuthStore } from "@/app/stores/slice/useAuthStore";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 interface ImageType {
   id: number;
@@ -26,18 +26,25 @@ interface ProductCardProps {
 }
 
 const formatPrice = (price: number | string): string => {
-  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
+  const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
     minimumFractionDigits: 0,
   }).format(numPrice);
 };
 
-const calculateFinalPrice = (originalPrice: number | string, discount?: number | string): { finalPrice: number; discountPercentage: number } => {
-  const numericPrice = typeof originalPrice === 'string' ? parseFloat(originalPrice) : originalPrice;
-  const numericDiscount = typeof discount === 'string' ? parseFloat(discount) : discount || 0;
-  
+const calculateFinalPrice = (
+  originalPrice: number | string,
+  discount?: number | string
+): { finalPrice: number; discountPercentage: number } => {
+  const numericPrice =
+    typeof originalPrice === "string"
+      ? parseFloat(originalPrice)
+      : originalPrice;
+  const numericDiscount =
+    typeof discount === "string" ? parseFloat(discount) : discount || 0;
+
   const hasDiscount = numericDiscount > 0;
   let finalPrice = numericPrice;
   let discountPercentage = 0;
@@ -55,8 +62,8 @@ const calculateFinalPrice = (originalPrice: number | string, discount?: number |
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   // Calculate final price and discount
-  const { finalPrice, discountPercentage } = useMemo(() => 
-    calculateFinalPrice(product.product_price, product.discount),
+  const { finalPrice, discountPercentage } = useMemo(
+    () => calculateFinalPrice(product.product_price, product.discount),
     [product.product_price, product.discount]
   );
   const hasDiscount = discountPercentage > 0;
@@ -64,6 +71,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const addItem = useCartStore((state) => state.addItem);
   const { user } = useAuthStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const router = useRouter();
 
   const userId = user ? user.id : null;
 
@@ -88,113 +96,231 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
 
     // Kiểm tra sản phẩm có trong wishlist không (nếu đã đăng nhập)
-    const fetchWishlist = async () => {
-      if (!user || !user.id) return;
+    // const fetchWishlist = async () => {
+    //   if (!user || !user.id) return;
 
-      try {
-        const wishlistRes = await wishlistService.getWishlistByUserId(Number(user.id));
-        const wishlistArr = wishlistRes.data || [];
-        const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: Pick<ProductData, 'id'>) => item.id === product.id);
-        setIsWishlisted(exists);
-      } catch (error) {
-        console.error("Lỗi khi kiểm tra wishlist:", error);
-      }
-    };
+    //   try {
+    //     const wishlistRes = await wishlistService.getWishlistByUserId(Number(user.id));
+    //     const wishlistArr = wishlistRes.data || [];
+    //     const exists = Array.isArray(wishlistArr) && wishlistArr.some((item: Pick<ProductData, 'id'>) => item.id === product.id);
+    //     setIsWishlisted(exists);
+    //   } catch (error) {
+    //     console.error("Lỗi khi kiểm tra wishlist:", error);
+    //   }
+    // };
 
-    fetchWishlist();
-  },  [product.id, user, userId]);
+    // fetchWishlist();
+  }, [product.id, user, userId]);
 
   // Helper function to validate and normalize image URL
   const getValidImageUrl = (url: string | undefined | null): string | null => {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
+    if (!url || typeof url !== "string" || url.trim() === "") {
       return null;
     }
-    // If it's already a full URL or starts with /, return as is
-    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) {
+    if (
+      url.startsWith("http") ||
+      url.startsWith("/") ||
+      url.startsWith("data:image")
+    ) {
       return url;
     }
-    // Otherwise, assume it's a relative path
-    return `/${url.replace(/^\//, '')}`; // Ensure single leading slash
+    return `/${url.replace(/^\//, "")}`;
   };
 
-  // Debug product data
-  console.log('Product data:', {
-    id: product.id,
-    name: product.product_name,
-    images: product.images,
-    image_url: product.image_url
-  });
-
-  // Get main image with fallback
+  // --- NEW LOGIC: Use image with name "main" as main image, fallback to first image, then image_url ---
   const mainImage = (() => {
-    // Try to get image from different possible locations
-    let imgSrc = '';
-    
-    // Check if there are images in the images array
     if (Array.isArray(product.images) && product.images.length > 0) {
-      // Try to find the main image first
-      const mainImg = product.images.find(img => 'name' in img && img.name === 'main');
-      if (mainImg && mainImg.url) {
-        imgSrc = mainImg.url;
-      } else {
-        // Fallback to the first image with a URL
-        const firstImage = product.images[0];
-        if (firstImage && firstImage.url) {
-          imgSrc = firstImage.url;
-        }
+      // Find image with name "main" (case-insensitive)
+      const mainImgObj = product.images.find(
+        (img) => img.name && img.name.trim().toLowerCase() === "main" && img.url
+      );
+      if (mainImgObj && mainImgObj.url) {
+        const normalized = getValidImageUrl(mainImgObj.url);
+        // console.log("ProductCard - Using MAIN image by name:", {
+        //   productId: product.id,
+        //   productName: product.product_name,
+        //   imageUrl: mainImgObj.url.substring(0, 50) + "...",
+        //   source: "Main-Name",
+        // });
+        return (
+          normalized ||
+          "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+        );
       }
-    } 
-    
-    // Fallback to image_url if no images in array
-    if (!imgSrc && product.image_url) {
-      imgSrc = product.image_url;
+      // Fallback: use first image in array
+      const firstImage = product.images[0];
+      if (firstImage && firstImage.url) {
+        const normalized = getValidImageUrl(firstImage.url);
+        console.log("ProductCard - Using FIRST image as fallback:", {
+          productId: product.id,
+          productName: product.product_name,
+          imageUrl: firstImage.url.substring(0, 50) + "...",
+          source: "First-Image-Fallback",
+        });
+        return (
+          normalized ||
+          "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+        );
+      }
     }
-    
-    // Normalize the URL
-    const normalized = getValidImageUrl(imgSrc);
-    console.log('Main image source:', { imgSrc, normalized });
-    
-    return normalized || 'https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image';
+    // Fallback: use image_url field
+    if (product.image_url) {
+      const normalized = getValidImageUrl(product.image_url);
+      console.log("ProductCard - Using image_url as fallback:", {
+        productId: product.id,
+        productName: product.product_name,
+        imageUrl: product.image_url.substring(0, 50) + "...",
+        source: "ImageUrl-Fallback",
+      });
+      return (
+        normalized || "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image"
+      );
+    }
+    return "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
   })();
 
-  // Get hover image if available and different from main image
+  // --- NEW LOGIC: Hover image is first image that is NOT the main image ---
   let hoverImage: string | null = null;
   if (Array.isArray(product.images) && product.images.length > 1) {
-    // Try to find a detail or featured image for hover
-    const hoverImg = product.images.find(
-      img => 'name' in img && (img.name === 'detail' || img.name === 'featured') && img.url && img.url !== mainImage
+    // Find main image index
+    const mainImgIndex = product.images.findIndex(
+      (img) => img.name && img.name.trim().toLowerCase() === "main" && img.url
     );
-    
-    if (hoverImg && hoverImg.url) {
-      hoverImage = getValidImageUrl(hoverImg.url);
-    } else {
-      // Fallback to any other image that's not the main one
-      const otherImage = product.images.find(
-        img => img.url && img.url !== mainImage
-      );
-      if (otherImage && otherImage.url) {
-        hoverImage = getValidImageUrl(otherImage.url);
-      }
+    // If no "main" image, use first image as main
+    const usedMainIndex = mainImgIndex !== -1 ? mainImgIndex : 0;
+    // Find first image that is not the main image
+    const hoverImgObj = product.images.find(
+      (img, idx) => idx !== usedMainIndex && img.url
+    );
+    if (hoverImgObj && hoverImgObj.url) {
+      hoverImage = getValidImageUrl(hoverImgObj.url);
+      // console.log("ProductCard - Using hover image:", {
+      //   productId: product.id,
+      //   imageUrl: hoverImgObj.url.substring(0, 50) + "...",
+      //   source: "Hover-Image",
+      // });
     }
-    
-    console.log('Hover image:', hoverImage);
   }
+
+  // Helper function to check if product is purchasable
+  const isPurchasable = () => {
+    const stock = Number(product.quantity_stock) || 0;
+    const status = product.status?.toString().toLowerCase().trim();
+
+    // Check status first - only allow if available
+    const isAvailable = !status || status === "available";
+
+    if (!isAvailable) {
+      return false;
+    }
+
+    // Then check stock
+    return stock > 0;
+  };
+
+  // Helper function to get status display info
+  const getStatusInfo = () => {
+    const stock = Number(product.quantity_stock) || 0;
+    const status = product.status?.toString().toLowerCase().trim();
+
+    // Status mapping - text only
+    switch (status) {
+      case "unavailable":
+        return {
+          show: true,
+          text: "Không khả dụng",
+          bgColor: "bg-gray-600",
+          textColor: "text-white",
+          description: "Sản phẩm tạm thời không khả dụng",
+        };
+      case "coming soon":
+      case "comingsoon":
+        return {
+          show: true,
+          text: "Sắp ra mắt",
+          bgColor: "bg-blue-600",
+          textColor: "text-white",
+          description: "Sản phẩm sẽ sớm có mặt",
+        };
+      case "discontinued":
+        return {
+          show: true,
+          text: "Ngừng sản xuất",
+          bgColor: "bg-orange-600",
+          textColor: "text-white",
+          description: "Sản phẩm đã ngừng sản xuất",
+        };
+      case "available":
+      default:
+        // For available status or undefined, check stock
+        if (stock <= 0) {
+          return {
+            show: true,
+            text: "Hết hàng",
+            bgColor: "bg-red-600",
+            textColor: "text-white",
+            description: "Sản phẩm sẽ sớm được cập nhật lại",
+          };
+        }
+        return { show: false };
+    }
+  };
 
   // ✅ Xử lý click thêm vào giỏ hàng
   const handleAddToCart = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
+    if (!isPurchasable()) {
+      const status = product.status?.toString().toLowerCase().trim();
+      switch (status) {
+        case "unavailable":
+          toast.error("Sản phẩm hiện không khả dụng.");
+          break;
+        case "coming soon":
+        case "comingsoon":
+          toast.error("Sản phẩm sắp ra mắt, vui lòng chờ đợi.");
+          break;
+        case "discontinued":
+          toast.error("Sản phẩm đã ngừng sản xuất.");
+          break;
+        default:
+          toast.error("Sản phẩm đã hết hàng.");
+      }
+      return;
+    }
+
+    const stock = Number(product.quantity_stock) || 0;
+
+    // Lấy số lượng hiện tại của sản phẩm trong giỏ (nếu có)
+    const currentItem = useCartStore
+      .getState()
+      .items.find((i) => i.id === Number(product.id));
+    const currentQty = currentItem?.quantity || 0;
+
+    // Nếu thêm 1 mà vượt kho -> báo và dừng
+    if (currentQty + 1 > stock) {
+      toast.error(`Số lượng vượt quá tồn kho. Chỉ còn ${stock} sản phẩm.`);
+      return;
+    }
+
+    // Số lượng thực sự sẽ thêm (trong trường hợp còn lại ít)
+    const quantityToAdd = Math.min(1, stock - currentQty);
+    if (quantityToAdd < 1) {
+      toast.error(`Sản phẩm chỉ còn ${stock} sản phẩm trong kho.`);
+      return;
+    }
+
     addItem({
       id: Number(product.id),
       product_name: product.product_name,
-      product_price: product.product_price,
-      // product_price: Number(product.discount ? product.product_price - (product.product_price * (product.discount / 100)) : product.product_price),
-      quantity: Number(1),
+      product_price: Number(product.product_price), // ép number cho an toàn
+      quantity: quantityToAdd,
       image_url: mainImage,
       discount: Number(product.discount) || 0,
       slug: product.slug,
       description: product.meta_description,
+      quantity_stock: stock,
     });
 
     toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`, {
@@ -222,29 +348,97 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     try {
       if (!isWishlisted) {
-        await wishlistService.addToWishlist(Number(user.id), Number(product.id));
-        toast.success(`Đã thêm "${product.product_name}" vào danh sách yêu thích`);
+        await wishlistService.addToWishlist(
+          Number(user.id),
+          Number(product.id)
+        );
+        toast.success(
+          `Đã thêm "${product.product_name}" vào danh sách yêu thích`
+        );
         setIsWishlisted(true);
       } else {
-        await wishlistService.removeFromWishlist(Number(user.id), Number(product.id));
-        toast.success(`Đã xóa "${product.product_name}" khỏi danh sách yêu thích`);
+        await wishlistService.removeFromWishlist(
+          Number(user.id),
+          Number(product.id)
+        );
+        toast.success(
+          `Đã xóa "${product.product_name}" khỏi danh sách yêu thích`
+        );
         setIsWishlisted(false);
       }
     } catch (error: unknown) {
       // Only show error if not a duplicate add
       if (!isWishlisted) {
-        const errorMessage = error instanceof Error ? error.message : "Lỗi xử lý yêu thích.";
+        const errorMessage =
+          error instanceof Error ? error.message : "Lỗi xử lý yêu thích.";
         toast.error(errorMessage);
       }
     }
   };
 
+  // ✅ Xử lý click "Mua ngay" - chuyển thẳng đến checkout với sản phẩm này
+  const handleBuyNow = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isPurchasable()) {
+      const status = product.status?.toString().toLowerCase().trim();
+      switch (status) {
+        case "unavailable":
+          toast.error("Sản phẩm hiện không khả dụng.");
+          break;
+        case "coming soon":
+        case "comingsoon":
+          toast.error("Sản phẩm sắp ra mắt, vui lòng chờ đợi.");
+          break;
+        case "discontinued":
+          toast.error("Sản phẩm đã ngừng sản xuất.");
+          break;
+        default:
+          toast.error("Sản phẩm đã hết hàng.");
+      }
+      return;
+    }
+
+    const stock = Number(product.quantity_stock) || 0;
+
+    // Tạo item để lưu vào localStorage cho checkout
+    const buyNowItem = {
+      id: Number(product.id),
+      product_name: product.product_name,
+      product_price: Number(product.product_price),
+      quantity: 1,
+      image_url: mainImage,
+      discount: Number(product.discount) || 0,
+      slug: product.slug,
+      description: product.meta_description,
+      quantity_stock: stock,
+      timestamp: Date.now(), // Thêm timestamp để kiểm tra expire
+    };
+
+    // Lưu vào localStorage với key riêng cho buy-now (expire sau 30 phút)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("buy-now-item", JSON.stringify(buyNowItem));
+    }
+
+    // Kiểm tra đăng nhập
+    if (!user || !user.id) {
+      toast.error("Bạn cần đăng nhập để mua hàng.");
+      router.push(
+        `/signin?redirect=${encodeURIComponent("/checkout?mode=buy-now")}`
+      );
+      return;
+    }
+
+    // Chuyển đến trang checkout
+    router.push("/checkout?mode=buy-now");
+  };
 
   return (
     <Link href={`/products/${product.slug}`} className="block group" passHref>
       <article
         ref={cardRef}
-        className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[450px] max-h-[450px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        className="relative product-card bg-white border border-gray-200 rounded-xl  flex flex-col justify-between min-h-[440px] max-h-[440px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
         itemScope
         itemType="https://schema.org/Product"
       >
@@ -260,6 +454,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               Best Seller
             </div>
           )}
+        
         </div>
 
         {/* Ảnh sản phẩm */}
@@ -275,7 +470,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.onerror = null;
-                target.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image';
+                target.src =
+                  "https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image";
               }}
             />
             {hoverImage && (
@@ -288,10 +484,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.onerror = null;
-                  target.style.display = 'none';
+                  target.style.display = "none";
                 }}
               />
             )}
+            {/* Hiển thị trạng thái sản phẩm */}
+            {(() => {
+              const statusInfo = getStatusInfo();
+              if (!statusInfo.show) return null;
+
+              return (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-30 flex flex-col items-center justify-center">
+                  <div
+                    className={`${statusInfo.bgColor} ${statusInfo.textColor} font-bold text-sm sm:text-base px-4 py-2 rounded-full shadow-md uppercase tracking-wide animate-pulse border border-current`}
+                  >
+                    {statusInfo.text}
+                  </div>
+                  <p className="mt-2 text-xs text-white italic opacity-80">
+                    {statusInfo.description}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -299,13 +513,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <button
               onClick={handleAddToWishlist}
               className={`p-2 rounded-full shadow hover:bg-background-50 border transition-colors duration-200
-                ${isWishlisted ? 'bg-red-500 border-red-500' : 'bg-white border-gray-300'}`}
+                ${
+                  isWishlisted
+                    ? "bg-red-500 border-red-500"
+                    : "bg-white border-gray-300"
+                }`}
               aria-label="Yêu thích"
             >
               <Heart
                 className={`w-5 h-5 transition-colors duration-200
-                  ${isWishlisted ? 'text-white fill-white' : 'text-gray-500'}`}
-                fill={isWishlisted ? '#ef4444' : 'none'}
+                  ${isWishlisted ? "text-white fill-white" : "text-gray-500"}`}
+                fill={isWishlisted ? "#ef4444" : "none"}
               />
             </button>
 
@@ -321,7 +539,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Thông tin sản phẩm */}
-        <div className="flex flex-col flex-1 px-2 overflow-hidden my-2" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+        <div
+          className="flex flex-col flex-1 px-2 overflow-hidden mt-2 pb-2"
+          itemProp="offers"
+          itemScope
+          itemType="https://schema.org/Offer"
+        >
           <h2
             className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase"
             itemProp="name"
@@ -334,7 +557,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <div className="mt-auto">
             {hasDiscount ? (
               // Display when there's a discount
-              <div className="flex flex-col gap-1 mb-1">
+              <div className="flex flex-col gap-1">
                 <div className="flex itemsx`-center gap-2">
                   <span className="text-red-500 font-semibold text-base">
                     {formatPrice(finalPrice)}
@@ -345,8 +568,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </div>
                 <div className="flex justify-between text-xs mt-1">
                   <div className="text-green-600">
-                    Tiết kiệm: {formatPrice(Number(product.product_price) - finalPrice)}
-                  </div>         
+                    Tiết kiệm:{" "}
+                    {formatPrice(Number(product.product_price) - finalPrice)}
+                  </div>
                   <div className="text-gray-500">
                     Đã bán: {product.quantity_sold ?? 0}
                   </div>
@@ -354,23 +578,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             ) : (
               // Display when there's no discount
-            <div className="flex flex-col gap-1 mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-800 font-semibold text-base">
-                  {formatPrice(product.product_price)}
-                </span>
-                <span className="text-xs text-green-600">
-                  (Đã bao gồm VAT)
-                </span>
+              <div className="flex flex-col gap-1 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-800 font-semibold text-base">
+                    {formatPrice(product.product_price)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <div className="text-xs text-green-600">(Đã bao gồm VAT)</div>
+                  <div className="text-gray-500">
+                    Đã bán: {product.quantity_sold ?? 0}
+                  </div>
+                </div>
               </div>
-              <span className="text-xs text-gray-500">
-                Đã bán: {product.quantity_sold ?? 0}
-              </span>
-            </div>
             )}
           </div>
         </div>
-            
 
         {/* Hiển thị các tag */}
         {/* {Array.isArray(product.tags) && product.tags.length > 0 && (
@@ -386,8 +609,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )} */}
         {/* Nút Mua ngay */}
-        <button className="w-full bg-background-900 text-white py-2 rounded-b-xl hover:bg-background-800 transition">
-          Mua ngay
+        <button
+          onClick={handleBuyNow}
+          disabled={!isPurchasable()}
+          className={`w-full py-2 rounded-b-xl transition ${
+            isPurchasable()
+              ? "bg-background-900 text-white hover:bg-background-800"
+              : "bg-gray-400 text-gray-600 cursor-not-allowed"
+          }`}
+        >
+          {(() => {
+            const status = product.status?.toString().toLowerCase().trim();
+            if (!isPurchasable()) {
+              switch (status) {
+                case "unavailable":
+                  return "Không khả dụng";
+                case "coming soon":
+                case "comingsoon":
+                  return "Sắp ra mắt";
+                case "discontinued":
+                  return "Ngừng sản xuất";
+                default:
+                  return "Hết hàng";
+              }
+            }
+            return "Mua ngay";
+          })()}
         </button>
       </article>
     </Link>

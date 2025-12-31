@@ -27,14 +27,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const imageUrl = isValidImageUrl(post.image) ? post.image : PLACEHOLDER_IMAGE;
   // Giả sử domain gốc của bạn
-  const baseUrl = 'https://pengoo.vn'; // THAY THẾ BẰNG DOMAIN THỰC TẾ CỦA BẠN!
+  const baseUrl = 'https://pengoo.store'; // THAY THẾ BẰNG DOMAIN THỰC TẾ CỦA BẠN!
   const fullImageUrl = imageUrl.startsWith('/') ? `${baseUrl}${imageUrl}` : imageUrl;
   const postUrl = `${baseUrl}/blogs/${post.canonical || (await params).slug}`; // Sử dụng canonical nếu có, hoặc slug
 
   return {
     title: `${post.name} | Blog PENGOO`, // Tiêu đề bài viết
     description: post.description || `Đọc thêm về ${post.name} trên Blog PENGOO.`, // Mô tả bài viết
-    keywords: post.keywords ? post.keywords.split(',').map(k => k.trim()) : [
+    keywords: post.keywords ? post.keywords.split(',').map((k: string) => k.trim()) : [
       'blog board game', 'tin tức board game', 'hướng dẫn board game',
       post.name.toLowerCase(), // Thêm tên bài viết làm từ khóa
     ], // Từ khóa động từ bài viết hoặc mặc định
@@ -91,8 +91,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     notFound(); // Next.js sẽ hiển thị trang 404
   }
 
-  const baseUrl = 'https://pengoo.vn';
-  const postUrl = `${baseUrl}/blogs/${post.canonical || params.slug}`;
+  const baseUrl = 'https://pengoo.store';
+  const postUrl = `${baseUrl}/blogs/${post.canonical || (await params).slug}`;
 
   const mappedPost = {
     id: post.id.toString(),
@@ -135,7 +135,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 "name": "PENGOO Board Game",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": "https://pengoo.vn/images/logo.png", // Thay thế bằng URL logo của bạn
+                  "url": "https://pengoo.store/images/logo.png", // Thay thế bằng URL logo của bạn
                 }
               },
               "mainEntityOfPage": {

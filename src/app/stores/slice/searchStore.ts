@@ -39,7 +39,6 @@ export const useSearchStore = create<SearchState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Sử dụng endpoint tìm kiếm chung cho cả trường hợp 1 ký tự và nhiều ký tự
       const searchUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS.SEARCH}${encodeURIComponent(trimmedQuery)}`;
 
       const response = await fetch(searchUrl, {
@@ -48,9 +47,8 @@ export const useSearchStore = create<SearchState>((set, get) => ({
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-        cache: 'no-store' // Đảm bảo không sử dụng cache cho tìm kiếm
-      }
-      );
+        cache: 'no-store'
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -82,7 +80,65 @@ export const useSearchStore = create<SearchState>((set, get) => ({
         });
       }
 
-      set({ searchResults: results });
+      // --- Ensure main image logic here ---
+      // --- Inside searchProducts: Fix all type errors ---
+      const mappedResults = results.map((productRaw: unknown) => {
+        // Defensive: ensure productRaw is an object
+        if (typeof productRaw !== "object" || productRaw === null) {
+          return {};
+        }
+        const product = productRaw as Record<string, unknown>;
+
+        // Map images to always have name and ord
+        let mainImageUrl = "";
+        let images: Array<{
+          id: number;
+          url: string;
+          name: string;
+          ord?: number;
+        }> = [];
+
+        if (Array.isArray(product.images) && product.images.length > 0) {
+          images = product.images.map((imgRaw, index: number) => {
+            if (typeof imgRaw !== "object" || imgRaw === null) {
+              return {
+                id: index + 1,
+                url: String(imgRaw),
+                name: index === 0 ? "main" : "",
+                ord: undefined,
+              };
+            }
+            const img = imgRaw as Record<string, unknown>;
+            return {
+              id: typeof img.id === "number" ? img.id : index + 1,
+              url: typeof img.url === "string" ? img.url : String(img.url ?? ""),
+              name: typeof img.name === "string" ? img.name : (index === 0 ? "main" : ""),
+              ord: undefined,
+            };
+          });
+
+          const mainImgObj = images.find(
+            (img) => typeof img.name === "string" && img.name.trim().toLowerCase() === "main"
+          );
+          mainImageUrl = mainImgObj?.url || images[0].url;
+        } else {
+          mainImageUrl = typeof product.image_url === "string"
+            ? product.image_url
+            : typeof product.image === "string"
+            ? product.image
+            : "";
+        }
+
+        // Defensive: only spread if product is an object
+        return {
+          ...(typeof product === "object" && product !== null ? product : {}),
+          images,
+          image: mainImageUrl,
+          image_url: mainImageUrl,
+        };
+      });
+
+      set({ searchResults: mappedResults });
       get().addToRecentSearches(trimmedQuery);
     } catch (error) {
       console.error('Search error:', error);
@@ -101,7 +157,6 @@ export const useSearchStore = create<SearchState>((set, get) => ({
     if (!query.trim()) return;
     
     set((state) => {
-      // Remove duplicate if exists
       const newSearches = [
         query.trim(),
         ...state.recentSearches.filter((item) => item.toLowerCase() !== query.trim().toLowerCase())

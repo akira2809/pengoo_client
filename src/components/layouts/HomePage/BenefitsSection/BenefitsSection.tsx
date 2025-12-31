@@ -1,20 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { gsap } from 'gsap'; // Import GSAP
+import React, { useEffect, useState, useRef } from "react";
+import { gsap } from "gsap";
 
-// Định nghĩa kiểu (interface) cho mỗi đối tượng lợi ích
 interface Benefit {
   id: number;
-  icon: React.ReactNode; // Kiểu của icon có thể là một React element (JSX)
+  icon: React.ReactNode;
   title: string;
   description: string;
 }
 
-// Dữ liệu mẫu cho các lợi ích
 const benefits: Benefit[] = [
   {
     id: 1,
     icon: (
-      // Biểu tượng kim cương (SVG)
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -23,18 +20,18 @@ const benefits: Benefit[] = [
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="h-8 w-8 text-gray-700"
+        className="h-10 w-10"
       >
         <path d="M2.75 8.75L12 2l9.25 6.75L12 22 2.75 8.75z" />
       </svg>
     ),
     title: "Bảo hành 12 tháng",
-    description: "Áp dụng với tất cả sản phẩm của Pengoo. An tâm mua sắm tại website chính hãng.",
+    description:
+      "Áp dụng với tất cả sản phẩm của Pengoo. An tâm mua sắm tại website chính hãng.",
   },
   {
     id: 2,
     icon: (
-      // Biểu tượng xe tải (SVG)
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -43,7 +40,7 @@ const benefits: Benefit[] = [
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="h-8 w-8 text-gray-700"
+        className="h-10 w-10"
       >
         <path d="M14 18l5 5 5-5" />
         <path d="M22 18V2a4 4 0 0 0-4-4H4a4 4 0 0 0-4 4v12a4 4 0 0 0 4 4h14" />
@@ -55,12 +52,12 @@ const benefits: Benefit[] = [
       </svg>
     ),
     title: "Miễn phí giao hàng",
-    description: "Giao hàng toàn quốc. Miễn phí vận chuyển với đơn hàng trên 1 triệu đồng.",
+    description:
+      "Giao hàng toàn quốc. Miễn phí vận chuyển với đơn hàng trên 1 triệu đồng.",
   },
   {
     id: 3,
     icon: (
-      // Biểu tượng mặt cười (SVG)
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -69,7 +66,7 @@ const benefits: Benefit[] = [
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="h-8 w-8 text-gray-700"
+        className="h-10 w-10"
       >
         <circle cx="12" cy="12" r="10" />
         <path d="M8 14s1.5 2 4 2 4-2 4-2" />
@@ -78,56 +75,78 @@ const benefits: Benefit[] = [
       </svg>
     ),
     title: "Thêm ưu đãi 10%",
-    description: "Nhận ngay mã giảm 10% đối với các khách hàng lần đầu tiên mua sắm tại Pengoo.vn",
+    description:
+      "Nhận ngay mã giảm 10% đối với các khách hàng lần đầu tiên mua sắm tại Pengoo.store",
   },
 ];
 
 export default function BenefitsSection() {
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [currentSlide, setCurrentSlide] = useState<number>(0);
-  const sliderRef = useRef<HTMLDivElement>(null); // Ref cho container chứa tất cả các slide
+  const [isMobile, setIsMobile] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Mobile khi nhỏ hơn md breakpoint
-    };
-
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // useEffect để animate slide khi currentSlide thay đổi
   useEffect(() => {
     if (isMobile && sliderRef.current) {
-      // Tính toán giá trị translateX để hiển thị slide hiện tại
-      // Mỗi slide chiếm 100% chiều rộng của container
       const translateXValue = -currentSlide * 100;
       gsap.to(sliderRef.current, {
         x: `${translateXValue}%`,
-        duration: 0.5, // Thời gian chuyển động
-        ease: "power3.out", // Hiệu ứng easing
+        duration: 0.5,
+        ease: "power3.out",
+        onComplete: () => {
+          // Hiệu ứng bounce cho icon khi đổi slide
+          const currentCard = sliderRef.current?.children[
+            currentSlide
+          ] as HTMLElement;
+          if (currentCard) {
+            const icon = currentCard.querySelector(".benefit-icon");
+            if (icon) {
+              gsap.fromTo(
+                icon,
+                { scale: 0.9 },
+                { scale: 1, duration: 0.4, ease: "bounce.out" }
+              );
+            }
+          }
+        },
       });
     }
-  }, [currentSlide, isMobile]); // Chạy lại khi currentSlide hoặc isMobile thay đổi
+  }, [currentSlide, isMobile]);
 
-  // Hàm render nội dung của một thẻ lợi ích
+  useEffect(() => {
+    // Hiệu ứng lấp loáng ánh sáng chạy qua icon
+    const icons = document.querySelectorAll(".benefit-icon");
+    icons.forEach((icon) => {
+      const shine = document.createElement("div");
+      shine.className =
+        "shine absolute top-0 left-[-50%] w-1/2 h-full bg-white opacity-30 skew-x-12";
+      icon.appendChild(shine);
+
+      gsap.to(shine, {
+        x: "200%",
+        duration: 2,
+        ease: "linear",
+        repeat: -1,
+        delay: Math.random() * 2, // tạo ngẫu nhiên cho tự nhiên hơn
+      });
+    });
+  }, []);
+
   const renderBenefitCard = (benefit: Benefit) => (
-    // Đảm bảo mỗi slide có width: 100% và flex-shrink-0 để không bị co lại
-    <div className="flex-none w-full flex flex-col items-center p-4">
-      {/* Vòng tròn nền cho icon */}
-      <div className="bg-background-50 p-6 rounded-full inline-flex items-center justify-center mb-6 shadow-sm text-text-950">
+    <div className="flex-none w-full flex flex-col items-center p-6 relative">
+      <div className="benefit-icon relative overflow-hidden bg-gradient-to-r from-blue-300 to-blue-500 p-6 rounded-full inline-flex items-center justify-center mb-6 shadow-lg text-white transform transition-transform duration-500 hover:scale-110 hover:rotate-6">
         {benefit.icon}
       </div>
-      {/* Tiêu đề của lợi ích */}
-      <h3 className="text-xl sm:text-2xl font-bold text-text-800 mb-2 text-text-950">
+      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
         {benefit.title}
       </h3>
-      {/* Mô tả chi tiết của lợi ích */}
-      <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-xs mx-auto text-text-800">
+      <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-xs mx-auto">
         {benefit.description}
       </p>
     </div>
@@ -135,34 +154,35 @@ export default function BenefitsSection() {
 
   return (
     <section className="bg-background-100 py-16 px-4 sm:px-6 lg:px-16 text-center mb-16">
-      <div className="max-w-screen-xl mx-auto overflow-hidden"> {/* Thêm overflow-hidden */}
-        {/* Grid layout cho tablet và desktop */}
+      <div className="max-w-screen-xl mx-auto overflow-hidden">
+        {/* Grid cho desktop */}
         <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 lg:gap-16">
-          {benefits.map((benefit: Benefit) => (
+          {benefits.map((benefit) => (
             <React.Fragment key={benefit.id}>
               {renderBenefitCard(benefit)}
             </React.Fragment>
           ))}
         </div>
 
-        {/* Carousel/Slide layout cho mobile */}
-        <div className="md:hidden"> {/* Ẩn trên md trở lên */}
-          {/* Container chứa tất cả các slide, dùng ref để GSAP thao tác */}
-          <div ref={sliderRef} className="flex transition-transform duration-300"> {/* Removed transition-transform to let GSAP control */}
-            {benefits.map((benefit: Benefit) => (
+        {/* Carousel cho mobile */}
+        <div className="md:hidden">
+          <div ref={sliderRef} className="flex">
+            {benefits.map((benefit) => (
               <React.Fragment key={benefit.id}>
                 {renderBenefitCard(benefit)}
               </React.Fragment>
             ))}
           </div>
 
-          {/* Pagination Dots - chỉ hiện trên mobile */}
+          {/* Pagination Dots */}
           <div className="flex justify-center mt-4">
             {benefits.map((_, index) => (
               <span
                 key={index}
-                className={`h-2 w-2 rounded-full mx-1 cursor-pointer transition-colors duration-300 ${
-                  index === currentSlide ? 'bg-gray-700' : 'bg-gray-400'
+                className={`h-3 w-3 rounded-full mx-1 cursor-pointer transition-all duration-300 ${
+                  index === currentSlide
+                    ? "bg-gradient-to-r from-pink-500 to-purple-600 scale-110"
+                    : "bg-gray-300"
                 }`}
                 onClick={() => setCurrentSlide(index)}
               ></span>

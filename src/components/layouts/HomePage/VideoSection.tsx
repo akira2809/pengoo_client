@@ -2,7 +2,7 @@ import React from 'react';
 
 // Dữ liệu cho Video Section
 const VIDEO_SECTION_CONTENT = {
-  videoSrc: "/doro.mp4", // Đảm bảo video này nằm trong thư mục `public` của bạn
+  videoSrc: "/Monster Hunter World_ Iceborne - Board game trailer.mp4", // Đảm bảo video này nằm trong thư mục `public` của bạn
 };
 
 export const VideoSection = () => {
@@ -25,7 +25,7 @@ export const VideoSection = () => {
       </video>
 
       {/* Overlay để làm tối video (tùy chọn, bạn có thể xóa nếu muốn video sáng hơn) */}
-      <div className="absolute top-0 left-0 w-full h-full bg-black opacity-40 z-0"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-black opacity-20 z-0"></div>
 
       {/* Không có Text Overlay */}
     </section>

@@ -1,9 +1,9 @@
 // src/services/authService.ts
 
-// Nên sử dụng biến môi trường cho các URL API trong ứng dụng thực tế
-// Ví dụ: process.env.NEXT_PUBLIC_AUTH_API_URL
-const AUTH_API_BASE_URL = 'http://localhost:3000/api/auth';
-const USERS_API_BASE_URL = 'http://localhost:3000/users';
+// Sử dụng biến môi trường cho các URL API
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const AUTH_API_BASE_URL = `${API_BASE_URL}/api/auth`;
+const USERS_API_BASE_URL = `${API_BASE_URL}/users`;
 
 // Định nghĩa lại UserApiData để phản ánh chính xác từ backend API
 export interface UserApiData { // Export để có thể dùng trong store
@@ -15,8 +15,8 @@ export interface UserApiData { // Export để có thể dùng trong store
   avatar_url: string;
   address: string;
   role: string;
-  points?: number; 
-  mfaCode?:number
+  points?: number;
+  mfaCode?: number
 }
 
 // Responses từ API của bạn
@@ -40,9 +40,11 @@ interface VerifyDecodedData {
   address?: string;
   role?: string;
   points?: number;
+  provider?: string
 }
 
 interface VerifyResponse {
+  mfaCode: null;
   isValid: boolean;
   decoded?: VerifyDecodedData;
   user?: UserApiData; // Nếu API verify trả về trực tiếp user object thay vì chỉ decoded token
@@ -124,10 +126,10 @@ export const authService = {
       console.error("Backend Register Error Response (HTTP !OK):", data);
       throw new Error(data.message || data.error || 'Đăng ký thất bại. Vui lòng thử lại sau.');
     }
-    
+
     // Nếu backend trả về 200 OK nhưng trong body có trường error, vẫn coi là lỗi logic
     if (data.error) {
-        throw new Error(data.error);
+      throw new Error(data.error);
     }
 
     return data; // Trả về tất cả dữ liệu từ backend
@@ -214,46 +216,53 @@ export const authService = {
   /**
    * Cập nhật mật khẩu người dùng
    */
-updatePassword: async (oldPassword: string, newPassword: string, token: string): Promise<{ success: boolean; message: string }> => {
-  const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({ oldPassword, newPassword }),
-  });
+  updatePassword: async (oldPassword: string, newPassword: string, token: string): Promise<{ status: number; message: string }> => {
+    const response = await fetch(`${USERS_API_BASE_URL}/updatePassword`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ oldPassword, newPassword }),
+    });
 
-  const contentType = response.headers.get('content-type');
-  let data: { success: boolean; message: string };
+    const contentType = response.headers.get('content-type');
+    let data: { success: boolean; message: string };
 
-  if (contentType && contentType.includes('application/json')) {
-    data = await response.json();
-  } else {
-    const text = await response.text();
-    console.warn('Server returned plain text:', text);
-    data = { success: false, message: text };
-    throw new Error(text || 'Đổi mật khẩu thất bại');
-  }
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.warn('Server returned plain text:', text);
+      data = { success: false, message: text };
+      throw new Error(text || 'Đổi mật khẩu thất bại');
+    }
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Đổi mật khẩu thất bại');
-  }
+    if (!response.ok) {
+      throw new Error(data.message || 'Đổi mật khẩu thất bại');
+    }
 
-  return data;
-}
-
-
-  // async updatePassword( newPassword: string, token: string) {
-  //   return apiClient.patch(`${USERS_API_BASE_URL}/updatePassword`);
-  // },
-  
+    return { status: response.status, message: data.message };
+  },
 
 
   /**
  * Người dùng nhập mã khuyến mãi để đổi voucher (dựa trên điểm)
  * Endpoint: POST /coupons/verify-voucher
  */
-
-
+  verifyVoucherByUserPoint: async (voucherCode: string, token: string) => {
+    // Example implementation, adjust endpoint and logic as needed
+    const response = await fetch('/api/voucher/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ voucherCode }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to verify voucher');
+    }
+    return response.json();
+  },
 };

@@ -12,7 +12,7 @@ export interface CouponState {
   fetchCoupons: () => Promise<void>;
   fetchMyVouchers: () => Promise<void>;
   verifyVoucher: (code: string) => Promise<boolean>;
-  applyVoucher: (code: string,orderValue:number) => Promise<void>;
+  applyVoucher: (code: string, orderValue: number) => Promise<unknown>;
 }
 
 export const createCouponSlice: StateCreator<CouponState> = (set) => ({
@@ -36,7 +36,7 @@ export const createCouponSlice: StateCreator<CouponState> = (set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await couponService.getMyVouchers();
-      set({ myVouchers: response?.data || [], isLoading: false });
+      set({ myVouchers: Array.isArray(response?.data) ? response.data : response?.data?.vouchers || [], isLoading: false });
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to fetch vouchers';
         set({ error: message, isLoading: false });
@@ -48,24 +48,25 @@ verifyVoucher: async (code: string) => {
     try {
         const response = await couponService.verifyVoucherByUserPoint(code);
         set({ isLoading: false });
-        return response;
+        // Assuming response has a property 'isValid' or similar to indicate success
+        return !!(response && (response.valid ?? response.success ?? response));
     } catch (error ) {
-        const message = error.message ? error.message : 'Verification failed';
-      set({ error: message, isLoading: false });
-      return false;
+        const message = error instanceof Error && error.message ? error.message : 'Verification failed';
+        set({ error: message, isLoading: false });
+        return false;
     }
-  }
-,
-applyVoucher: async (code: string,orderValue:number) => {
+},
+applyVoucher: async (code: string, orderValue: number)=> {
     set({ isLoading: true, error: null });
     try {
-        const response = await couponService.validateAndApply(code,orderValue);
-        set({ isLoading: false });
-        return response;
-    } catch (error ) {
-        const message = error.message ? error.message : 'Verification failed';
-      set({ error: message, isLoading: false });
-      return false;
+      const data = await couponService.validateAndApply(code, orderValue);
+      console.log('dataService', data);
+      set({ isLoading: false });
+      return data;
+    } catch (error) {
+        const message = error instanceof Error && error.message ? error.message : 'Verification failed';
+        set({ error: message, isLoading: false });
+        return null;
     }
-  }
+}
 });

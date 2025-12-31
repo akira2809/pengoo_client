@@ -10,25 +10,56 @@ import { ProductPagination } from "@/app/(public)/products/component/layouts/pro
 // import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
 // import { confirmRemoveAll, confirmRemoveSelected } from '@/components/common/UI/confirmDialog';
 
-// --- Type Definitions ---
-import { ProductData } from '@/app/type/product';
+type Product = {
+  id: number;
+  product_name: string;
+  product_price: number | string;
+  description?: string;
+  slug?: string;
+  status?: string;
+  discount?: number;
+  meta_title?: string;
+  meta_description?: string;
+  quantity_sold?: number;
+  quantity_stock: number;
+  rating?: number;
+  reviewCount?: number;
+  images: Array<{
+    id: number;
+    url: string;
+    name?: string;
+    folder?: string | null;
+    ord?: number | null;
+    deletedAt?: string | null;
+  }>;
+  category_ID?: number | { id: number; name: string };
+  publisher_ID?: number | { id: number; name: string };
+  tags?: Array<{
+    id: number;
+    name: string;
+    type: string;
+    deletedAt?: string | null;
+  }>;
+  cmsContent?: {
+    [key: string]: unknown;
+  };
+};
 
 type WishlistItem = {
   id: number;
-  product: ProductData;
+  product: Product;
 };
 
 // --- Helper Icons ---
 const TrashIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
 );
 const CartIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
 );
 const BrokenHeartIcon = (props: ComponentPropsWithoutRef<'svg'>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.1 18.55l-.1.1-.11-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/><path d="M16 13l-4 4-4-4"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.1 18.55l-.1.1-.11-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z" /><path d="M16 13l-4 4-4-4" /></svg>
 );
-
 
 export default function WishlistPage() {
   const { user } = useAuthStore();
@@ -37,29 +68,55 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
-  const addItemToCart = useCartStore(state => state.addItem);
+  const addItem = useCartStore(state => state.addItem);
 
   useEffect(() => {
     const fetchWishlist = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
+      if (!user?.id) return;
       try {
         const res = await wishlistService.getWishlist(Number(user.id));
-        // Map API response to WishlistItem array
-        const normalizedData = (res.data ?? []).map((product: ProductData): WishlistItem => ({
-          id: product.id, // Using product ID as wishlist item ID
-          product: {
-            ...product,
-            // Map any necessary fields that might be named differently
-            image_url: product.images?.[0]?.url || product.image_url || '',
-          }
-        }));
-        setWishlist(normalizedData);
-      } catch (error) {
-        console.error("Failed to fetch wishlist:", error);
-        toast.error("Không thể tải danh sách yêu thích.");
+
+        console.log("API Response:", res.data);
+
+
+        console.log('Raw API response:', JSON.stringify(res.data, null, 2));
+        
+        const data = (res.data ?? []).map((item, index) => {
+          console.log(`Processing item ${index}:`, JSON.stringify(item, null, 2));
+          // The item itself is the product data
+          const productData = item.product || item;
+          
+          // Get the main image (look for image with name 'main' or take the first one)
+          const mainImage = productData.images?.find(img => img.name === 'main') || productData.images?.[0];
+          const imageUrl = mainImage?.url || '';
+          
+          const transformedItem = {
+            id: item.id,
+            product: {
+              ...productData,
+              id: productData.id,
+              product_name: productData.product_name || '',
+              product_price: Number(productData.product_price || 0),
+              images: productData.images || [],
+              image: imageUrl,
+              quantity_stock: productData.quantity_stock || 0,
+              description: productData.description || '',
+              slug: productData.slug || `product-${productData.id}`,
+              status: productData.status || 'Available',
+              discount: productData.discount || 0,
+              reviewCount: productData.reviewCount || 0,
+              meta_description: productData.meta_description || '',
+              cmsContent: productData.cmsContent
+            }
+          };
+          
+          console.log(`Transformed item ${index}:`, JSON.stringify(transformedItem, null, 2));
+          return transformedItem;
+        })
+        console.log('Final transformed data:', JSON.stringify(data, null, 2));
+        console.log('Number of wishlist items:', data.length);
+        setWishlist(data);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -67,58 +124,60 @@ export default function WishlistPage() {
     fetchWishlist();
   }, [user?.id]);
 
-  // --- Helper Functions ---
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  const calculateFinalPrice = (originalPrice: number, discount?: number) => {
+    const validDiscount = discount && discount > 0 ? discount : 0;
+    const finalPrice = Math.max(0, originalPrice * (1 - validDiscount / 100));
+    return {
+      finalPrice,
+      discountPercentage: validDiscount,
+    };
+  };
 
-  const handleRemoveItem = async (productId: number) => {
-    if (!user?.id) return;
-    // Note: In a real app, show a custom modal instead of confirm()
-    if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?')) return;
-    try {
-        await wishlistService.removeFromWishlist(Number(user.id), productId);
-        setWishlist(prev => prev.filter(item => item.product.id !== productId));
-        toast.success("Đã xóa sản phẩm khỏi danh sách yêu thích.");
-    } catch {
-        toast.error("Lỗi khi xóa sản phẩm.");
+  interface ProductImage {
+    url: string;
+    name?: string;
+    // Add other image properties if needed
+  }
+
+  interface Product {
+    id: number;
+    product_name: string;
+    product_price: number | string;
+    images: ProductImage[];
+    image?: string;
+    // Add other product properties as needed
+  }
+
+  const getValidImageUrl = (product: Product): string => {
+    // First try to get the main image (with name 'main' or first image in the array)
+    if (product.images && product.images.length > 0) {
+      const mainImage = product.images.find((img: { name?: string }) => img.name === 'main') || product.images[0];
+      if (mainImage?.url) {
+        const url = mainImage.url.trim();
+        if (url) {
+          return url.startsWith('http') ? url : `https:${url}`;
+        }
+      }
     }
-  };
-
-  const handleRemoveSelected = async () => {
-    if (!user?.id || selectedItems.length === 0) return;
-    if (!confirm(`Bạn có chắc muốn xóa ${selectedItems.length} sản phẩm đã chọn?`)) return;
-
-    try {
-      const productIdsToRemove = wishlist
-        .filter(item => selectedItems.includes(item.id))
-        .map(item => item.product.id);
-
-      await Promise.all(
-        productIdsToRemove.map(productId => wishlistService.removeFromWishlist(Number(user.id), productId))
-      );
-
-      setWishlist(prev => prev.filter(item => !selectedItems.includes(item.id)));
-      setSelectedItems([]);
-      toast.success("Đã xóa các sản phẩm đã chọn.");
-    } catch {
-      toast.error("Lỗi khi xóa các sản phẩm đã chọn.");
+    
+    // Fallback to product.image if exists
+    if (product.image) {
+      const url = product.image.trim();
+      if (url) {
+        return url.startsWith('http') ? url : `https:${url}`;
+      }
     }
+    
+    // Default fallback
+    return 'https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image';
   };
 
-  const handleAddToCart = (e: MouseEvent, product: ProductData) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItemToCart({
-      id: product.id,
-      product_name: product.product_name,
-      product_price: product.product_price,
-      quantity: 1,
-      image_url: product.image_url || product.images?.[0]?.url || '',
-      slug: product.slug || '',
-      description: product.meta_description || '',
-      discount: product.discount || 0
-    });
-    toast.success(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
-  };
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+    }).format(price);
 
   const toggleSelectItem = (id: number) => {
     setSelectedItems(prev =>
@@ -127,238 +186,214 @@ export default function WishlistPage() {
   };
 
   const selectAllItems = () => {
-    if (selectedItems.length === paginatedWishlist.length) {
+    setSelectedItems(
+      selectedItems.length === wishlist.length ? [] : wishlist.map(i => i.id)
+    );
+  };
+
+
+  const removeSelectedItems = async () => {
+    if (!user?.id || selectedItems.length === 0) return;
+
+    try {
+      await Promise.all(
+        selectedItems.map(wishlistId => {
+          const item = wishlist.find(i => i.id === wishlistId);
+          if (item) {
+            return wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id));
+          }
+          return Promise.resolve();
+        })
+      );
+      setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
       setSelectedItems([]);
-    } else {
-      setSelectedItems(paginatedWishlist.map(i => i.id));
+      // showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
+    } catch (error: unknown) {
+      console.error('Error removing selected items:', error);
+      // showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
     }
   };
 
-  // --- Render Logic ---
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
+  // Remove all items functionality has been removed as it's not being used
+  // and was causing ESLint warnings
 
-//   const removeSelectedItems = async () => {
-//     if (!user?.id || selectedItems.length === 0) return;
-//     const confirmed = await confirmRemoveSelected();
-//       if (!confirmed) return;
+  const handleRemove = async (productId: number) => {
+    if (!user?.id) return;
+    await wishlistService.removeFromWishlist(Number(user.id), Number(productId));
+    setWishlist(prev => prev.filter(item => item.product.id !== productId));
+    setSelectedItems(prev => prev.filter(id => {
+      const item = wishlist.find(i => i.id === id);
+      return item && item.product.id !== productId;
+    }));
+  };
 
-//     try{
-//     await Promise.all(
-//       selectedItems.map(wishlistId => {
-//         const item = wishlist.find(i => i.id === wishlistId);
-//         if (item) {
-//           return wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id));
-//         }
-//         return Promise.resolve();
-//       })
-//     );
-//     setWishlist(wishlist.filter(item => !selectedItems.includes(item.id)));
-//     setSelectedItems([]);
-//     showSuccessToast('Đã xoá các sản phẩm đã chọn khỏi danh sách yêu thích!');
-//   } catch (error) {
-//     showErrorToast('Có lỗi xảy ra khi xoá sản phẩm đã chọn.');
-//   }
-// };
-
-//  const removeAllItems = async () => {
-//   if (!user?.id || wishlist.length === 0) return;
-
-//   const confirmed = await confirmRemoveAll();
-//   if (!confirmed) return;
-
-//   try {
-//     await Promise.all(
-//       wishlist.map(item =>
-//         wishlistService.removeFromWishlist(Number(user.id), Number(item.product.id))
-//       )
-//     );
-//     setWishlist([]);
-//     setSelectedItems([]);
-//     showSuccessToast('Đã xoá toàn bộ sản phẩm khỏi danh sách yêu thích!');
-//   } catch (error) {
-//     showErrorToast('Có lỗi xảy ra khi xoá danh sách yêu thích.');
-//   }
-// };
-
-//   const handleRemove = async (productId: number) => {
-//     if (!user?.id) return;
-//     await wishlistService.removeFromWishlist(Number(user.id), Number(productId));
-//     setWishlist(prev => prev.filter(item => item.product.id !== productId));
-//     setSelectedItems(prev => prev.filter(id => {
-//       const item = wishlist.find(i => i.id === id);
-//       return item && item.product.id !== productId;
-//     }));
-//   };
-
-//   const handleAddToCart = (e: MouseEvent, product: WishlistItem['product']) => {
-//     e.preventDefault();
-//     e.stopPropagation();
-
-//     addItem({
-//       id: product.id,
-//       product_name: product.product_name,
-//       product_price: product.product_price,
-//       quantity: 1,
-//       image_url: product.image || '',
-//       slug: product.slug || '',
-//       description: product.meta_description || '',
-//       discount: product.discount || 0
-//     });
-
-//     showSuccessToast(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
-//   };
-
-//   if (!user?.id) return <div className="text-center py-16 text-red-600">Bạn chưa đăng nhập.</div>;
-//   if (loading) return <div className="text-center py-16 text-gray-600">Đang tải...</div>;
+  const handleAddToCart = (e: MouseEvent, product: WishlistItem['product']) => {
+    e.preventDefault();
+    const addToCart = (product: Product) => {
+      addItem({
+        id: product.id,
+        name: product.product_name,
+        price: Number(product.product_price),
+        quantity: 1,
+        image: getValidImageUrl(product),
+        stock: product.quantity_stock || 0,
+      });
+    };
+    addToCart(product);
+    // Toast notification is commented out as the import is not available
+    // showSuccessToast(`Đã thêm "${product.product_name}" vào giỏ hàng!`);
+  };
 
   if (!user?.id) {
     return (
-         <div className="text-center py-20 bg-white rounded-lg shadow-sm max-w-2xl mx-auto mt-10">
-            <h3 className="text-xl font-semibold text-gray-900">Vui lòng đăng nhập</h3>
-            <p className="mt-2 text-gray-600">Bạn cần đăng nhập để xem danh sách yêu thích của mình.</p>
-            <Link href="/login" className="mt-6 inline-block bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
-                Đăng nhập
-            </Link>
-        </div>
+      <div className="text-center py-20 bg-white rounded-lg shadow-sm max-w-2xl mx-auto mt-10">
+        <h3 className="text-xl font-semibold text-gray-900">Vui lòng đăng nhập</h3>
+        <p className="mt-2 text-gray-600">Bạn cần đăng nhập để xem danh sách yêu thích của mình.</p>
+        <Link href="/login" className="mt-6 inline-block bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
+          Đăng nhập
+        </Link>
+      </div>
     );
   }
-  
-
+  if (loading) return <div className="text-center py-16 text-gray-600">Đang tải...</div>;
   if (wishlist.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-lg shadow-sm max-w-2xl mx-auto mt-10">
         <BrokenHeartIcon className="mx-auto text-red-400" />
         <h3 className="mt-4 text-xl font-semibold text-gray-900">Danh sách yêu thích trống</h3>
         <p className="mt-2 text-gray-600">Hãy thêm những sản phẩm bạn yêu vào đây nhé!</p>
-        <Link href="/" className="mt-6 inline-block bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
+        <Link href="/" className="mt-6 inline-block bg-gray-200 text-white font-medium py-2 px-6 rounded-lg hover:bg-background-800 transition-colors">
           Bắt đầu mua sắm
         </Link>
       </div>
     );
   }
 
-  const paginatedWishlist = wishlist.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const paginatedWishlist = wishlist.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-5xl mx-auto">
-        {/* --- Header --- */}
-        <div className="flex flex-col sm:flex-row justify-between items-baseline pb-4 mb-6 border-b border-gray-200">
-          <h1 className="text-3xl font-bold text-gray-900">Sản phẩm yêu thích</h1>
-          <span className="text-sm text-gray-600 mt-2 sm:mt-0">{wishlist.length} sản phẩm</span>
-        </div>
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="flex justify-between mb-4">
+        <h1 className="text-2xl font-bold">Sản phẩm yêu thích</h1>
+        <span className="text-sm text-gray-600">{wishlist.length} sản phẩm</span>
+      </div>
 
-        {/* --- Controls --- */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 bg-white p-3 rounded-lg shadow-sm">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="select-all"
-              checked={selectedItems.length > 0 && selectedItems.length === paginatedWishlist.length}
-              onChange={selectAllItems}
-              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-            />
-            <label htmlFor="select-all" className="ml-3 text-sm text-gray-700">
-              Chọn tất cả ({selectedItems.length})
-            </label>
-          </div>
-          <div className="flex items-center gap-4 mt-3 sm:mt-0">
-            {selectedItems.length > 0 && (
-              <button onClick={handleRemoveSelected} className="flex items-center gap-1.5 text-sm text-red-600 hover:text-red-800 font-medium transition-colors">
-                <TrashIcon /> Xóa đã chọn
-              </button>
-            )}
-          </div>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedItems.length === wishlist.length}
+            onChange={selectAllItems}
+            className="h-4 w-4 text-primary-600 border-gray-300 rounded"
+          />
+          <label className="ml-2 text-sm text-gray-700">Chọn tất cả ({selectedItems.length})</label>
         </div>
+        <div className="flex gap-2">
+          {selectedItems.length > 0 && (
+            <button onClick={removeSelectedItems} className="text-sm text-red-600 hover:text-red-800 flex items-center">
+              <TrashIcon /> Xóa đã chọn
+            </button>
+          )}
+          {/* {wishlist.length > 0 && (
+            <button onClick={removeAllItems} className="text-sm text-red-600 hover:text-red-800 flex items-center">
+              Xoá tất cả
+            </button>
+          )} */}
+        </div>
+      </div>
 
-        {/* --- Wishlist Items --- */}
-        <div className="space-y-4">
-          {paginatedWishlist.map(({ id, product }) => {
-            const { finalPrice, discountPercentage } = calculateFinalPrice(product.product_price, product.discount);
-            const isSelected = selectedItems.includes(id);
-            return (
-              <div key={id} className={`bg-white rounded-lg shadow-sm p-4 transition-all duration-200 flex items-start gap-4 ${isSelected ? 'ring-2 ring-indigo-500' : 'border border-transparent'}`}>
+      <div className="space-y-6 border-t border-gray-200">
+        {paginatedWishlist.map(({ id, product }) => {
+          const { finalPrice, discountPercentage } = calculateFinalPrice(product.product_price, product.discount);
+          const savedAmount = product.product_price - finalPrice;
+
+          return (
+            <div key={id} className="flex flex-col md:flex-row items-start md:items-center py-6 border-b border-gray-200">
+              <div className="flex w-full items-start">
                 <input
                   type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggleSelectItem(item.id)}
-                  className="h-4 w-4 mt-1 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 shrink-0"
+                  checked={selectedItems.includes(id)}
+                  onChange={() => toggleSelectItem(id)}
+                  className="h-4 w-4 mt-6 text-primary-600 border-gray-300 rounded"
                 />
-                <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-100 rounded-md overflow-hidden shrink-0">
+                <div className="ml-4 w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
                   <Image
-                    src={product.image_url || product.images?.[0]?.url || '/images/placeholder.png'}
+                    src={getValidImageUrl(product)}
                     alt={product.product_name}
-                    width={80}
-                    height={80}
-                    className="h-20 w-20 rounded object-cover"
+                    width={96}
+                    height={96}
+                    className="object-cover w-full h-full"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'https://placehold.co/96x96/e5e7eb/9ca3af?text=No+Image';
+                    }}
                   />
                 </div>
-                <div className="flex-1 flex flex-col justify-between h-full">
-                  <div>
-                    <Link href={`/products/${product.slug || product.id}`} className="hover:underline">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 line-clamp-2">{product.product_name}</h3>
-                    </Link>
-                    <p className={`mt-1 text-sm ${product.quantity_stock && product.quantity_stock > 0 ? 'text-green-600' : 'text-red-600'} font-medium`}>
-                      {product.quantity_stock && product.quantity_stock > 0 ? 'Còn hàng' : 'Hết hàng'}
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-2">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-indigo-600">{formatPrice(finalPrice)}</span>
-                      {discountPercentage > 0 && (
-                        <span className="text-sm text-gray-500 line-through">{formatPrice(product.product_price)}</span>
+                <div className="ml-4 flex-1">
+                  <div className="flex flex-col md:flex-row md:justify-between">
+                    <div>
+                      <h3 className="text-xl sm:text-lg font-bold text-gray-900 line-clamp-2 first-letter:uppercase">
+                        {product.product_name}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">{product.meta_description}</p>
+                      <p className="text-sm text-gray-500 mt-1">({product.reviewCount || 0} đánh giá)</p>
+                    </div>
+                    <div className="text-right mt-2 md:mt-0">
+                      {discountPercentage > 0 ? (
+                        <div className="space-y-1">
+                          <div className="text-red-500 font-semibold text-base">{formatPrice(finalPrice)}</div>
+                          <div className="text-gray-400 text-sm line-through">{formatPrice(product.product_price)}</div>
+                          <div className="text-xs text-green-600">Tiết kiệm: {formatPrice(savedAmount)}</div>
+                        </div>
+                      ) : (
+                        <div className="text-gray-800 font-semibold text-base">{formatPrice(product.product_price)}</div>
                       )}
+                      <div className={`text-sm mt-1 ${product.quantity_stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {product.quantity_stock > 0 ? 'Còn hàng' : 'Hết hàng'}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-3 sm:mt-0">
-                      <button
-                        onClick={(e) => handleAddToCart(e, product)}
-                        disabled={!product.quantity_stock || product.quantity_stock <= 0}
-                        className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <CartIcon />
-                        <span>Thêm vào giỏ</span>
-                      </button>
-                      <button
-                        onClick={() => handleRemoveItem(product.id)}
-                        className="flex items-center justify-center p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-md transition-colors"
-                        aria-label="Xóa"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-4 w-full">
+                    <button
+                      onClick={(e) => handleAddToCart(e, product)}
+                      disabled={!product.quantity_stock || product.quantity_stock <= 0}
+                      className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-gray-300 rounded-md hover:bg-background-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <CartIcon />
+                      <span>Thêm vào giỏ</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleRemove(product.id)}
+                      className="flex items-center justify-center p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-md transition-colors"
+                      aria-label="Xóa"
+                    >
+                      <TrashIcon />
+                    </button>
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-        
-        {/* --- Pagination --- */}
-        {wishlist.length > itemsPerPage && (
-            <div className="mt-8">
-                <ProductPagination
-                    currentPage={currentPage}
-                    itemsPerPage={itemsPerPage}
-                    totalItems={wishlist.length}
-                    onPageChange={setCurrentPage}
-                />
             </div>
-        )}
+          );
+        })}
       </div>
+
+      {/* --- Pagination --- */}
+      {wishlist.length > itemsPerPage && (
+        <div className="mt-8">
+          <ProductPagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={wishlist.length}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
 }
-
-// Helper function to calculate final price
-const calculateFinalPrice = (originalPrice: number, discount?: number) => {
-    const validDiscount = discount && discount > 0 ? discount : 0;
-    const finalPrice = Math.max(0, originalPrice * (1 - validDiscount / 100));
-    return { finalPrice, discountPercentage: validDiscount };
-};
-

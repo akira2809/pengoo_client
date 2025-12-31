@@ -1,20 +1,39 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCartStore } from '@/app/stores/slice/cartStore';
-import { useAuthStore } from '@/app/stores/slice/useAuthStore';
-import { orderService } from '@/app/api/services/orderService';
-import InputField from '../../(public)/checkout/component/InputField';
-import RadioButton from '../../(public)/checkout/component/RadioButton';
-import Image from 'next/image';
-import { showSuccessToast, showErrorToast } from '@/components/common/UI/toastHelper';
-import { useStore } from '@/app/stores/store';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/app/stores/slice/cartStore";
+import { useAuthStore } from "@/app/stores/slice/useAuthStore";
+import { orderService } from "@/app/api/services/orderService";
+import InputField from "../../(public)/checkout/component/InputField";
+import RadioButton from "./component/RadioButton"; // Adjust import path as needed
+import Image from "next/image";
+import {
+  showSuccessToast,
+  showErrorToast,
+} from "@/components/common/UI/toastHelper";
+import { useStore } from "@/app/stores/store";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import type { CheckoutFormData as ImportedCheckoutFormData } from "@/app/type/order";
+import type { CartItem as ImportedCartItem } from "@/app/type/order";
 
-//
+interface DeliveryMethod {
+  id: number;
+  name: string;
+  fee: number;
+  description?: string;
+}
 
+interface Voucher {
+  id?: number;
+  coupon: {
+    code: string;
+    description?: string;
+  };
+  active?: boolean;
+  discount?: number;
+}
 interface FormData {
   email: string;
   country: string;
@@ -27,31 +46,70 @@ interface FormData {
   phone: string;
   saveInfo: boolean;
   delivery_id: number;
-  paymentMethod: "payos" | "cod";
+// ...in your FormData and related types...
+paymentMethod: "payos" | "cod" | "paypal";
   billingAddress: "sameAsShipping" | "different";
   note?: string;
   couponCode?: string;
 }
 
+// Helper to map delivery_id to shippingMethod string
+const getShippingMethodString = (id: number): "localHCM" | "outsideHCM" => {
+  if (id === 1) return "localHCM";
+  return "outsideHCM";
+};
+
+// Helper to check and clean expired buy-now items
+const getBuyNowItem = (): ImportedCartItem | null => {
+  try {
+    const buyNowData = localStorage.getItem("buy-now-item");
+    if (!buyNowData) return null;
+
+    const item = JSON.parse(buyNowData) as ImportedCartItem & {
+      timestamp?: number;
+    };
+
+    // Kiểm tra expire (30 phút)
+    const EXPIRE_TIME = 30 * 60 * 1000;
+    const now = Date.now();
+
+    if (item.timestamp && now - item.timestamp > EXPIRE_TIME) {
+      localStorage.removeItem("buy-now-item");
+      return null;
+    }
+
+    return item;
+  } catch (error) {
+    console.error("Error parsing buy-now item:", error);
+    localStorage.removeItem("buy-now-item");
+    return null;
+  }
+};
+
 const CheckoutPage: React.FC = () => {
   const myVouchers = useStore((state) => state.myVouchers);
   const fetchMyVouchers = useStore((state) => state.fetchMyVouchers);
   const applyVoucher = useStore((state) => state.applyVoucher);
-  const [showCouponList, setShowCouponList] = useState(false); // Dropdown toggle
+  const [showCouponList, setShowCouponList] = useState(false);
   const router = useRouter();
   const { items: cartItems, clearCart, getTotalItems } = useCartStore();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isCartReady, setIsCartReady] = useState(false);
-  const [listVouchers, setListVouchers] = useState([]);
+  const [delivery, setDelivery] = useState<DeliveryMethod[]>([]);
+  const [listVouchers, setListVouchers] = useState<Voucher[]>([]);
+  const [isFetchingVouchers, setIsFetchingVouchers] = useState(false);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
     {}
   );
-  const [delivery, setDelivery] = useState([]);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [shippingCost, setShippingCost] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
+  const [buyNowItem, setBuyNowItem] = useState<ImportedCartItem | null>(null);
+  const [isBuyNowMode, setIsBuyNowMode] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: user?.email || "",
     country: "Vietnam",
@@ -92,30 +150,35 @@ const CheckoutPage: React.FC = () => {
     user?.phone_number,
   ]);
 
-  // Define delivery method type
-  interface DeliveryMethod {
-    id: number;
-    name: string;
-    fee: number;
-    description?: string;
-  }
-
   // Gọi API lấy mã giảm giá và phương thức vận chuyển
   useEffect(() => {
     if (user?.id) {
       const fetchData = async () => {
         try {
-          await fetchMyVouchers(); // gọi API lấy voucher
+          await fetchMyVouchers(); // don't check for truthiness
 
           const deliveryMethod = await orderService.getDeliveryMethod();
           if (deliveryMethod?.data && Array.isArray(deliveryMethod.data)) {
-            setDelivery(deliveryMethod.data as DeliveryMethod[]);
-            setShippingCost(deliveryMethod.data[0].fee)
-          } else {
-            console.error(
-              "Invalid delivery method data format:",
-              deliveryMethod
+            // Map to DeliveryMethod[]
+            const mappedDelivery = deliveryMethod.data.map(
+              (item, idx: number) => ({
+                id: item.id ?? idx + 1,
+                name: item.name ?? `Phương thức vận chuyển ${idx + 1}`,
+                fee: item.fee ?? 25000,
+                description: item.description ?? "",
+              })
             );
+            setDelivery(mappedDelivery);
+            const initialShippingCost = Number(mappedDelivery[0].fee) || 25000;
+            // console.log(
+            //   `Setting initial shipping cost: ${initialShippingCost} (type: ${typeof initialShippingCost})`
+            // );
+            setShippingCost(initialShippingCost);
+          } else {
+            // console.error(
+            //   "Invalid delivery method data format:",
+            //   deliveryMethod
+            // );
             // Set default delivery methods if API fails
             setDelivery([
               { id: 1, name: "Nội thành TP Hồ Chí Minh", fee: 25000 },
@@ -137,39 +200,89 @@ const CheckoutPage: React.FC = () => {
 
   // Format currency
   const formatCurrency = (amount: number) => {
+    // Ensure amount is a valid number
+    const validAmount =
+      isNaN(amount) || !isFinite(amount) ? 0 : Math.round(amount);
+    // console.log(`Formatting currency: ${amount} -> ${validAmount}`);
+
     return (
       new Intl.NumberFormat("vi-VN", {
         style: "decimal",
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(amount) + "₫"
+      }).format(validAmount) + "₫"
     );
   };
 
-  // Calculate subtotal
-  const subtotal = cartItems.reduce(
-    (sum, item) =>
-      sum +
-      item.product_price * item.quantity * (1 - (item.discount || 0) / 100),
-    0
-  );
+  // Get items based on mode (buy-now or cart)
+  const typedCartItems: ImportedCartItem[] =
+    isBuyNowMode && buyNowItem
+      ? [buyNowItem]
+      : (cartItems as ImportedCartItem[]);
 
-  // Calculate shipping cost
-  // const shippingCost = formData.delivery_id === 1 ? 25000 : 40000;
+  // Calculate subtotal
+  const subtotal = typedCartItems.reduce((sum, item) => {
+    const price = item.price ?? item.product_price;
+    const discountMultiplier = 1 - (item.discount || 0) / 100;
+    const itemTotal = price * item.quantity * discountMultiplier;
+    // console.log(
+    //   `Item: ${item.product_name}, Price: ${price}, Quantity: ${item.quantity}, Discount: ${item.discount}%, Total: ${itemTotal}`
+    // );
+    return sum + itemTotal;
+  }, 0);
 
   // Calculate total
-  const total = subtotal - shippingCost - discountAmount;
+  const numericSubtotal = Number(subtotal) || 0;
+  const numericDiscountAmount = Number(discountAmount) || 0;
+  const numericShippingCost = Number(shippingCost) || 0;
 
-  // Handle cart initialization
+  // console.log(
+  //   `Debug types - Subtotal: ${typeof subtotal} (${subtotal}), Discount: ${typeof discountAmount} (${discountAmount}), Shipping: ${typeof shippingCost} (${shippingCost})`
+  // );
+
+  const total = Math.max(
+    0,
+    numericSubtotal - numericDiscountAmount + numericShippingCost
+  );
+  // console.log(
+  //   `Subtotal: ${numericSubtotal}, Discount: ${numericDiscountAmount}, Shipping: ${numericShippingCost}, Total: ${total}`
+  // );
+
+  // Handle cart initialization and buy-now mode
   useEffect(() => {
+    // Check if this is buy-now mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get("mode");
+
+    if (mode === "buy-now") {
+      setIsBuyNowMode(true);
+      // Load buy-now item using helper function
+      const item = getBuyNowItem();
+      if (item) {
+        setBuyNowItem(item);
+      }
+    }
+
     // Mark cart as ready after initial render
     // This ensures we've had a chance to load from localStorage
     const timer = setTimeout(() => {
       setIsCartReady(true);
+      setIsInitialized(true);
     }, 100);
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Theo dõi khi user đăng nhập thành công trong buy-now mode
+  useEffect(() => {
+    if (isBuyNowMode && isAuthenticated && isInitialized && !buyNowItem) {
+      // User vừa đăng nhập thành công, thử load lại buy-now item
+      const item = getBuyNowItem();
+      if (item) {
+        setBuyNowItem(item);
+      }
+    }
+  }, [isBuyNowMode, isAuthenticated, isInitialized, buyNowItem]);
 
   // Handle authentication and cart validation
   useEffect(() => {
@@ -177,10 +290,27 @@ const CheckoutPage: React.FC = () => {
     if (!isCartReady || authChecked) return;
 
     const checkAuthAndCart = async () => {
-      // Check if cart is empty using getTotalItems to ensure we have the latest count
-      if (getTotalItems() === 0) {
-        showErrorToast('Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ.');
-        router.push('/');
+      // Check if items are empty (either cart or buy-now item)
+      const hasItems = isBuyNowMode ? buyNowItem !== null : getTotalItems() > 0;
+
+      if (!hasItems) {
+        // Nếu là buy-now mode và không có item, có thể do expire hoặc chưa có
+        if (isBuyNowMode) {
+          showErrorToast(
+            "Phiên mua hàng đã hết hạn hoặc không tìm thấy sản phẩm. Vui lòng thử lại."
+          );
+          // Redirect về trang trước hoặc trang chủ
+          if (typeof window !== "undefined" && window.history.length > 1) {
+            router.back();
+          } else {
+            router.push("/");
+          }
+        } else {
+          showErrorToast(
+            "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ."
+          );
+          router.push("/");
+        }
         return;
       }
 
@@ -192,7 +322,10 @@ const CheckoutPage: React.FC = () => {
       // If not authenticated after loading is complete
       if (!isAuthenticated) {
         toast.error("Vui lòng đăng nhập để thanh toán.");
-        router.push(`/signin?redirect=${encodeURIComponent("/checkout")}`);
+        const redirectUrl = isBuyNowMode
+          ? `/signin?redirect=${encodeURIComponent("/checkout?mode=buy-now")}`
+          : `/signin?redirect=${encodeURIComponent("/checkout")}`;
+        router.push(redirectUrl);
         return;
       }
 
@@ -203,17 +336,22 @@ const CheckoutPage: React.FC = () => {
   }, [
     isCartReady,
     cartItems,
+    buyNowItem,
+    isBuyNowMode,
     router,
     isAuthenticated,
     isAuthLoading,
     authChecked,
     getTotalItems,
   ]);
-  const changeShipFee = (id: number) =>{
-    const data:{fee:number} = delivery.find(item => id === item.id)
-    console.log(data)
-    return data ? data.fee : 25000
-  }
+  const changeShipFee = (id: number) => {
+    const data = delivery.find((item) => id === item.id);
+    const fee = data ? Number(data.fee) : 25000;
+    // console.log(
+    //   `Changing shipping fee for delivery ID ${id}: ${fee} (type: ${typeof fee})`
+    // );
+    return fee;
+  };
   // Show loading state while checking auth or cart
   if (isAuthLoading || !authChecked || !isCartReady) {
     return (
@@ -224,12 +362,14 @@ const CheckoutPage: React.FC = () => {
   }
 
   // Show empty cart message if no items after loading
-  if (cartItems.length === 0) {
+  if (typedCartItems.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg text-gray-600">
-            Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ...
+            {isBuyNowMode
+              ? "Không tìm thấy sản phẩm để mua. Đang chuyển hướng..."
+              : "Giỏ hàng của bạn đang trống. Đang chuyển hướng về trang chủ..."}
           </p>
         </div>
       </div>
@@ -241,78 +381,88 @@ const CheckoutPage: React.FC = () => {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => {
-    console.log(formData);
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    if(name == "delivery_id"){
-      setShippingCost(changeShipFee(Number(value)))
+    if (name === "delivery_id") {
+      const newShippingCost = changeShipFee(Number(value));
+      // console.log(
+      //   `Setting new shipping cost: ${newShippingCost} (type: ${typeof newShippingCost})`
+      // );
+      setShippingCost(Number(newShippingCost));
     }
-    console.log(formData);
-    // setShippingCost()
-    setErrors((prev) => ({ ...prev, [name]: undefined })); // Clear error on change
-  };
-  const handleShowCouponList = async () => {
-    interface Voucher {
-      coupon: {
-        code: string;
-      };
-      active?: boolean;
-    }
-
-    const result = await Promise.all(
-      myVouchers.map(async (voucher: Voucher) => {
-        const data = await applyVoucher(voucher.coupon.code, subtotal);
-        return data
-          ? { ...voucher, active: true }
-          : { ...voucher, active: false };
-      })
-    );
-    result.sort((a, b) => {
-      if (a.active && !b.active) return -1; // a is active, b is not
-      if (!a.active && b.active) return 1; // b is active, a is not
-      return 0; // both are either active or inactive
-    });
-    setListVouchers(result);
-    console.log("Fetching vouchers...", result);
-    setShowCouponList(true);
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleApplyCoupon = async () => {
-    const code = formData.couponCode?.trim();
-
-    if (!code) {
-      showErrorToast('Vui lòng nhập mã giảm giá.');
-      return;
+const handleShowCouponList = async () => {
+  if (myVouchers.length === 0) {
+    setIsFetchingVouchers(true);
+    try {
+      await fetchMyVouchers();
+    } catch (error) {
+      console.error("Error fetching vouchers:", error);
+      showErrorToast("Không thể tải danh sách mã giảm giá");
+    } finally {
+      setIsFetchingVouchers(false);
     }
-    const data = await applyVoucher(code, subtotal);
-    // console.log('Coupon data:', data);
-    if (!data) {
+  }
+
+  // Xử lý apply voucher với subtotal hiện tại
+  const result = await Promise.all(
+    myVouchers.map(async (voucher: Voucher) => {
+      const data = await applyVoucher(voucher.coupon.code, subtotal);
+      return data !== undefined && data !== null
+        ? { ...voucher, active: true }
+        : { ...voucher, active: false };
+    })
+  );
+  
+  result.sort((a: Voucher, b: Voucher) => {
+    if (a.active && !b.active) return -1;
+    if (!a.active && b.active) return 1;
+    return 0;
+  });
+  setListVouchers(result);
+  setShowCouponList(true);
+};
+
+const handleApplyCoupon = async () => {
+  const code = formData.couponCode?.trim();
+  if (!code) {
+    showErrorToast("Vui lòng nhập mã giảm giá.");
+    return;
+  }
+  
+  setIsApplyingCoupon(true); // Bắt đầu loading
+  try {
+    const data = (await applyVoucher(code, subtotal)) as
+      | { discount: number; coupon: { code: string } }
+      | null
+      | undefined;
+      
+    if (data === undefined || data === null) {
       showErrorToast(`Mã khuyến mãi không hợp lệ hoặc đã hết hạn.`);
       setDiscountAmount(0);
-      setIsCouponApplied(false)
-      return;
+      setIsCouponApplied(false);
     } else {
-      setDiscountAmount(data.discount);
+      const discount = Number(data.discount) || 0;
+      setDiscountAmount(discount);
       setIsCouponApplied(true);
       showSuccessToast(`Áp dụng mã khuyến mãi ${data.coupon.code} thành công!`);
     }
-    // Giả sử có mã giảm giá cố định là SAVE10 giảm 10%
-    // if (code === 'SAVE10') {
-    //   const discount = subtotal * 0.1;
-    //   setDiscountAmount(discount);
-    //   setIsCouponApplied(true);
-    //   toast.success('Áp dụng mã giảm giá thành công!');
-    // } else {
-    //   setDiscountAmount(0);
-    //   setIsCouponApplied(false);
-    //   toast.error('Mã giảm giá không hợp lệ.');
-    // }
-  };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      showErrorToast(`Có lỗi xảy ra khi áp dụng mã giảm giá: ${error.message}`);
+    } else {
+      showErrorToast("Có lỗi xảy ra khi áp dụng mã giảm giá.");
+    }
+  } finally {
+    setIsApplyingCoupon(false); // Kết thúc loading
+  }
+};
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
@@ -333,51 +483,72 @@ const CheckoutPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Validate cart has items
-    if (cartItems.length === 0) {
-      showErrorToast('Giỏ hàng của bạn đang trống.');
+    if (typedCartItems.length === 0) {
+      showErrorToast(
+        isBuyNowMode
+          ? "Không tìm thấy sản phẩm để mua."
+          : "Giỏ hàng của bạn đang trống."
+      );
       return;
     }
-
-    // Validate form
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-
     try {
-      // Prepare order data using the service helper
-      const orderData = orderService.prepareOrderData(
-        {
-          ...formData,
-          total,
-          couponCode: formData.couponCode || "", // ✅ Gửi mã
-        },
-        cartItems,
+      // Prepare order data and create order
+      const orderData: ImportedCheckoutFormData = {
+        ...formData,
+        total,
+        shippingMethod: getShippingMethodString(Number(formData.delivery_id)),
+        name: "",
+        fee: 0,
+        description: "",
+        phone_number: formData.phone,
+      };
+      const preparedOrder = orderService.prepareOrderData(
+        orderData,
+        typedCartItems,
         user?.id ? parseInt(user.id.toString(), 10) : undefined
       );
+      const response = await orderService.createOrder(preparedOrder);
 
-      console.log("Submitting order:", orderData);
+      // PayPal flow
+      if (formData.paymentMethod === "paypal") {
+        // Call backend to create PayPal order
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/paypal/create-order/${response.order_id}`,
+          { method: "POST" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.approvalUrl) {
+            window.location.href = data.approvalUrl;
+            return;
+          } else {
+            toast.error("Không lấy được link thanh toán PayPal.");
+          }
+        } else {
+          toast.error("Không thể tạo đơn PayPal.");
+        }
+        setIsSubmitting(false);
+        return;
+      }
 
-      // Create order
-      const response = await orderService.createOrder(orderData);
-      console.log("Order created:", response);
-
-      // Handle payment URL redirection if exists
-      if (response.payment_url) {
-        console.log("Redirecting to payment URL:", response.payment_url);
-        // Redirect to PayOS payment page
+      // PayOS: redirect to payment gateway
+      if (formData.paymentMethod === "payos" && response.payment_url) {
         window.location.href = response.payment_url;
         return;
       }
 
-      // If no payment URL (e.g., COD), clear cart and redirect to success page
-      clearCart();
+      // COD: clear cart/buy-now, then redirect to success page
+      if (!isBuyNowMode) {
+        clearCart();
+      } else {
+        localStorage.removeItem("buy-now-item");
+      }
       router.push(`/order/success?order_id=${response.order_id}`);
     } catch (error) {
-      console.error("Error creating order:", error);
       toast.error(
         error instanceof Error ? error.message : "Có lỗi xảy ra khi đặt hàng"
       );
@@ -400,7 +571,9 @@ const CheckoutPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600">
-                <span className="hidden sm:inline">Bước 2/2: </span>
+                <span className="hidden sm:inline">
+                  {isBuyNowMode ? "Mua ngay: " : "Bước 2/2: "}
+                </span>
                 <span className="font-medium">Thanh toán</span>
               </div>
               <div className="relative">
@@ -418,9 +591,9 @@ const CheckoutPage: React.FC = () => {
                     d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                   />
                 </svg>
-                {cartItems.length > 0 && (
+                {typedCartItems.length > 0 && (
                   <span className="absolute -top-2 -right-2 bg-amber-800 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                    {cartItems.length}
+                    {typedCartItems.length}
                   </span>
                 )}
               </div>
@@ -613,7 +786,7 @@ const CheckoutPage: React.FC = () => {
                 // icon={<CashIcon />}
                 /> */}
                 {Array.isArray(delivery) && delivery.length > 0 ? (
-                  delivery.map((item: unknown) => (
+                  delivery.map((item: DeliveryMethod) => (
                     <RadioButton
                       key={item.id}
                       id={`delivery-${item.id}`}
@@ -627,7 +800,7 @@ const CheckoutPage: React.FC = () => {
                     />
                   ))
                 ) : (
-                  // Fallback options if no delivery methods are available
+                  // fallback...
                   <>
                     <RadioButton
                       id="localHCM"
@@ -661,6 +834,7 @@ const CheckoutPage: React.FC = () => {
                 Toàn bộ các giao dịch được bảo mật và mã hóa.
               </p>
               <div className="space-y-3 mb-6">
+                {/* PayOS */}
                 <label
                   htmlFor="payos"
                   className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
@@ -681,7 +855,7 @@ const CheckoutPage: React.FC = () => {
                     <div className="mt-2 flex items-center space-x-2">
                       <Image
                         src="/Casso-payOSLogo-1.svg"
-                        alt="Visa"
+                        alt="PayOS"
                         width={130}
                         height={50}
                         className="object-contain"
@@ -690,25 +864,65 @@ const CheckoutPage: React.FC = () => {
                   </span>
                 </label>
 
-                {formData.paymentMethod === "payos" && (
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 mt-2">
-                    <p>
-                      Sau khi nhấp vào &quot;Thanh toán ngay&quot;, bạn sẽ được
-                      chuyển hướng đến PayOS để hoàn tất thanh toán một cách an
-                      toàn.
-                    </p>
-                  </div>
-                )}
+                {/* PayPal */}
+                <label
+                  htmlFor="paypal"
+                  className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
+                >
+                  <input
+                    type="radio"
+                    id="paypal"
+                    name="paymentMethod"
+                    value="paypal"
+                    checked={formData.paymentMethod === "paypal"}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                  />
+                  <span className="flex flex-col">
+                    <span className="block text-sm font-medium text-gray-900">
+                      Thanh toán qua PayPal
+                    </span>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <Image
+                        src="/pngegg.png"
+                        alt="PayPal"
+                        width={100}
+                        height={30}
+                        className="object-contain"
+                      />
+                    </div>
+                  </span>
+                </label>
 
-                <RadioButton
-                  id="cod"
-                  name="paymentMethod"
-                  value="cod"
-                  checked={formData.paymentMethod === "cod"}
-                  onChange={handleInputChange}
-                  label="Thanh toán khi nhận hàng (COD)"
-                  // icon={<CashIcon />}
-                />
+                {/* COD */}
+                <label
+                  htmlFor="cod"
+                  className="relative flex items-center cursor-pointer rounded-lg border border-gray-300 bg-white p-4 focus:outline-none hover:border-gray-500 transition-all duration-200"
+                >
+                  <input
+                    type="radio"
+                    id="cod"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={formData.paymentMethod === "cod"}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                  />
+                  <span className="flex flex-col">
+                    <span className="block text-sm font-medium text-gray-900">
+                      Thanh toán khi nhận hàng (COD)
+                    </span>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <Image
+                        src="/cod.png"
+                        alt="COD"
+                        width={80}
+                        height={30}
+                        className="object-contain"
+                      />
+                    </div>
+                  </span>
+                </label>
               </div>
 
               {/* Billing Address */}
@@ -755,19 +969,22 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white rounded-md overflow-hidden">
               <div className="px-4 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">
+                  {isBuyNowMode && (
+                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-2">
+                      Mua ngay
+                    </span>
+                  )}
                   <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-200 text-sm font-bold mr-2">
-                    {cartItems.length}
+                    {typedCartItems.length}
                   </span>
                 </h3>
               </div>
               <div className="p-4">
-                {cartItems.map((item) => (
+                {typedCartItems.map((item: ImportedCartItem) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between text-sm text-gray-700 mb-2 last:mb-0"
                   >
-                    {" "}
-                    {/* Added mb-2 and last:mb-0 for spacing */}
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 relative overflow-hidden rounded-md border border-gray-200">
                         <Image
@@ -789,7 +1006,7 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <span className="text-gray-900">
                       {formatCurrency(
-                        item.product_price *
+                        (item.price ?? item.product_price) *
                           item.quantity *
                           (1 - (item.discount || 0) / 100)
                       )}
@@ -798,60 +1015,92 @@ const CheckoutPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Mã giảm giá */}
+              {/* voucher */}
               <div className="px-4 py-4 border-t border-gray-200 relative">
-                <input
-                  type="text"
-                  placeholder="Mã giảm giá"
-                  value={formData.couponCode}
-                  onFocus={() => handleShowCouponList()}
-                  onBlur={() => setTimeout(() => setShowCouponList(false), 150)} // delay để chọn được
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      couponCode: e.target.value,
-                    }))
-                  }
-                  className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3"
-                />
-                {showCouponList && listVouchers.length > 0 && (
-                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
-                    {listVouchers.map((uc) => (
-                      <li
-                        key={uc.id}
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            couponCode: uc.coupon.code,
-                          }));
-                          setShowCouponList(false);
-                        }}
-                        className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 
-                          ${
-                            uc.active
-                              ? "bg-green-50 hover:bg-green-100 text-green-800"
-                              : "bg-red-50 hover:bg-red-100 text-red-700"
-                          }
-                        `}
-                      >
-                        <div className="font-semibold">{uc.coupon.code}</div>
-                        <div className="text-xs italic">
-                          {uc.coupon.description || "Không có mô tả"}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Mã giảm giá"
+                    value={formData.couponCode}
+                    onFocus={() => handleShowCouponList()}
+                    onBlur={() => setTimeout(() => setShowCouponList(false), 150)}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        couponCode: e.target.value,
+                      }))
+                    }
+                    className="block w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500 text-sm py-2 px-3 pr-10"
+                    disabled={isApplyingCoupon || isFetchingVouchers}
+                  />
+                  {(isApplyingCoupon || isFetchingVouchers) && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                  )}
+                </div>
+                
+                {showCouponList && (
+                  <div className="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 shadow-lg max-h-40 overflow-auto divide-y divide-gray-100">
+                    {isFetchingVouchers ? (
+                      <div className="px-4 py-3 text-sm text-center text-gray-500">
+                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        Đang tải mã giảm giá...
+                      </div>
+                    ) : listVouchers.length > 0 ? (
+                      listVouchers.map((uc: Voucher) => (
+                        <li
+                          key={uc.id}
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              couponCode: uc.coupon.code,
+                            }));
+                            setShowCouponList(false);
+                          }}
+                          className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-200 list-none
+                            ${
+                              uc.active
+                                ? "bg-green-50 hover:bg-green-100 text-green-800"
+                                : "bg-red-50 hover:bg-red-100 text-red-700"
+                            }
+                          `}
+                        >
+                          <div className="font-semibold">{uc.coupon.code}</div>
+                          <div className="text-xs italic">
+                            {uc.coupon.description || "Không có mô tả"}
+                          </div>
+                          {uc.active && (
+                            <div className="text-xs text-green-600 font-medium mt-1">
+                              Giảm {formatCurrency(uc.discount || 0)}
+                            </div>
+                          )}
+                        </li>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-center text-gray-500">
+                        Không có mã giảm giá khả dụng
+                      </div>
+                    )}
+                  </div>
                 )}
+                
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
-                  className="mt-2 w-full bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-300 transition-colors"
+                  disabled={isApplyingCoupon || isFetchingVouchers}
+                  className={`mt-2 w-full ${
+                    isApplyingCoupon || isFetchingVouchers
+                      ? 'bg-gray-300 cursor-not-allowed' 
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  } text-gray-700 font-medium py-2 px-4 rounded-md text-sm transition-colors`}
                 >
-                  Áp dụng
+                  {isApplyingCoupon ? 'Đang xử lý...' : 'Áp dụng'}
                 </button>
               </div>
+              {/* voucher */}
 
-              {/* Tổng kết */}
+              
               <div className="px-4 py-4 border-t border-gray-200 text-sm">
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Tổng phụ</span>
@@ -866,14 +1115,12 @@ const CheckoutPage: React.FC = () => {
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>Vận chuyển</span>
                   <span>
-                    -{" "}
                     {shippingCost === 0
                       ? "Miễn phí"
                       : formatCurrency(shippingCost)}
                   </span>
                 </div>
               </div>
-
               <div className="px-4 py-4 border-t border-gray-200 flex justify-between items-center">
                 <span className="font-bold text-base text-gray-900">Tổng</span>
                 <span className="text-xl font-bold text-brown-700">
